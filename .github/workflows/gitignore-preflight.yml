@@ -1,0 +1,23 @@
+name: Gitignore Preflight
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  verify-gitignore:
+    name: Verify Gitignore Rules
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run gitignore verifier
+        run: |
+          chmod +x scripts/verify-gitignore.sh
+          ./scripts/verify-gitignore.sh

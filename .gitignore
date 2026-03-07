@@ -1,0 +1,57 @@
+# Shared ignores across apps
+apps/*/node_modules/
+apps/*/logs/
+apps/*/*.log
+apps/**/.DS_Store
+apps/**/.idea
+
+# Common debug logs
+apps/**/npm-debug.log*
+apps/**/pnpm-debug.log*
+apps/**/yarn-debug.log*
+apps/**/yarn-error.log*
+apps/**/lerna-debug.log*
+
+# ledger-api-core
+apps/ledger-api-core/dist/
+apps/ledger-api-core/build/
+apps/ledger-api-core/coverage/
+apps/ledger-api-core/.nyc_output/
+apps/ledger-api-core/.project
+apps/ledger-api-core/.classpath
+apps/ledger-api-core/.c9/
+apps/ledger-api-core/*.launch
+apps/ledger-api-core/.settings/
+apps/ledger-api-core/*.sublime-workspace
+apps/ledger-api-core/.vscode/*
+!apps/ledger-api-core/.vscode/settings.json
+!apps/ledger-api-core/.vscode/tasks.json
+!apps/ledger-api-core/.vscode/launch.json
+!apps/ledger-api-core/.vscode/extensions.json
+apps/ledger-api-core/.env
+apps/ledger-api-core/.env.development.local
+apps/ledger-api-core/.env.test.local
+apps/ledger-api-core/.env.production.local
+apps/ledger-api-core/.env.local
+apps/ledger-api-core/.temp
+apps/ledger-api-core/.tmp
+apps/ledger-api-core/pids
+apps/ledger-api-core/*.pid
+apps/ledger-api-core/*.seed
+apps/ledger-api-core/*.pid.lock
+apps/ledger-api-core/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ledger-api-gateway
+# (currently only node_modules, already covered by apps/*/node_modules/)
+
+# ledger-frontend
+apps/ledger-frontend/.output/
+apps/ledger-frontend/.data/
+apps/ledger-frontend/.nuxt/
+apps/ledger-frontend/.nitro/
+apps/ledger-frontend/.cache/
+apps/ledger-frontend/dist/
+apps/ledger-frontend/.fleet
+apps/ledger-frontend/.env
+apps/ledger-frontend/.env.*
+!apps/ledger-frontend/.env.example

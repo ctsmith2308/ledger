@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Block push when ignore coverage regresses.
+"$(git rev-parse --show-toplevel)/scripts/verify-gitignore.sh"
