@@ -1,0 +1,101 @@
+version: '3.9'
+
+services:
+
+  # ── Infrastructure ───────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ledger-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-ledger}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ledger-redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Core API (NestJS) ────────────────────────────────────────────────────────
+
+  core-api:
+    build:
+      context: ./apps/ledger-api-core
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    volumes:
+      - ./apps/ledger-api-core:/app        # bind your local src into the container
+      - /app/node_modules   
+    container_name: ledger-core-api
+    ports:
+      - '3001:3001'         # exposed for local debugging; not public in prod
+    environment:
+      PORT: 3001
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3001/ || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Gateway (Fastify) ────────────────────────────────────────────────────
+
+  api-gateway:
+    build:
+      context: ./apps/ledger-api-gateway
+      dockerfile: Dockerfile
+    command: npm run dev
+    volumes:
+      - ./apps/ledger-api-gateway:/app        # bind your local src into the container
+      - /app/node_modules
+    container_name: ledger-api-gateway
+    ports:
+      - '3000:3000'         # the only port the frontend (and browser) talks to
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      CORE_API_URL: http://core-api:3001   # Docker internal DNS — not localhost
+    depends_on:
+      core-api:
+        condition: service_healthy
+
+  # ── Frontend (Nuxt 4) ────────────────────────────────────────────────────────
+
+  # frontend:
+  #   build:
+  #     context: ./apps/ledger-frontend
+  #     dockerfile: Dockerfile
+  #   command: npm run dev
+  # volumes:
+  #  - ./apps/ledger-frontend:/app        
+  #  - /app/node_modules
+  #   container_name: ledger-frontend
+  #   ports:
+  #     - '4000:4000'
+  #   environment:
+  #     PORT: 4000
+  #     NUXT_PUBLIC_API_BASE: http://localhost:3000   # browser-visible URL
+  #   depends_on:
+  #     - api-gateway
+
+volumes:
+  postgres_data:

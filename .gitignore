@@ -1,3 +1,10 @@
+.DS_Store
+
+.env
+.env.example
+
+docker/
+
 # Shared ignores across apps
 apps/*/node_modules/
 apps/*/logs/
