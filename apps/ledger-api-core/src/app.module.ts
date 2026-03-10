@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 @Module({
-  imports: [],
+  imports: [CqrsModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })

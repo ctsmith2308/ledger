@@ -1,0 +1,3 @@
+class IdentityController {}
+
+export { IdentityController };
