@@ -26,6 +26,20 @@ class User extends AggregateRoot {
     this._mfaEnabled = true;
   }
 
+  static reconstitute(
+    id: string,
+    email: string,
+    passwordHash: string,
+    mfaEnabled: boolean,
+    mfaSecret?: string,
+  ): User {
+    return new User(id, new Email(email), passwordHash, mfaEnabled, mfaSecret);
+  }
+
+  get passwordHash() {
+    return this._passwordHash;
+  }
+
   get id() {
     return this._id;
   }

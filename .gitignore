@@ -47,6 +47,7 @@ apps/ledger-api-core/*.pid
 apps/ledger-api-core/*.seed
 apps/ledger-api-core/*.pid.lock
 apps/ledger-api-core/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+apps/ledger-api-core/generated
 
 # ledger-api-gateway
 # (currently only node_modules, already covered by apps/*/node_modules/)

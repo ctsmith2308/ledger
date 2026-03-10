@@ -4,9 +4,11 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// moduleFormat = "cjs" is important: https://docs.nestjs.com/recipes/prisma#configure-the-module-format
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat  = "cjs"
 }
 
 datasource db {

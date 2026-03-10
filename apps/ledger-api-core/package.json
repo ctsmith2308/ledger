@@ -18,10 +18,13 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:generate": "prisma generate",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "prisma:migrate": "dotenvx run -f ../../.env -- npx prisma migrate dev",
+    "prisma:generate": "dotenvx run -f ../../.env -- npx prisma generate",
+    "prisma:studio": "dotenvx run -f ../../.env -- npx prisma studio"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.54.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/cqrs": "^11.0.3",
@@ -29,7 +32,6 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "argon2": "^0.44.0",
-    "dotenv": "^17.3.1",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -43,6 +45,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0l",
     "@types/jest": "^30.0.0",
+    "@types/node": "^25.4.0",
     "@types/pg": "^8.18.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
