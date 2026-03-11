@@ -1,5 +1,5 @@
 import { ValueObject } from '@/shared/domain/value-object';
-import { InvalidEmailException } from '@/modules/identity/domain';
+import { InvalidEmailException } from '@/modules/identity/domain/exceptions';
 
 interface EmailProps {
   value: string;
@@ -11,15 +11,18 @@ class Email extends ValueObject<EmailProps> {
   }
 
   public static create(email: string): Email {
-    if (!this.isValid(email)) {
-      throw new InvalidEmailException(email);
+    const trimmedEmail = email.trim();
+
+    if (!this.isValid(trimmedEmail)) {
+      throw new InvalidEmailException();
     }
 
-    return new Email({ value: email.toLowerCase().trim() });
+    return new Email({ value: trimmedEmail.toLowerCase() });
   }
 
   private static isValid(email: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return isValid;
   }
 
   get value(): string {

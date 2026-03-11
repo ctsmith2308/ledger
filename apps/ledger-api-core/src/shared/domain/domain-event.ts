@@ -1,4 +1,4 @@
-import { EventType } from '@/shared/domain';
+import type { EventType } from './event-types';
 
 abstract class DomainEvent {
   readonly occurredAt: Date;

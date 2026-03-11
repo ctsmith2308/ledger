@@ -1,10 +1,10 @@
 import { AggregateRoot } from '@/shared/domain/aggregate-root';
+import { UserRegisteredEvent } from '@/modules/identity/domain/events';
 import {
   Email,
   Password,
   UserId,
-  UserRegisteredEvent,
-} from '@/modules/identity/domain';
+} from '@/modules/identity/domain/value-objects';
 
 class User extends AggregateRoot {
   private constructor(

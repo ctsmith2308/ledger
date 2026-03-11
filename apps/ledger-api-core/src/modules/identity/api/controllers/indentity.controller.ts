@@ -1,7 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common';
 
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { RegisterUserDto } from '@/modules/identity/api';
+import { RegisterUserDto } from '@/modules/identity/api/dtos';
 import { RegisterUserCommand } from '@/modules/identity/application';
 
 @Controller('auth')

@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { type ICommandHandler, CommandHandler, EventBus } from '@nestjs/cqrs';
 
-import { DomainEvent } from '@/shared/domain';
+import type { DomainEvent } from '@/shared/domain';
 
 import {
   IUserRepository,
@@ -15,7 +15,8 @@ import {
   Password,
   Email,
 } from '@/modules/identity/domain';
-import { RegisterUserCommand } from '@/modules/identity/application';
+
+import { RegisterUserCommand } from './register-user.command';
 
 @CommandHandler(RegisterUserCommand)
 class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {

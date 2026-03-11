@@ -1,4 +1,5 @@
-import { User, Email } from '@/modules/identity/domain';
+import { User } from '@/modules/identity/domain/aggregates';
+import { Email } from '@/modules/identity/domain/value-objects';
 
 const USER_REPOSITORY = Symbol('IUserRepository');
 
