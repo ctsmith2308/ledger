@@ -35,7 +35,7 @@ server.get('/health', async (req, reply) => {
   }
 });
 
-// ── Proxy: everything under /api → core-api ───────────────────────────────
+// Core-Api
 server.get('/api/*', async (request, reply) => {
   const path = (request.params as any)['*'];
 

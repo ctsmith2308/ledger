@@ -4,8 +4,8 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { RegisterUserDto } from '@/modules/identity/api';
 import { RegisterUserCommand } from '@/modules/identity/application';
 
-@Controller('identity')
-export class IdentityController {
+@Controller('auth')
+class IdentityController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus, // You'll need this for reads
@@ -19,10 +19,13 @@ export class IdentityController {
 
     return userId;
   }
-
-  // @Get(':id')
-  // async getById(@Param('id') id: string) {
-  //   const user = await this.queryBus.execute(new GetUserProfileQuery(id));
-  //   return UserMapper.toResponse(user);
-  // }
 }
+
+export { IdentityController };
+
+// TODO:
+// @Get(':id')
+// async getById(@Param('id') id: string) {
+//   const user = await this.queryBus.execute(new GetUserProfileQuery(id));
+//   return UserMapper.toResponse(user);
+// }
