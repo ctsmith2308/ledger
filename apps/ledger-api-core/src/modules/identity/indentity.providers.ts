@@ -1,13 +1,29 @@
 import { Provider } from '@nestjs/common';
 
-// Domain Repositories
-import { USER_REPOSITORY } from '@/modules/identity/domain';
+// Domain
+import {
+  USER_REPOSITORY,
+  ID_GENERATOR,
+  PASSWORD_HASHER,
+} from '@/modules/identity/domain';
 
-// Infrastructure Repositories
-import { UserRepository } from '@/modules/identity/infrastructure';
+// Infrastructure
+import {
+  UserRepository,
+  UuIdV4IdGenerator,
+  ArgonPasswordHasher,
+} from '@/modules/identity/infrastructure';
 
+/**
+ * Important!
+ * Providers need to be provided as per nest.js spec:
+ * see: https://docs.nestjs.com/fundamentals/custom-providers#standard-providers
+ * see: https://docs.nestjs.com/fundamentals/custom-providers
+ */
 const PersistenceProviders: Provider[] = [
   { provide: USER_REPOSITORY, useClass: UserRepository },
+  { provide: ID_GENERATOR, useClass: UuIdV4IdGenerator },
+  { provide: PASSWORD_HASHER, useClass: ArgonPasswordHasher },
 ];
 
 export { PersistenceProviders };

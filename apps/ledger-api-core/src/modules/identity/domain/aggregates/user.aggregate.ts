@@ -1,15 +1,14 @@
-import { v4 as uuid } from 'uuid';
-
 import { AggregateRoot } from '@/shared/domain/aggregate-root';
 import {
   Email,
   Password,
+  UserId,
   UserRegisteredEvent,
 } from '@/modules/identity/domain';
 
 class User extends AggregateRoot {
   private constructor(
-    private readonly _id: string,
+    private readonly _id: UserId,
     private readonly _email: Email,
     private _passwordHash: Password,
     private _mfaEnabled: boolean = false,
@@ -18,11 +17,10 @@ class User extends AggregateRoot {
     super();
   }
 
-  static register(email: Email, passwordHash: Password): User {
-    const id = uuid();
+  static register(id: UserId, email: Email, passwordHash: Password): User {
     const user = new User(id, email, passwordHash);
 
-    user.addDomainEvent(new UserRegisteredEvent(id, email.value));
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
 
     return user;
   }
@@ -33,7 +31,7 @@ class User extends AggregateRoot {
   }
 
   static reconstitute(
-    id: string,
+    id: UserId,
     email: Email,
     passwordHash: Password,
     mfaEnabled: boolean,

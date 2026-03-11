@@ -6,9 +6,12 @@ import { DomainEvent } from '@/shared/domain';
 import {
   IUserRepository,
   IPasswordHasher,
+  IIdGenerator,
   USER_REPOSITORY,
   PASSWORD_HASHER,
+  ID_GENERATOR,
   User,
+  UserId,
   Password,
   Email,
 } from '@/modules/identity/domain';
@@ -19,6 +22,7 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_HASHER) private readonly hasher: IPasswordHasher,
+    @Inject(ID_GENERATOR) private readonly idGenerator: IIdGenerator,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -35,7 +39,11 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
 
     const passwordHash = Password.fromHash(hashString);
 
-    const user = User.register(email, passwordHash);
+    const rawId = this.idGenerator.generate();
+
+    const userId = UserId.create(rawId);
+
+    const user = User.register(userId, email, passwordHash);
 
     await this.userRepository.save(user);
 
@@ -45,7 +53,7 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
       this.eventBus.publish(event);
     });
 
-    return { id: user.id };
+    return { id: user.id.value };
   }
 }
 
