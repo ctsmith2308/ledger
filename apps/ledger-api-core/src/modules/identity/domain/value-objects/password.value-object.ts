@@ -1,6 +1,6 @@
 import { ValueObject } from '@/shared/domain';
-
-import { WeakPasswordException } from '@/modules/identity/domain/exceptions';
+import { Result } from '@/shared/domain/result';
+import { InvalidPasswordException } from '@/modules/identity/domain/exceptions';
 
 interface PasswordProps {
   value: string;
@@ -11,25 +11,32 @@ class Password extends ValueObject<PasswordProps> {
     super(props);
   }
 
-  public static create(plainText: string): Password {
-    // BUSINESS RULE: Must contain a special character
+  public static create(
+    plainText: string,
+  ): Result<Password, InvalidPasswordException> {
+    if (!Password.hasSpecial(plainText)) {
+      return Result.fail(new InvalidPasswordException());
+    }
+
+    if (!Password.hasNumber(plainText)) {
+      return Result.fail(new InvalidPasswordException());
+    }
+
+    const passwordInstance = new Password({ value: plainText });
+
+    return Result.ok(passwordInstance);
+  }
+
+  // BUSINESS RULE: Must contain a special character
+  private static hasSpecial(plainText: string) {
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(plainText);
+    return hasSpecial;
+  }
 
-    if (!hasSpecial) {
-      throw new WeakPasswordException(
-        'Password must contain a special character',
-      );
-    }
-
-    // // BUSINESS RULE: Must contain a number
+  // BUSINESS RULE: Must contain a number
+  private static hasNumber(plainText: string) {
     const hasNumber = /\d/.test(plainText);
-    if (!hasNumber) {
-      throw new WeakPasswordException(
-        'Password must contain at least one number',
-      );
-    }
-
-    return new Password({ value: plainText });
+    return hasNumber;
   }
 
   // Use this when creating from a HASH (e.g., from DB or after hashing)

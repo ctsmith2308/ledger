@@ -1,7 +1,9 @@
 import { Inject } from '@nestjs/common';
 import { type ICommandHandler, CommandHandler, EventBus } from '@nestjs/cqrs';
 
-import type { DomainEvent } from '@/shared/domain';
+import { type DomainEvent, Result } from '@/shared/domain';
+
+import { RegisterUserResponse } from './register-user.types';
 
 import {
   IUserRepository,
@@ -27,25 +29,33 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
     private readonly eventBus: EventBus,
   ) {}
 
-  async execute(command: RegisterUserCommand): Promise<{ id: string }> {
-    const email = Email.create(command.email);
+  async execute(command: RegisterUserCommand): Promise<RegisterUserResponse> {
+    // 1. Validate Email (Domain)
+    const emailResult = Email.create(command.email);
+    if (emailResult.isFailure) return Result.fail(emailResult.error);
+    const email = emailResult.value;
 
+    // 2. Check Uniqueness (Application/Security)
     const existing = await this.userRepository.findByEmail(email);
+    if (existing) {
+      // Return success to prevent enumeration,
+      return Result.ok({ id: existing.id.value });
+    }
 
-    if (existing) throw new Error('Email already registered');
+    // 3. Validate Password (Domain)
+    const passwordResult = Password.create(command.password);
+    if (passwordResult.isFailure) return Result.fail(passwordResult.error);
+    const plainPassword = passwordResult.value;
 
-    const plainPassword = Password.create(command.password);
-
+    // 4. Infrastructure/Coordination
     const hashString = await this.hasher.hash(plainPassword.value);
-
     const passwordHash = Password.fromHash(hashString);
+    const userId = UserId.create(this.idGenerator.generate());
 
-    const rawId = this.idGenerator.generate();
-
-    const userId = UserId.create(rawId);
-
+    // 5. Domain Logic (The actual registration)
     const user = User.register(userId, email, passwordHash);
 
+    // 6. Persistence & Side Effects
     await this.userRepository.save(user);
 
     const events = user.pullDomainEvents();
@@ -54,7 +64,7 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
       this.eventBus.publish(event);
     });
 
-    return { id: user.id.value };
+    return Result.ok({ id: user.id.value });
   }
 }
 

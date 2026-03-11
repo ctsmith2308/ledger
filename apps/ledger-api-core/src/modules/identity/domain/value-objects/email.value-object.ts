@@ -1,4 +1,5 @@
 import { ValueObject } from '@/shared/domain/value-object';
+import { Result } from '@/shared/domain/result';
 import { InvalidEmailException } from '@/modules/identity/domain/exceptions';
 
 interface EmailProps {
@@ -10,14 +11,18 @@ class Email extends ValueObject<EmailProps> {
     super(props);
   }
 
-  public static create(email: string): Email {
-    const trimmedEmail = email.trim();
+  public static create(email: string): Result<Email, InvalidEmailException> {
+    const trimmedEmail = (email ?? '').trim();
 
-    if (!this.isValid(trimmedEmail)) {
-      throw new InvalidEmailException();
+    if (Email.isValid(trimmedEmail)) {
+      return Result.fail(new InvalidEmailException());
     }
 
-    return new Email({ value: trimmedEmail.toLowerCase() });
+    const emailInstance = new Email({
+      value: trimmedEmail.toLowerCase(),
+    });
+
+    return Result.ok(emailInstance);
   }
 
   private static isValid(email: string): boolean {
