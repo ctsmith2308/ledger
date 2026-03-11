@@ -1,4 +1,5 @@
 import { EventBus, IEvent } from '@nestjs/cqrs';
+import type { Mock } from 'vitest';
 
 import {
   RegisterUserCommand,
@@ -50,11 +51,11 @@ const fakeIdGenerator: IIdGenerator = {
 describe('RegisterUserHandler', () => {
   let handler: RegisterUserHandler;
   let repo: InMemoryUserRepository;
-  let eventBus: { publish: jest.Mock };
+  let eventBus: { publish: Mock };
 
   beforeEach(() => {
     repo = new InMemoryUserRepository();
-    eventBus = { publish: jest.fn() };
+    eventBus = { publish: vi.fn() };
     handler = new RegisterUserHandler(
       repo,
       fakeHasher,
@@ -134,7 +135,7 @@ describe('RegisterUserHandler', () => {
   });
 
   it('should not publish any events if saving fails', async () => {
-    jest.spyOn(repo, 'save').mockRejectedValueOnce(new Error('DB error'));
+    vi.spyOn(repo, 'save').mockRejectedValueOnce(new Error('DB error'));
 
     await expect(
       handler.execute(

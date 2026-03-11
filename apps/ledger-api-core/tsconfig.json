@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "target": "ES2023",
     "esModuleInterop": true,
     "isolatedModules": true,
@@ -27,6 +27,6 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["src/**/*.ts", "generated/**/*.ts", "prisma.config.ts", "jest.config.ts"],
+  "include": ["src/**/*.ts", "generated/**/*.ts", "prisma.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
