@@ -1,8 +1,11 @@
 import { v4 as uuid } from 'uuid';
 
 import { AggregateRoot } from '@/shared/domain/aggregate-root';
-import { Email, Password } from '@/modules/identity/domain';
-// import { UserRegisteredEvent } from '../events/user-registered.event';
+import {
+  Email,
+  Password,
+  UserRegisteredEvent,
+} from '@/modules/identity/domain';
 
 class User extends AggregateRoot {
   private constructor(
@@ -19,7 +22,7 @@ class User extends AggregateRoot {
     const id = uuid();
     const user = new User(id, email, passwordHash);
 
-    user.addDomainEvent(new UserRegisteredEvent(id, email));
+    user.addDomainEvent(new UserRegisteredEvent(id, email.value));
 
     return user;
   }
