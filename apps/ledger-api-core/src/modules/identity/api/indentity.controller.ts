@@ -1,3 +1,0 @@
-class IdentityController {}
-
-export { IdentityController };

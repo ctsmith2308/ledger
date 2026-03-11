@@ -1,22 +1,25 @@
+import { v4 as uuid } from 'uuid';
+
 import { AggregateRoot } from '@/shared/domain/aggregate-root';
-import { Email } from '@/modules/identity/domain';
+import { Email, Password } from '@/modules/identity/domain';
 // import { UserRegisteredEvent } from '../events/user-registered.event';
 
 class User extends AggregateRoot {
   private constructor(
     private readonly _id: string,
     private readonly _email: Email,
-    private _passwordHash: string,
+    private _passwordHash: Password,
     private _mfaEnabled: boolean = false,
     private _mfaSecret?: string,
   ) {
     super();
   }
 
-  static register(id: string, email: string, passwordHash: string): User {
-    const user = new User(id, new Email(email), passwordHash);
+  static register(email: Email, passwordHash: Password): User {
+    const id = uuid();
+    const user = new User(id, email, passwordHash);
 
-    // user.addDomainEvent(new UserRegisteredEvent(id, email));
+    user.addDomainEvent(new UserRegisteredEvent(id, email));
 
     return user;
   }
@@ -28,16 +31,12 @@ class User extends AggregateRoot {
 
   static reconstitute(
     id: string,
-    email: string,
-    passwordHash: string,
+    email: Email,
+    passwordHash: Password,
     mfaEnabled: boolean,
     mfaSecret?: string,
   ): User {
-    return new User(id, new Email(email), passwordHash, mfaEnabled, mfaSecret);
-  }
-
-  get passwordHash() {
-    return this._passwordHash;
+    return new User(id, email, passwordHash, mfaEnabled, mfaSecret);
   }
 
   get id() {
@@ -45,7 +44,11 @@ class User extends AggregateRoot {
   }
 
   get email() {
-    return this._email.value;
+    return this._email;
+  }
+
+  get passwordHash() {
+    return this._passwordHash;
   }
 
   get mfaEnabled() {

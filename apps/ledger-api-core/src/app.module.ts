@@ -1,13 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 
-import { AppController } from './app.controller';
-import { PrismaService } from '@/shared/infrastructure/prisma.service';
+import { PrismaModule } from '@/shared/infrastructure/persistence';
 
 @Module({
-  imports: [CqrsModule.forRoot()],
-  controllers: [AppController],
-  providers: [PrismaService],
+  imports: [CqrsModule.forRoot(), PrismaModule],
 })
 class AppModule {}
 

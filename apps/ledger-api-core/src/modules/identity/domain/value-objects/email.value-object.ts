@@ -1,14 +1,21 @@
 import { ValueObject } from '@/shared/domain/value-object';
+import { InvalidEmailException } from '@/modules/identity/domain';
 
 interface EmailProps {
   value: string;
 }
 
 class Email extends ValueObject<EmailProps> {
-  constructor(email: string) {
-    if (!Email.isValid(email)) throw new Error(`Invalid email: ${email}`);
+  private constructor(props: EmailProps) {
+    super(props);
+  }
 
-    super({ value: email.toLowerCase() });
+  public static create(email: string): Email {
+    if (!this.isValid(email)) {
+      throw new InvalidEmailException(email);
+    }
+
+    return new Email({ value: email.toLowerCase().trim() });
   }
 
   private static isValid(email: string): boolean {
@@ -18,6 +25,10 @@ class Email extends ValueObject<EmailProps> {
   get value(): string {
     return this.props.value;
   }
+
+  public static fromValue(value: string): Email {
+    return new Email({ value });
+  }
 }
 
-export { Email };
+export { type EmailProps, Email };

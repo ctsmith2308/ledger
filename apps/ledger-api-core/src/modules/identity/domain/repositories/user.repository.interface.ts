@@ -1,12 +1,10 @@
-import { User } from '@/modules/identity/domain/';
+import { User, Email } from '@/modules/identity/domain';
 
 const USER_REPOSITORY = Symbol('IUserRepository');
 
 interface IUserRepository {
   save(user: User): Promise<void>;
-  findByEmail(email: string): Promise<User | null>;
+  findByEmail(email: Email): Promise<User | null>;
 }
 
-export type { IUserRepository };
-
-export { USER_REPOSITORY };
+export { type IUserRepository, USER_REPOSITORY };
