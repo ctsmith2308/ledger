@@ -44,7 +44,7 @@ class Password extends ValueObject<PasswordProps> {
     return new Password({ value: hash });
   }
 
-  get value(): string {
+  get content(): string {
     return this.props.value;
   }
 }

@@ -48,9 +48,9 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
     const plainPassword = passwordResult.value;
 
     // 4. Infrastructure/Coordination
-    const hashString = await this.hasher.hash(plainPassword.value);
+    const hashString = await this.hasher.hash(plainPassword.content);
     const passwordHash = Password.fromHash(hashString);
-    const userId = UserId.create(this.idGenerator.generate());
+    const { value: userId } = UserId.create(this.idGenerator.generate());
 
     // 5. Domain Logic (The actual registration)
     const user = User.register(userId, email, passwordHash);

@@ -20,7 +20,7 @@ class User extends AggregateRoot {
   static register(id: UserId, email: Email, passwordHash: Password): User {
     const user = new User(id, email, passwordHash);
 
-    user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
 
     return user;
   }

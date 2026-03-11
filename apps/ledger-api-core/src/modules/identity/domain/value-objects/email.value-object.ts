@@ -14,7 +14,7 @@ class Email extends ValueObject<EmailProps> {
   public static create(email: string): Result<Email, InvalidEmailException> {
     const trimmedEmail = (email ?? '').trim();
 
-    if (Email.isValid(trimmedEmail)) {
+    if (!Email.isValid(trimmedEmail)) {
       return Result.fail(new InvalidEmailException());
     }
 
@@ -30,12 +30,12 @@ class Email extends ValueObject<EmailProps> {
     return isValid;
   }
 
-  get value(): string {
+  get address(): string {
     return this.props.value;
   }
 
-  public static fromValue(value: string): Email {
-    return new Email({ value });
+  public static from(address: string): Email {
+    return new Email({ value: address });
   }
 }
 

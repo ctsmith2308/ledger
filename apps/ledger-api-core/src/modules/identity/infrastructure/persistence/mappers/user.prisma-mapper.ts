@@ -3,8 +3,8 @@ import { User, UserId, Email, Password } from '@/modules/identity/domain';
 
 class UserPrismaMapper {
   static toDomain(raw: PrismaUser): User {
-    const id = UserId.fromValue(raw.id);
-    const email = Email.fromValue(raw.email);
+    const id = UserId.from(raw.id);
+    const email = Email.from(raw.email);
     const password = Password.fromHash(raw.passwordHash);
 
     return User.reconstitute(
@@ -19,8 +19,8 @@ class UserPrismaMapper {
   static toPersistence(user: User) {
     return {
       id: user.id.value,
-      email: user.email.value,
-      passwordHash: user.passwordHash.value,
+      email: user.email.address,
+      passwordHash: user.passwordHash.content,
       mfaEnabled: user.mfaEnabled,
       mfaSecret: user.mfaSecret ?? null,
     };

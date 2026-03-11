@@ -13,7 +13,7 @@ import {
   IUserRepository,
   User,
   InvalidEmailException,
-  WeakPasswordException,
+  InvalidPasswordException,
 } from '@/modules/identity/domain';
 
 import { IdentityEvents } from '@/shared/domain';
@@ -29,7 +29,8 @@ class InMemoryUserRepository implements IUserRepository {
   }
 
   findByEmail(email: Email): Promise<User | null> {
-    const found = this.store.find((u) => u.email.value === email.value) ?? null;
+    const found =
+      this.store.find((u) => u.email.address === email.address) ?? null;
     return Promise.resolve(found);
   }
 }
@@ -69,9 +70,12 @@ describe('RegisterUserHandler', () => {
       new RegisterUserCommand('user@example.com', 'Secure@Pass1'),
     );
 
-    expect(result).toEqual({ id: 'test-uuid-12345' });
+    expect(result.isSuccess).toBe(true);
+    expect(result.value).toEqual({ id: 'test-uuid-12345' });
 
-    const saved = await repo.findByEmail(Email.create('user@example.com'));
+    const saved = await repo.findByEmail(
+      Email.create('user@example.com').value,
+    );
     expect(saved).not.toBeNull();
     expect(saved!.id.value).toBe('test-uuid-12345');
   });
@@ -81,9 +85,11 @@ describe('RegisterUserHandler', () => {
       new RegisterUserCommand('user@example.com', 'Secure@Pass1'),
     );
 
-    const saved = await repo.findByEmail(Email.create('user@example.com'));
-    expect(saved!.passwordHash.value).toBe('hashed:Secure@Pass1');
-    expect(saved!.passwordHash.value).not.toBe('Secure@Pass1');
+    const saved = await repo.findByEmail(
+      Email.create('user@example.com').value,
+    );
+    expect(saved!.passwordHash.content).toBe('hashed:Secure@Pass1');
+    expect(saved!.passwordHash.content).not.toBe('Secure@Pass1');
   });
 
   it('should publish a UserRegisteredEvent after saving', async () => {
@@ -100,38 +106,41 @@ describe('RegisterUserHandler', () => {
     );
   });
 
-  it('should throw if the email is already registered', async () => {
-    await handler.execute(
+  it('should silently succeed if the email is already registered (prevent enumeration)', async () => {
+    const first = await handler.execute(
       new RegisterUserCommand('user@example.com', 'Secure@Pass1'),
     );
+    expect(first.isSuccess).toBe(true);
 
-    await expect(
-      handler.execute(
-        new RegisterUserCommand('user@example.com', 'Another@Pass1'),
-      ),
-    ).rejects.toThrow('Email already registered');
+    const second = await handler.execute(
+      new RegisterUserCommand('user@example.com', 'Another@Pass1'),
+    );
+    expect(second.isSuccess).toBe(true);
+    expect(second.value).toEqual({ id: first.value.id });
   });
 
-  it('should throw InvalidEmailException for a malformed email', async () => {
-    await expect(
-      handler.execute(new RegisterUserCommand('not-an-email', 'Secure@Pass1')),
-    ).rejects.toThrow(InvalidEmailException);
+  it('should return a failure for a malformed email', async () => {
+    const result = await handler.execute(
+      new RegisterUserCommand('not-an-email', 'Secure@Pass1'),
+    );
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBeInstanceOf(InvalidEmailException);
   });
 
-  it('should throw WeakPasswordException for a password without a special character', async () => {
-    await expect(
-      handler.execute(
-        new RegisterUserCommand('user@example.com', 'SecurePass1'),
-      ),
-    ).rejects.toThrow(WeakPasswordException);
+  it('should return a failure for a password without a special character', async () => {
+    const result = await handler.execute(
+      new RegisterUserCommand('user@example.com', 'SecurePass1'),
+    );
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBeInstanceOf(InvalidPasswordException);
   });
 
-  it('should throw WeakPasswordException for a password without a number', async () => {
-    await expect(
-      handler.execute(
-        new RegisterUserCommand('user@example.com', 'Secure@Pass'),
-      ),
-    ).rejects.toThrow(WeakPasswordException);
+  it('should return a failure for a password without a number', async () => {
+    const result = await handler.execute(
+      new RegisterUserCommand('user@example.com', 'Secure@Pass'),
+    );
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBeInstanceOf(InvalidPasswordException);
   });
 
   it('should not publish any events if saving fails', async () => {

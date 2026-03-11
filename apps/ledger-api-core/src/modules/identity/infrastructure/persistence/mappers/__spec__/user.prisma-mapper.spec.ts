@@ -18,8 +18,8 @@ describe('UserPrismaMapper', () => {
       const record = makePrismaRecord();
       const user = UserPrismaMapper.toDomain(record);
 
-      expect(user.email.value).toBe('user@example.com');
-      expect(user.passwordHash.value).toBe('$argon2id$hashed');
+      expect(user.email.address).toBe('user@example.com');
+      expect(user.passwordHash.content).toBe('$argon2id$hashed');
       expect(user.mfaEnabled).toBe(false);
       expect(user.mfaSecret).toBeUndefined();
     });
@@ -45,8 +45,8 @@ describe('UserPrismaMapper', () => {
 
   describe('toPersistence()', () => {
     it('should map a User aggregate to a Prisma-compatible record', () => {
-      const id = UserId.create('test-uuid-12345');
-      const email = Email.create('user@example.com');
+      const id = UserId.from('test-uuid-12345');
+      const email = Email.from('user@example.com');
       const password = Password.fromHash('$argon2id$hashed');
       const user = User.register(id, email, password);
 
@@ -59,8 +59,8 @@ describe('UserPrismaMapper', () => {
     });
 
     it('should map mfaSecret to null when not set', () => {
-      const id = UserId.create('test-uuid-12345');
-      const email = Email.create('user@example.com');
+      const id = UserId.from('test-uuid-12345');
+      const email = Email.from('user@example.com');
       const password = Password.fromHash('hash');
       const user = User.register(id, email, password);
 

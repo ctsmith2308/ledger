@@ -1,39 +1,37 @@
 import { Password } from '@/modules/identity/domain';
-import { WeakPasswordException } from '@/modules/identity/domain/exceptions';
+import { InvalidPasswordException } from '@/modules/identity/domain/exceptions';
 
 describe('Password', () => {
   describe('create()', () => {
     it('should create a valid password with a special char and number', () => {
-      const password = Password.create('Secure@Pass1');
-      expect(password.value).toBe('Secure@Pass1');
+      const result = Password.create('Secure@Pass1');
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.content).toBe('Secure@Pass1');
     });
 
-    it('should throw WeakPasswordException when missing a special character', () => {
-      expect(() => Password.create('SecurePass1')).toThrow(
-        WeakPasswordException,
-      );
-      expect(() => Password.create('SecurePass1')).toThrow(
-        'Password must contain a special character',
-      );
+    it('should return a failure when missing a special character', () => {
+      const result = Password.create('SecurePass1');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidPasswordException);
     });
 
-    it('should throw WeakPasswordException when missing a number', () => {
-      expect(() => Password.create('Secure@Pass')).toThrow(
-        WeakPasswordException,
-      );
-      expect(() => Password.create('Secure@Pass')).toThrow(
-        'Password must contain at least one number',
-      );
+    it('should return a failure when missing a number', () => {
+      const result = Password.create('Secure@Pass');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidPasswordException);
     });
 
-    it('should throw when password is empty', () => {
-      expect(() => Password.create('')).toThrow(WeakPasswordException);
+    it('should return a failure for an empty string', () => {
+      const result = Password.create('');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidPasswordException);
     });
 
     it('should accept all supported special characters', () => {
       const specials = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')'];
       specials.forEach((char) => {
-        expect(() => Password.create(`ValidPass1${char}`)).not.toThrow();
+        const result = Password.create(`ValidPass1${char}`);
+        expect(result.isSuccess).toBe(true);
       });
     });
   });
@@ -42,7 +40,7 @@ describe('Password', () => {
     it('should create a Password from an existing hash without validation', () => {
       const hash = '$argon2id$v=19$...somehashvalue';
       const password = Password.fromHash(hash);
-      expect(password.value).toBe(hash);
+      expect(password.content).toBe(hash);
     });
 
     it('should not throw even if the value would fail create() rules', () => {

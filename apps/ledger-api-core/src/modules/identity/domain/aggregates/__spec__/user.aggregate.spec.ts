@@ -3,9 +3,10 @@ import { Email, Password, UserId } from '@/modules/identity/domain';
 import { IdentityEvents } from '@/shared/domain';
 
 const makeUser = () => {
-  const id = UserId.create('test-uuid-12345');
-  const email = Email.create('user@example.com');
+  const id = UserId.from('test-uuid-12345');
+  const email = Email.from('user@example.com');
   const password = Password.fromHash('hashed-password');
+
   return { id, email, password };
 };
 
@@ -16,8 +17,8 @@ describe('User aggregate', () => {
       const user = User.register(id, email, password);
 
       expect(user.id.value).toBe('test-uuid-12345');
-      expect(user.email.value).toBe('user@example.com');
-      expect(user.passwordHash.value).toBe('hashed-password');
+      expect(user.email.address).toBe('user@example.com');
+      expect(user.passwordHash.content).toBe('hashed-password');
       expect(user.mfaEnabled).toBe(false);
       expect(user.mfaSecret).toBeUndefined();
     });

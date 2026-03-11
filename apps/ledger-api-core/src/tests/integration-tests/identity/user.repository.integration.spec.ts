@@ -18,8 +18,8 @@ describe('UserRepository (integration)', () => {
 
   it('should persist a new user via save()', async () => {
     const user = User.register(
-      UserId.create('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
-      Email.create('integration@test.com'),
+      UserId.from('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
+      Email.from('integration@test.com'),
       Password.fromHash('$argon2id$testhash'),
     );
 
@@ -38,28 +38,28 @@ describe('UserRepository (integration)', () => {
 
   it('should find a user by email via findByEmail()', async () => {
     const user = User.register(
-      UserId.create('b1ffcd00-1d1c-5fg9-cc7e-7cc0ce491b22'),
-      Email.create('findme@test.com'),
+      UserId.from('b1ffcd00-1d1c-5fg9-cc7e-7cc0ce491b22'),
+      Email.from('findme@test.com'),
       Password.fromHash('$argon2id$anotherhash'),
     );
 
     await repo.save(user);
 
-    const found = await repo.findByEmail(Email.create('findme@test.com'));
+    const found = await repo.findByEmail(Email.create('findme@test.com').value);
 
     expect(found).not.toBeNull();
-    expect(found!.email.value).toBe('findme@test.com');
+    expect(found!.email.address).toBe('findme@test.com');
     expect(found!.mfaEnabled).toBe(false);
   });
 
   it('should return null when user does not exist', async () => {
-    const found = await repo.findByEmail(Email.create('ghost@test.com'));
+    const found = await repo.findByEmail(Email.create('ghost@test.com').value);
     expect(found).toBeNull();
   });
 
   it('should upsert without creating a duplicate', async () => {
-    const id = UserId.create('c2ggde11-2e2d-6gh0-dd8f-8dd1df502c33');
-    const email = Email.create('upsert@test.com');
+    const id = UserId.from('c2ggde11-2e2d-6gh0-dd8f-8dd1df502c33');
+    const email = Email.from('upsert@test.com');
 
     const user = User.register(id, email, Password.fromHash('hash-v1'));
     await repo.save(user);
