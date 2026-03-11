@@ -15,6 +15,10 @@ class UserId extends ValueObject<UserIdProps> {
     return new UserId({ value: id });
   }
 
+  public static fromValue(value: string): UserId {
+    return new UserId({ value });
+  }
+
   get value(): string {
     return this.props.value;
   }

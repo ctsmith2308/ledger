@@ -1,13 +1,14 @@
 import { User as PrismaUser } from '@generated/prisma/client'; // Import the generated type from Prisma.schema.
-import { User, Email, Password } from '@/modules/identity/domain';
+import { User, UserId, Email, Password } from '@/modules/identity/domain';
 
 class UserPrismaMapper {
   static toDomain(raw: PrismaUser): User {
+    const id = UserId.fromValue(raw.id);
     const email = Email.fromValue(raw.email);
     const password = Password.fromHash(raw.passwordHash);
 
     return User.reconstitute(
-      raw.id,
+      id,
       email,
       password,
       raw.mfaEnabled,
@@ -17,7 +18,7 @@ class UserPrismaMapper {
 
   static toPersistence(user: User) {
     return {
-      id: user.id,
+      id: user.id.value,
       email: user.email.value,
       passwordHash: user.passwordHash.value,
       mfaEnabled: user.mfaEnabled,

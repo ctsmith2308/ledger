@@ -1,0 +1,15 @@
+services:
+  db_test:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ledger_test
+    ports:
+      - '5433:5432'
+    volumes:
+      - ledger_test_data:/var/lib/postgresql/data
+volumes:
+  ledger_test_data:
+    driver: local

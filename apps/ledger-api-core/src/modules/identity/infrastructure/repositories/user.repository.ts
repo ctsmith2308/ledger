@@ -11,7 +11,7 @@ class UserRepository implements IUserRepository {
     const data = UserPrismaMapper.toPersistence(user);
 
     await this.prisma.user.upsert({
-      where: { id: user.id },
+      where: { id: user.id.value },
       update: data,
       create: data,
     });
