@@ -48,7 +48,6 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      # test: ['CMD', 'curl', '-f', 'http://localhost:3001/health || exit 1']
       test: ['CMD-SHELL', 'wget -qO- http://localhost:3001/health || exit 1']
       interval: 30s
       timeout: 10s
@@ -71,14 +70,11 @@ services:
       NODE_ENV: development
       CORE_API_URL: http://core-api:3001 # Docker internal DNS — not localhost
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'wget -qO- http://localhost:3000/gateway-health || exit 1',
-        ]
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3000/health || exit 1']
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 45s
     depends_on:
       core-api:
         condition: service_healthy

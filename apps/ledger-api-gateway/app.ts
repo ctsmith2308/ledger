@@ -16,12 +16,6 @@ async function buildApp() {
     timeWindow: '1 minute',
   });
 
-  await app.register(fastifyHttpProxy, {
-    upstream: CORE_API_URL,
-    prefix: '/api/auth',
-    http2: false,
-  });
-
   // TODO
   // Plugins
   // await app.register(fastifyCors, {
@@ -45,6 +39,12 @@ async function buildApp() {
   // Api "health" routes - no auth
   await app.register(appHealthRoutes);
   await app.register(webhookRoutes, { prefix: '/webhooks' });
+
+  await app.register(fastifyHttpProxy, {
+    upstream: CORE_API_URL,
+    prefix: '/api',
+    http2: false,
+  });
 
   await app.register(
     async (protectedApp) => {
