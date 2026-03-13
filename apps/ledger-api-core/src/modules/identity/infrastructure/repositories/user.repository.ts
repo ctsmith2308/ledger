@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { type IUserRepository, User, Email } from '@/modules/identity/domain';
+import {
+  type IUserRepository,
+  User,
+  Email,
+  UserId,
+} from '@/modules/identity/domain';
 import { UserPrismaMapper } from '@/modules/identity/infrastructure/persistence';
 import { PrismaService } from '@/shared/infrastructure/persistence';
 
@@ -15,6 +20,14 @@ class UserRepository implements IUserRepository {
       update: data,
       create: data,
     });
+  }
+
+  async findById(id: UserId): Promise<User | null> {
+    const record = await this.prisma.user.findUnique({
+      where: { id: id.value },
+    });
+
+    return record ? UserPrismaMapper.toDomain(record) : null;
   }
 
   async findByEmail(email: Email): Promise<User | null> {

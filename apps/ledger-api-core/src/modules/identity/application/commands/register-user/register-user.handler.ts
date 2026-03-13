@@ -3,8 +3,6 @@ import { type ICommandHandler, CommandHandler, EventBus } from '@nestjs/cqrs';
 
 import { type DomainEvent, Result } from '@/shared/domain';
 
-import { RegisterUserResponse } from './register-user.types';
-
 import {
   IUserRepository,
   IPasswordHasher,
@@ -18,7 +16,11 @@ import {
   Email,
 } from '@/modules/identity/domain';
 
-import { RegisterUserCommand } from './register-user.command';
+import {
+  RegisterUserCommand,
+  type RegisterUserResponse,
+} from './register-user.command';
+import { UserMapper } from '@/modules/identity/application/mappers';
 
 @CommandHandler(RegisterUserCommand)
 class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
@@ -39,7 +41,10 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
     const existing = await this.userRepository.findByEmail(email);
     if (existing) {
       // Return success to prevent enumeration,
-      return Result.ok({ id: existing.id.value });
+      return Result.ok({
+        status: 'PENDING_VERIFICATION',
+        message: 'Check your email to proceed.',
+      });
     }
 
     // 3. Validate Password (Domain)
@@ -55,16 +60,21 @@ class RegisterUserHandler implements ICommandHandler<RegisterUserCommand> {
     // 5. Domain Logic (The actual registration)
     const user = User.register(userId, email, passwordHash);
 
-    // 6. Persistence & Side Effects
+    // 6. Persistence
     await this.userRepository.save(user);
 
+    // 7. Side Effects
     const events = user.pullDomainEvents();
 
     events.forEach((event: DomainEvent) => {
       this.eventBus.publish(event);
     });
 
-    return Result.ok({ id: user.id.value });
+    // 8. Mapped Output
+    return Result.ok({
+      status: 'SUCCESS',
+      ...UserMapper.toResponse(user),
+    });
   }
 }
 

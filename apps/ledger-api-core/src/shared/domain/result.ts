@@ -1,4 +1,4 @@
-class Result<T, E> {
+class Result<T, E extends Error> {
   public readonly isFailure: boolean;
 
   private constructor(
@@ -25,12 +25,19 @@ class Result<T, E> {
     return this._error as E;
   }
 
+  public getValueOrThrow(): T {
+    if (this.isFailure) {
+      throw this._error!;
+    }
+    return this._value as T;
+  }
+
   // Use 'never' for the side that isn't present
-  public static ok<T, E = never>(value: T): Result<T, E> {
+  public static ok<T, E extends Error = never>(value: T): Result<T, E> {
     return new Result<T, E>(true, undefined, value);
   }
 
-  public static fail<E, T = never>(error: E): Result<T, E> {
+  public static fail<E extends Error, T = never>(error: E): Result<T, E> {
     return new Result<T, E>(false, error, undefined);
   }
 }
