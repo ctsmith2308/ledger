@@ -1,0 +1,41 @@
+{
+  "name": "ledger-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "prisma:migrate:test": "dotenvx run -f .env.test -- npx prisma migrate deploy",
+    "test:int": "dotenvx run -f .env.test -- vitest run --config vitest.config.integration.ts",
+    "test:int:watch": "dotenvx run -f .env.test -- vitest --config vitest.config.integration.ts",
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.55.1",
+    "@prisma/client": "^7.5.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "prisma": "^7.5.0",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.0"
+  }
+}
