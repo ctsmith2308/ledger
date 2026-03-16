@@ -39,7 +39,7 @@ Fill in the required values in `.env.local`:
 | `POSTGRES_PASSWORD` | Postgres password (Docker) |
 | `POSTGRES_DB` | Postgres database name (Docker) |
 
-> `.env.local` is gitignored and must never be committed. Use `.env.example` as the reference for collaborators.
+> **Important:** Only `.env.example` and `.env.test.example` are safe to commit — they contain no secrets and serve as the reference for collaborators. All other env files (`.env`, `.env.local`, `.env.test`) are gitignored and must never be committed. A preflight check enforces this on every push and pull request.
 
 ### 3. Start infrastructure
 

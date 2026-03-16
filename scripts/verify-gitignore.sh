@@ -43,29 +43,20 @@ assert_not_ignored() {
   echo "PASS: not ignored -> $path"
 }
 
-echo "Checking single-source .gitignore layout..."
-if find apps -type f -name '.gitignore' | grep -q .; then
-  echo "FAIL: found nested app .gitignore files; expected only root .gitignore"
-  find apps -type f -name '.gitignore' -print
-  failures=$((failures + 1))
-else
-  echo "PASS: no nested app .gitignore files"
-fi
+echo "Checking critical ignore rules..."
+assert_ignored "node_modules/dummy.txt" "/node_modules"
+assert_ignored ".next/dummy.txt" "/.next/"
+assert_ignored ".env.local" ".env"
+assert_ignored ".env.test" ".env"
+assert_ignored "logs/dummy.txt" "logs/"
+assert_ignored ".claude/settings.json" ".claude"
 
 echo
-echo "Checking critical ignore rules..."
-assert_ignored "apps/ledger-api-core/node_modules/dummy.txt" "apps/*/node_modules/"
-assert_ignored "apps/ledger-api-gateway/node_modules/dummy.txt" "apps/*/node_modules/"
-assert_ignored "apps/ledger-frontend/node_modules/dummy.txt" "apps/*/node_modules/"
-assert_ignored "apps/ledger-api-core/dist/dummy.js" "apps/ledger-api-core/dist/"
-assert_ignored "apps/ledger-api-core/build/dummy.js" "apps/ledger-api-core/build/"
-assert_ignored "apps/ledger-api-core/coverage/dummy.txt" "apps/ledger-api-core/coverage/"
-assert_ignored "apps/ledger-api-core/.env" "apps/ledger-api-core/.env"
-assert_ignored "apps/ledger-api-core/.env.local" "apps/ledger-api-core/.env.local"
-assert_ignored "apps/ledger-frontend/.nuxt/dummy.txt" "apps/ledger-frontend/.nuxt/"
-assert_ignored "apps/ledger-frontend/dist/dummy.js" "apps/ledger-frontend/dist/"
-assert_ignored "apps/ledger-frontend/.env" "apps/ledger-frontend/.env"
-assert_not_ignored "apps/ledger-frontend/.env.example"
+echo "Checking critical files are not ignored..."
+assert_not_ignored ".env.example"
+assert_not_ignored ".env.test.example"
+assert_not_ignored "scripts/verify-gitignore.sh"
+assert_not_ignored ".github/workflows/gitignore-preflight.yml"
 
 echo
 echo "Checking for tracked files that should now be ignored..."
