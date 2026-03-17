@@ -1,4 +1,4 @@
-import { IRequest, Result } from '@/core/shared/domain';
+import { Result } from '@/core/shared/domain';
 import { DomainException } from '@/core/shared/domain/exceptions';
 
 type RegisterUserResponseData =
@@ -7,7 +7,7 @@ type RegisterUserResponseData =
 
 type RegisterUserResponse = Result<RegisterUserResponseData, DomainException>;
 
-interface RegisterUserCommand extends IRequest<RegisterUserResponse> {
+interface RegisterUserCommand {
   readonly email: string;
   readonly password: string;
 }

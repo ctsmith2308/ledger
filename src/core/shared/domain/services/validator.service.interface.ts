@@ -1,7 +1,5 @@
-import { Result, ValidationException } from '@/core/shared/domain';
-
 interface IValidator<T> {
-  validate(data: unknown): Result<T, ValidationException>;
+  parse(data: unknown): T;
 }
 
 export type { IValidator };

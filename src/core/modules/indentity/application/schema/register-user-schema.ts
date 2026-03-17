@@ -1,12 +1,14 @@
 import { z } from 'zod';
-import { RegisterUserCommand } from '../commands/register-user.command';
+
 import { ZodValidator } from '@/core/shared/infrastructure/services/zod-validator.service';
 
-const schema: z.ZodSchema<RegisterUserCommand> = z.object({
-  email: z.email(),
-  password: z.string().min(8),
-});
+import { RegisterUserCommand } from '../commands/register-user.command';
 
-const RegisterUserValidator = () => new ZodValidator<RegisterUserCommand>(schema);
+const registerUserValidator = new ZodValidator<RegisterUserCommand>(
+  z.object({
+    email: z.email(),
+    password: z.string().min(8),
+  }),
+);
 
-export { RegisterUserValidator };
+export { registerUserValidator };

@@ -1,4 +1,4 @@
-import { IRequestHandler, Result } from '@/core/shared/domain';
+import { IHandler, Result } from '@/core/shared/domain';
 import {
   IPasswordHasher,
   IIdGenerator,
@@ -14,7 +14,7 @@ import {
 } from './register-user.command';
 import { UserMapper } from '../mappers/user.mapper';
 
-class RegisterUserHandler implements IRequestHandler<RegisterUserCommand> {
+class RegisterUserHandler implements IHandler<RegisterUserCommand, RegisterUserResponse> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly hasher: IPasswordHasher,
