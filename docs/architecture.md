@@ -2,6 +2,27 @@
 
 This document covers the deliberate architectural decisions made in this project and the reasoning behind them. This project is an experiment and case study in pragmatic, framework-agnostic application architecture.
 
+## The Full Portability Argument
+
+The core architectural win over Next.js Server Actions is not just convenience — it is genuine framework independence across the entire stack:
+
+| Concern | This stack | Server Actions |
+|---|---|---|
+| API layer | tRPC — adapter swap to port | Next.js only |
+| Auth | httpOnly cookie via tRPC context — same security posture as Server Actions, framework agnostic | Next.js session/cookie handling |
+| Server state | TanStack Query — React, Vue, Svelte adapters | `use()`, `useFormState()` — React only |
+| Client state | Nanostores — React, Vue, Svelte adapters | React context / Zustand etc. |
+| Type safety | End-to-end via tRPC, no code generation | Server Action return types only |
+| Middleware | Once in `procedure.ts`, applied everywhere | Per action wrapper functions |
+
+Swapping Next.js for SvelteKit or Nuxt tomorrow means:
+- Replace `@nanostores/react` with `@nanostores/vue` or `@nanostores/svelte`
+- Replace `@tanstack/react-query` with the Vue or Svelte adapter
+- Replace the Next.js route handler in `src/app/api/trpc/` with the target framework's equivalent
+- Everything in `src/core/` and `src/trpc/` is untouched
+
+The domain logic, application handlers, tRPC procedures, error handling, and validation abstraction are all framework-agnostic by design. Next.js is the current host, not a dependency.
+
 ## DDD-Lite — Pragmatic Domain Driven Design
 
 Full DDD with a framework like NestJS wires dependencies at runtime via an IoC container. Decorators like `@Injectable()` and `@InjectRepository()` instruct the container to resolve and inject dependencies automatically — powerful, but opaque.
