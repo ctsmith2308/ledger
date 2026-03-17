@@ -109,7 +109,32 @@ The frontend never interacts with URLs directly — it uses the typed client (`t
 
 Next.js App Router provides API route handlers that cover all server-side concerns for this application — authentication, business logic, third-party integrations, and webhooks. Adding a separate Express or Fastify server would introduce a second process, a gateway or proxy to manage, and additional deployment complexity with no meaningful benefit at this scale.
 
-If multi-platform support were required — serving a mobile app, a separate React Native client, or third-party integrations alongside the web app — a dedicated API server with a gateway would be the right call. At that point the `src/core/` and `src/trpc/` layers are already portable and a standalone server could be introduced without rewriting application logic.
+If multi-platform support were required — serving a mobile app, a separate React Native client, or third-party integrations alongside the web app — a dedicated API server with a gateway would be the right call. The migration is straightforward because tRPC has first-class adapters for both. The same `appRouter`, procedures, and middleware carry over — only the adapter changes:
+
+```ts
+// Express
+import { createExpressMiddleware } from '@trpc/server/adapters/express';
+
+app.use('/api/trpc', createExpressMiddleware({
+  router: appRouter,
+  createContext: ({ req }): Context => ({ headers: req.headers }),
+}));
+```
+
+```ts
+// Fastify
+import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
+
+await fastify.register(fastifyTRPCPlugin, {
+  prefix: '/api/trpc',
+  trpcOptions: {
+    router: appRouter,
+    createContext: ({ req }): Context => ({ headers: req.headers }),
+  },
+});
+```
+
+`src/core/` and `src/trpc/routers/` are untouched. The only change is the server entry point.
 
 ## Why not NestJS
 
