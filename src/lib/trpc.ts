@@ -1,11 +1,11 @@
 'use client';
 
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import { createTRPCClient, httpLink } from '@trpc/client';
 
 import type { AppRouter } from '@/trpc/routers';
 
 const trpcClient = createTRPCClient<AppRouter>({
-  links: [httpBatchLink({ url: '/api/trpc' })],
+  links: [httpLink({ url: '/api/trpc' })],
 });
 
 export { trpcClient };

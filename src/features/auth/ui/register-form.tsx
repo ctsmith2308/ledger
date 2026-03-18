@@ -12,22 +12,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-// import { useRegisterUser } from '../composables/use-register.composable';
+import { useRegisterUser } from '../composables/use-register.composable';
 
 function RegisterForm() {
-  // const { register, loading, error } = useRegisterUser();
+  const { register, loading, error } = useRegisterUser();
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const form = new FormData(e.currentTarget);
 
-    console.log('loggin in!');
-
-    // register({
-    //   email: form.get('email') as string,
-    //   password: form.get('password') as string,
-    // });
+    register({
+      email: form.get('email') as string,
+      password: form.get('password') as string,
+    });
   };
 
   return (

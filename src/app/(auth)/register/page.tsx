@@ -1,5 +1,7 @@
+import { RegisterForm } from '@/features/auth/ui/register-form';
+
 function RegisterPage() {
-  return <div>Im the RegisterPage</div>;
+  return <RegisterForm />;
 }
 
 export default RegisterPage;
