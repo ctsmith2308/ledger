@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/app/_components/ui/button';
 import {
+  Button,
   Card,
   CardAction,
   CardContent,
@@ -9,15 +9,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/app/_components/ui/card';
-import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@/app/_components/ui/field';
-import { Input } from '@/app/_components/ui/input';
-import { Spinner } from '@/app/_components/ui/spinner';
+  Input,
+  Spinner,
+} from '@/app/_components';
 
 import { useLoginForm, type RegisterFormApi } from '../composables';
 

@@ -17,11 +17,10 @@ Here dependencies are wired explicitly at startup:
 ```ts
 // identity.module.ts
 const repo = new UserRepository(prisma);
-const hasher = new ArgonPasswordHasher();
-const idGenerator = new UuIdV4IdGenerator();
 
 const identityModule = {
-  registerUser: new RegisterUserHandler(repo, hasher, idGenerator),
+  registerUser: new RegisterUserHandler(repo, PasswordHasher, IdGenerator),
+  loginUser: new LoginUserHandler(repo, PasswordHasher, JwtService),
 };
 ```
 
@@ -45,72 +44,86 @@ class RegisterUserHandler implements IHandler<RegisterUserCommand, RegisterUserR
 
 No decorators, no IoC tokens — just a typed contract that self-documents intent and enforces the `execute` signature consistently across all handlers.
 
+## Feature-Sliced Design (FSD) — UI Layer
+
+The `src/app/` directory follows FSD conventions. Each layer has a single, explicit responsibility and dependencies flow strictly one way — lower layers never import from higher ones.
+
+| Layer | Directory | Responsibility |
+|---|---|---|
+| components | `_components/` | Primitive, stateless UI (button, input, card). Flat, no subdirectories. |
+| widgets | `_widgets/` | Compositional UI blocks combining primitives into meaningful sections. |
+| providers | `_providers/` | App-level context setup — data fetching, auth, theming. Infrastructure, not UI. |
+| features | `_features/` | Domain feature modules. Each owns `actions/`, `composables/`, and `ui/`. |
+| lib | `_lib/` | Shared utilities, services, and factories consumed across features. |
+
+**Dependency rule:** `_lib` → `_components` → `_widgets` → `_features` → routes. No layer imports from above itself. Features never import from other features.
+
+Each layer exposes a barrel `index.ts`. Consumers always import from the barrel, never from deep internal paths.
+
 ## Transport Layer — Next.js Server Actions
 
-Server actions act as the transport layer — thin entry points that validate input, call domain handlers, and return a consistent `ActionResult<T>` shape. They are the equivalent of controllers in a traditional MVC stack.
+Server actions act as the transport layer — thin entry points that call domain handlers and return a consistent `ActionResult<T>` shape. They are the equivalent of controllers in a traditional MVC stack.
 
-### `withAction` — the action wrapper
+### `createAction` — the action factory
 
-All server actions are wrapped with `withAction` which provides:
-- Optional Zod schema validation via `schema.parse()` — throws `ZodError` on failure
-- Consistent `ActionResult<T>` response shape
-- Centralised error handling via `mapError` — `ZodError`, `DomainException`, and unexpected errors all map to the same failure shape
+All server actions are created via `createAction` (`_lib/factories/create-action.ts`), which provides:
+- Optional session authentication via `protected: true`
+- Consistent `ActionResult<T>` response shape via `_toSuccess` / `_toFailure` mappers
+- Centralised error handling — `DomainException`, `ZodError`, and unexpected errors all flow to one catch boundary via `mapError`
 
 ```ts
-// with validation
-const registerAction = withAction(async (input) => {
-  const result = await identityModule.registerUser.execute(input);
-  return result.getValueOrThrow();
-}, registerUserSchema);
-
-// without validation — sign out, toggles
-const signOutAction = withAction(async () => {
-  // side effect only
+// Unprotected — input validation is the handler's responsibility
+const registerAction = createAction({
+  handler: async (input: unknown) => {
+    const dto = SchemaValidator.parse(registerUserSchema, input).getValueOrThrow();
+    const result = await identityModule.registerUser.execute(dto);
+    return result.getValueOrThrow();
+  },
 });
-```
 
-### `withAuth` — protected actions
-
-Protected actions compose with `withAuth`, which reads and verifies the JWT session cookie before executing the handler. The verified user is injected into the handler:
-
-```ts
-const getProfileAction = withAuth(async (input, user) => {
-  return identityModule.getProfile.execute({ userId: user.id });
-}, schema);
+// Protected — session resolved and injected before handler runs
+const getProfileAction = createAction({
+  protected: true,
+  handler: async (session: AuthUser, input: unknown) => {
+    const result = await identityModule.getProfile.execute({ userId: session.id });
+    return result.getValueOrThrow();
+  },
+});
 ```
 
 ### Full request flow
 
 ```
-useMutation({ mutationFn: registerAction })   # composable (client)
-  → registerAction(data)                       # server action — 'use server'
-    → withAction — schema.parse(data)          # validates input
-      → identityModule.registerUser.execute()  # domain handler
-        → src/core/                            # pure domain logic
-    → ActionResult<T>                          # returned to client
-  → onSuccess(result)                          # composable handles result
-    → result.success → router.push('/login')
+useMutation({ mutationFn: registerAction })     # composable (client)
+  → registerAction(data)                         # server action — 'use server'
+    → createAction — auth check (if protected)   # session resolved or throws
+      → handler(input)                           # schema validation + domain call
+        → identityModule.registerUser.execute()  # pure domain handler
+          → src/core/                            # pure domain logic
+    → ActionResult<T>                            # returned to client
+  → onSuccess(result)                            # composable handles result
+    → result.success → router.push('/dashboard')
     → !result.success → toast.error(result.message)
 ```
 
 ### Auth flow
 
 ```
-loginAction(data)                    # server action
+loginAction(data)                      # server action
   → identityModule.loginUser.execute()
-  → cookies().set('session', jwt)    # httpOnly cookie
+  → SessionService.set(jwt)            # httpOnly cookie
   → ActionResult<{ success: true }>
 
-middleware.ts                        # Next.js middleware — runs at edge
+middleware.ts                          # Next.js middleware — runs at edge
   → reads 'session' cookie
-  → jwtVerify(token, secret)
+  → JwtService.verify(token)
   → invalid/missing → redirect /login
   → valid → NextResponse.next()
 
-withAuth(handler)                    # protected server action
+createAction({ protected: true })      # protected server action
   → reads 'session' cookie
-  → jwtVerify(token, secret)
-  → injects user into handler
+  → JwtService.verify(token)
+  → injects AuthUser into handler
 ```
 
 ## Why not NestJS
@@ -119,22 +132,49 @@ NestJS was considered for its first-class DDD/CQRS support. The decision was mad
 
 ## Validation
 
-Validation is decoupled from the transport layer via `IValidator<T>`:
+Validation occurs at two explicit boundaries, each with a distinct responsibility.
+
+### 1. Transport boundary — `SchemaValidator`
+
+`SchemaValidator` in the infrastructure layer wraps Zod's `safeParse` and returns a `Result<T, DomainException>`:
 
 ```ts
-interface IValidator<T> {
-  parse(data: unknown): T;
-}
+const dto = SchemaValidator.parse(registerUserSchema, input).getValueOrThrow();
 ```
 
-`ZodValidator<T>` implements this interface in the infrastructure layer. `withAction` accepts any Zod schema directly — `schema.parse()` throws a `ZodError` on failure which flows through `mapError` to a consistent `VALIDATION_ERROR` response.
+This is the first gate — it validates that the raw incoming payload has the correct shape and types before it reaches the domain. `SchemaValidator.parse` accepts `unknown` input and infers the output type from the schema. A `ZodError` on failure flows through `mapError` to a consistent `VALIDATION_ERROR` response.
 
-Swapping Zod for another library means implementing `IValidator<T>` once. Server actions and the domain layer are untouched.
+Swapping Zod means replacing `SchemaValidator` once. Server actions and the domain layer are untouched.
 
-## `_lib/utils/` vs `_lib/services/`
+### 2. Domain boundary — value objects
 
-| | `_lib/utils/` | `_lib/services/` |
+Schema validation ensures the payload is structurally correct, but it does not enforce business rules. That is the responsibility of value objects in the domain layer:
+
+```ts
+// Email enforces valid format at construction time
+const email = Email.create(cmd.email).getValueOrThrow(); // throws InvalidEmailException
+
+// Password enforces strength rules
+const password = Password.create(cmd.password).getValueOrThrow(); // throws InvalidPasswordException
+```
+
+Value objects validate domain invariants — rules that must always hold true regardless of where the data came from. If a value object fails, a typed `DomainException` is thrown and flows to the same catch boundary via `mapError`.
+
+### Why two layers?
+
+| | `SchemaValidator` | Value objects |
 |---|---|---|
-| Example | `cn`, `withAction`, `withAuth` | monitoring SDKs, external clients |
-| Side effects | None | Yes — network, logging, notifications |
-| Stateful | No | Yes — config, connections |
+| Layer | Infrastructure | Domain |
+| Validates | Shape and types | Business invariants |
+| Fails with | `ZodError` → `VALIDATION_ERROR` | `DomainException` → `VALIDATION_ERROR` |
+| Swappable | Yes — replace `SchemaValidator` | No — these are the rules |
+
+Both map to the same `VALIDATION_ERROR` response externally. Internally they are distinct — schema validation is a transport concern, value object validation is a domain concern.
+
+## `_lib/` structure
+
+| Directory | Example | Responsibility |
+|---|---|---|
+| `_lib/factories/` | `createAction` | HOFs that produce typed, reusable wrappers |
+| `_lib/services/` | `SessionService` | Stateful clients, external integrations |
+| `_lib/utils/` | `cn` | Pure, stateless utility functions |

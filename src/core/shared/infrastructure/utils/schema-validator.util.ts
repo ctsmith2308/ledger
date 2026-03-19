@@ -5,6 +5,7 @@ import {
   Result,
   ValidationException,
 } from '@/core/shared/domain';
+
 const SchemaValidator = {
   parse<T>(schema: z.ZodType<T>, data: unknown): Result<T, DomainException> {
     const result = schema.safeParse(data);
