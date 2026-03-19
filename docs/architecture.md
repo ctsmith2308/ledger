@@ -1,27 +1,12 @@
 # Architecture
 
-This document covers the deliberate architectural decisions made in this project and the reasoning behind them. This project is an experiment and case study in pragmatic, framework-agnostic application architecture.
+This document covers the deliberate architectural decisions made in this project and the reasoning behind them. This project is an experiment and case study in pragmatic, framework-agnostic application architecture using Next.js Server Actions as the transport layer over a pure domain core.
 
-## The Full Portability Argument
+## The Core Principle — Domain Purity
 
-The core architectural win over Next.js Server Actions is not just convenience — it is genuine framework independence across the entire stack:
+The domain knows nothing about Next.js, server actions, cookies, or HTTP. It only knows about business rules. The transport layer (server actions) and the domain are deliberately kept separate — server actions call domain handlers, domain handlers return results, server actions map those results to responses.
 
-| Concern | This stack | Server Actions |
-|---|---|---|
-| API layer | tRPC — adapter swap to port | Next.js only |
-| Auth | httpOnly cookie via tRPC context — same security posture as Server Actions, framework agnostic | Next.js session/cookie handling |
-| Server state | TanStack Query — React, Vue, Svelte adapters | `use()`, `useFormState()` — React only |
-| Client state | Nanostores — React, Vue, Svelte adapters | React context / Zustand etc. |
-| Type safety | End-to-end via tRPC, no code generation | Server Action return types only |
-| Middleware | Once in `procedure.ts`, applied everywhere | Per action wrapper functions |
-
-Swapping Next.js for SvelteKit or Nuxt tomorrow means:
-- Replace `@nanostores/react` with `@nanostores/vue` or `@nanostores/svelte`
-- Replace `@tanstack/react-query` with the Vue or Svelte adapter
-- Replace the Next.js route handler in `src/app/api/trpc/` with the target framework's equivalent
-- Everything in `src/core/` and `src/trpc/` is untouched
-
-The domain logic, application handlers, tRPC procedures, error handling, and validation abstraction are all framework-agnostic by design. Next.js is the current host, not a dependency.
+This means swapping the transport layer leaves `src/core/` completely untouched.
 
 ## DDD-Lite — Pragmatic Domain Driven Design
 
@@ -60,81 +45,73 @@ class RegisterUserHandler implements IHandler<RegisterUserCommand, RegisterUserR
 
 No decorators, no IoC tokens — just a typed contract that self-documents intent and enforces the `execute` signature consistently across all handlers.
 
-## Why tRPC instead of REST or Next.js Server Actions
+## Transport Layer — Next.js Server Actions
 
-### Server Actions
+Server actions act as the transport layer — thin entry points that validate input, call domain handlers, and return a consistent `ActionResult<T>` shape. They are the equivalent of controllers in a traditional MVC stack.
 
-Server Actions were evaluated and not adopted for the following reasons:
+### `withAction` — the action wrapper
 
-- No structured middleware story — auth, logging, and error handling would need to be applied manually per action via wrapper functions.
-- Tightly coupled to Next.js — porting to Nuxt/Vue, SvelteKit, or any other frontend framework would require rewriting every entry point.
-- No end-to-end type safety between client and server beyond what manual TypeScript provides.
-
-### tRPC
-
-- Middleware (auth, logging, error sanitisation) is defined once in `src/trpc/procedure.ts` and applied to every procedure automatically — no per-route wiring.
-- **Framework agnostic** — the entire `src/core/` layer and `src/trpc/` layer are portable. Swapping Next.js for SvelteKit or Nuxt requires only replacing the transport adapter, not the application logic.
-- End-to-end type safety without code generation — renaming a procedure or changing its input shape produces an immediate TypeScript error at the call site, not a silent runtime failure.
-- Zod schemas are defined once in the application layer and shared between client validation and server-side input parsing — no duplication.
-- React Query is included via `@trpc/react-query`, giving caching, loading states, and optimistic updates for free.
-
-### tRPC vs REST — practical comparison
-
-| Concern | tRPC | REST |
-|---|---|---|
-| Type safety | End-to-end, automatic | Manual, error-prone |
-| Middleware | Once, all procedures | Per route or custom wrapper |
-| Client calls | `trpc.identity.register.useMutation()` | `fetch` + manual error handling |
-| Schema sharing | Zod schema shared client/server | Duplicate or trust the wire |
-| Refactoring | TS breaks call site immediately | Silent runtime failure |
-| Framework portability | Adapter swap only | Full rewrite of entry points |
-| External consumers | Awkward (dot notation, wire format) | Natural |
-
-The only REST win is external consumers — third-party clients, mobile apps, or webhooks. Inbound webhooks (e.g. Plaid) use plain Next.js route handlers at `/api/webhooks/*` since the request format is controlled by the external service.
-
-### URL convention
-
-tRPC uses dot notation for procedure paths. When testing via Postman or similar tools, procedures are called as:
-
-```
-POST http://localhost:3000/api/trpc/identity.register
-Content-Type: application/json
-
-{"json": {"email": "test@test.com", "password": "Password1!"}}
-```
-
-The frontend never interacts with URLs directly — it uses the typed client (`trpc.identity.register.useMutation()`).
-
-## Why not Express or Fastify
-
-Next.js App Router provides API route handlers that cover all server-side concerns for this application — authentication, business logic, third-party integrations, and webhooks. Adding a separate Express or Fastify server would introduce a second process, a gateway or proxy to manage, and additional deployment complexity with no meaningful benefit at this scale.
-
-If multi-platform support were required — serving a mobile app, a separate React Native client, or third-party integrations alongside the web app — a dedicated API server with a gateway would be the right call. The migration is straightforward because tRPC has first-class adapters for both. The same `appRouter`, procedures, and middleware carry over — only the adapter changes:
+All server actions are wrapped with `withAction` which provides:
+- Optional Zod schema validation via `schema.parse()` — throws `ZodError` on failure
+- Consistent `ActionResult<T>` response shape
+- Centralised error handling via `mapError` — `ZodError`, `DomainException`, and unexpected errors all map to the same failure shape
 
 ```ts
-// Express
-import { createExpressMiddleware } from '@trpc/server/adapters/express';
+// with validation
+const registerAction = withAction(async (input) => {
+  const result = await identityModule.registerUser.execute(input);
+  return result.getValueOrThrow();
+}, registerUserSchema);
 
-app.use('/api/trpc', createExpressMiddleware({
-  router: appRouter,
-  createContext: ({ req }): Context => ({ headers: req.headers }),
-}));
-```
-
-```ts
-// Fastify
-import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
-
-await fastify.register(fastifyTRPCPlugin, {
-  prefix: '/api/trpc',
-  trpcOptions: {
-    router: appRouter,
-    createContext: ({ req }): Context => ({ headers: req.headers }),
-  },
+// without validation — sign out, toggles
+const signOutAction = withAction(async () => {
+  // side effect only
 });
 ```
 
-`src/core/` and `src/trpc/routers/` are untouched. The only change is the server entry point.
+### `withAuth` — protected actions
+
+Protected actions compose with `withAuth`, which reads and verifies the JWT session cookie before executing the handler. The verified user is injected into the handler:
+
+```ts
+const getProfileAction = withAuth(async (input, user) => {
+  return identityModule.getProfile.execute({ userId: user.id });
+}, schema);
+```
+
+### Full request flow
+
+```
+useMutation({ mutationFn: registerAction })   # composable (client)
+  → registerAction(data)                       # server action — 'use server'
+    → withAction — schema.parse(data)          # validates input
+      → identityModule.registerUser.execute()  # domain handler
+        → src/core/                            # pure domain logic
+    → ActionResult<T>                          # returned to client
+  → onSuccess(result)                          # composable handles result
+    → result.success → router.push('/login')
+    → !result.success → toast.error(result.message)
+```
+
+### Auth flow
+
+```
+loginAction(data)                    # server action
+  → identityModule.loginUser.execute()
+  → cookies().set('session', jwt)    # httpOnly cookie
+  → ActionResult<{ success: true }>
+
+middleware.ts                        # Next.js middleware — runs at edge
+  → reads 'session' cookie
+  → jwtVerify(token, secret)
+  → invalid/missing → redirect /login
+  → valid → NextResponse.next()
+
+withAuth(handler)                    # protected server action
+  → reads 'session' cookie
+  → jwtVerify(token, secret)
+  → injects user into handler
+```
 
 ## Why not NestJS
 
@@ -150,10 +127,14 @@ interface IValidator<T> {
 }
 ```
 
-`ZodValidator<T>` implements this interface in the infrastructure layer. tRPC's `.input()` accepts any object with a `parse` method, so validators plug in directly with no adapter:
+`ZodValidator<T>` implements this interface in the infrastructure layer. `withAction` accepts any Zod schema directly — `schema.parse()` throws a `ZodError` on failure which flows through `mapError` to a consistent `VALIDATION_ERROR` response.
 
-```ts
-.input(registerUserValidator)
-```
+Swapping Zod for another library means implementing `IValidator<T>` once. Server actions and the domain layer are untouched.
 
-Swapping Zod for another library means implementing `IValidator<T>` once. The tRPC procedures and application layer are untouched.
+## `_lib/utils/` vs `_lib/services/`
+
+| | `_lib/utils/` | `_lib/services/` |
+|---|---|---|
+| Example | `cn`, `withAction`, `withAuth` | monitoring SDKs, external clients |
+| Side effects | None | Yes — network, logging, notifications |
+| Stateful | No | Yes — config, connections |

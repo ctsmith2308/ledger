@@ -6,7 +6,7 @@ A personal finance management app built with Next.js, Prisma, PostgreSQL, and Re
 
 - **Framework** — Next.js 16 (App Router)
 - **Language** — TypeScript
-- **API Layer** — tRPC v11
+- **Transport** — Next.js Server Actions
 - **Styling** — Tailwind CSS v4
 - **Database** — PostgreSQL 16 via Prisma ORM
 - **Cache** — Redis 7
@@ -37,6 +37,7 @@ Fill in the required values in `.env`:
 
 | Variable | Description |
 |---|---|
+| `JWT_SECRET` | Secret used to sign and verify JWT tokens — must be a long, random string |
 | `DATABASE_URL` | Postgres connection string — must match `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` below |
 | `POSTGRES_USER` | Postgres username used by Docker Compose |
 | `POSTGRES_PASSWORD` | Postgres password used by Docker Compose |
@@ -150,23 +151,30 @@ npm run test:int
 
 ## Architecture
 
-For architectural decisions and reasoning — tRPC over REST, DDD-lite, explicit dependency wiring, validation abstraction, and more — see [docs/architecture.md](./docs/architecture.md).
+For architectural decisions and reasoning — server actions as transport, DDD-lite, explicit dependency wiring, validation abstraction, and more — see [docs/architecture.md](./docs/architecture.md).
 
 ## Project Structure
 
 ```
 src/
-  app/
-    (auth)/         # Login, register, MFA routes
-    (dashboard)/    # Budgets, transactions, settings routes
   core/
-    modules/        # Feature modules (identity, ledger, etc.)
-    shared/         # Domain primitives, infrastructure utilities
-  trpc/
-    routers/        # Procedure definitions per module
-    mappers/        # Error mapping
-    client/         # React client and provider
-  components/       # Shared UI components
-  assets/           # Global styles
+    modules/        # Domain modules (identity, ledger, etc.)
+    shared/         # Shared domain primitives and infrastructure
+  middleware.ts     # JWT session verification — protects dashboard routes
+
+src/app/
+  _components/      # Shared UI primitives (shadcn)
+  _features/        # FSD feature slices
+    auth/
+      actions/      # Server actions (register, login) — transport layer
+      composables/  # Client hooks — form state, mutations
+      ui/           # Form components
+  _lib/
+    utils/          # Pure utilities (cn, withAction, withAuth)
+    services/       # Stateful client services (monitoring, etc.)
+  _widgets/         # Composed page-level blocks
+  (auth)/           # Login, register routes
+  (dashboard)/      # Budgets, transactions, settings routes
+
 prisma/             # Schema and migrations
 ```

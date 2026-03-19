@@ -1,4 +1,6 @@
 // import { Prisma } from '@generated/prisma/client';
+import { ZodError } from 'zod';
+
 import { DomainException } from '../../domain';
 
 type NormalizedError = {
@@ -43,6 +45,10 @@ const domainTypeMap: Record<string, NormalizedError> = {
 const mapError = (error: unknown): NormalizedError => {
   if (error instanceof DomainException) {
     return domainTypeMap[error.type] ?? domainTypeMap.SERVER_ERROR;
+  }
+
+  if (error instanceof ZodError) {
+    return domainTypeMap.VALIDATION_ERROR;
   }
 
   // if (error instanceof Prisma.PrismaClientKnownRequestError) { ... }

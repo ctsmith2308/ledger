@@ -1,9 +1,8 @@
-import { LoginForm } from '@/features/auth/ui/login-form';
+import { LoginForm } from '@/app/_features/auth/ui/login-form';
 
 function LoginPage() {
   return (
     <main>
-      <h1>Sign In</h1>
       <LoginForm />
     </main>
   );

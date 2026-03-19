@@ -1,3 +1,4 @@
+import { LoginUserHandler } from './application/commands/login-user.handler';
 import { RegisterUserHandler } from './application/commands/register-user.handler';
 import { UserRepository } from './infrastructure/repository/user.repository';
 import { ArgonPasswordHasher } from './infrastructure/services/argon-password-hasher.service';
@@ -10,6 +11,7 @@ const _idGenerator = new UuIdV4IdGenerator();
 
 const identityModule = {
   registerUser: new RegisterUserHandler(_repo, _hasher, _idGenerator),
+  loginUser: new LoginUserHandler(),
 };
 
 export { identityModule };

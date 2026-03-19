@@ -1,19 +1,25 @@
 import { z } from 'zod';
 
-import { ValidationException } from '@/core/shared/domain';
+import {
+  DomainException,
+  Result,
+  ValidationException,
+} from '@/core/shared/domain';
 import { IValidator } from '@/core/shared/domain/services/validator.service.interface';
 
 class ZodValidator<T> implements IValidator<T> {
-  constructor(private schema: z.Schema<T>) {}
+  private constructor(private readonly schema: z.Schema<T>) {}
 
-  parse(data: unknown): T {
+  static create<T>(schema: z.Schema<T>): ZodValidator<T> {
+    return new ZodValidator(schema);
+  }
+
+  parse(data: unknown): Result<T, DomainException> {
     const result = this.schema.safeParse(data);
 
-    if (!result.success) {
-      throw new ValidationException(z.prettifyError(result.error));
-    }
-
-    return result.data;
+    return result.success
+      ? Result.ok(result.data)
+      : Result.fail(new ValidationException(z.prettifyError(result.error)));
   }
 }
 
