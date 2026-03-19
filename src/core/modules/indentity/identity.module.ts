@@ -1,9 +1,8 @@
 import { JwtService } from '@/core/shared/infrastructure';
-import { LoginUserHandler } from './application/commands/login-user.handler';
-import { RegisterUserHandler } from './application/commands/register-user.handler';
-import { UserRepository } from './infrastructure/repository/user.repository';
+import { LoginUserHandler, RegisterUserHandler } from './application/commands';
+import { UserRepository } from './infrastructure/repository';
 import { IdGenerator, PasswordHasher } from './infrastructure/services';
-import { prisma } from '@/core/shared/infrastructure/persistence';
+import { prisma } from '@/core/shared/infrastructure';
 
 const _repo = new UserRepository(prisma);
 
