@@ -1,3 +1,1 @@
-export * from './tailwind-class-merger';
-export * from './public-action';
-export * from './protected-action';
+export * from './tailwind-class-merger.util';

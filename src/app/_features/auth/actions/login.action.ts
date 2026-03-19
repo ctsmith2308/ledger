@@ -1,29 +1,18 @@
 'use server';
 
-import { identityModule } from '@/core/modules/indentity/identity.module';
-import {
-  loginUserSchema,
-  type LoginUserInput,
-} from '@/core/modules/indentity/application/schema/login-user.schema';
-import { publicAction } from '@/app/_lib/utils/public-action';
-import { ZodValidator } from '@/core/shared/infrastructure';
-import { CookieService } from '@/app/_lib/services/cookie';
+import { identityModule, loginUserSchema } from '@/core/modules/indentity';
+import { SchemaValidator } from '@/core/shared/infrastructure';
+import { SessionService, createAction } from '@/app/_lib';
 
-const loginAction = publicAction(async (input: LoginUserInput) => {
-  const dto = ZodValidator.create(loginUserSchema)
-    .parse(input)
-    .getValueOrThrow();
+const handler = async (input: unknown) => {
+  const dto = SchemaValidator.parse(loginUserSchema, input).getValueOrThrow();
 
-  const { jwt } = (await identityModule.loginUser.execute(dto)).getValueOrThrow();
+  const result = await identityModule.loginUser.execute(dto);
+  const { jwt } = result.getValueOrThrow();
 
-  const cookieService = await CookieService.create();
+  SessionService.set(jwt);
+};
 
-  cookieService.set('session', jwt, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-  });
-});
+const loginAction = createAction({ handler });
 
 export { loginAction };

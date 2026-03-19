@@ -56,5 +56,4 @@ const mapError = (error: unknown): NormalizedError => {
   return domainTypeMap.SERVER_ERROR;
 };
 
-export { mapError };
-export type { NormalizedError };
+export { mapError, type NormalizedError };

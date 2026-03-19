@@ -1,8 +1,6 @@
-const internalLogger = (error: unknown, traceId: string): void => {
-  const type = error instanceof Error ? error.constructor.name : 'UnknownError';
-  const message = error instanceof Error ? error.message : String(error);
-
-  console.error(`[LOG] [ID: ${traceId}] Type: ${type} | Msg: ${message}`);
+const internalLogger = (error: unknown, traceId?: string): void => {
+  // for other logging services/tools like Pinto.
+  console.error({ traceId, error });
 };
 
 export { internalLogger };

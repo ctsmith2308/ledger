@@ -1,13 +1,12 @@
-import { Result } from '@/core/shared/domain';
-import { DomainException } from '@/core/shared/domain/exceptions';
+import { Result, DomainException } from '@/core/shared';
 
 type LoginUserResponseData = { jwt: string };
 
-type RegisterUserResponse = Result<LoginUserResponseData, DomainException>;
+type LoginUserResponse = Result<LoginUserResponseData, DomainException>;
 
 interface LoginUserCommand {
   readonly email: string;
   readonly password: string;
 }
 
-export type { LoginUserCommand, RegisterUserResponse, LoginUserResponseData };
+export type { LoginUserCommand, LoginUserResponse, LoginUserResponseData };

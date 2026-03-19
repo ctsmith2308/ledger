@@ -1,14 +1,5 @@
-// import {
-//   type IUserRepository,
-//   User,
-//   Email,
-//   UserId,
-// } from '@/modules/identity/domain';
-// import { UserPrismaMapper } from '@/modules/identity/infrastructure/persistence';
-// import { PrismaService } from '@/shared/infrastructure/persistence';
-
 import { PrismaService } from '@/core/shared/infrastructure';
-import { UserId, Email } from '../../domain';
+import { UserId, Email } from '@/core/modules/indentity/domain';
 import { User } from '../../domain/aggregates';
 import { IUserRepository } from '../../domain/repositories';
 import { UserPrismaMapper } from '../mappers/user-prisma.mapper';

@@ -5,3 +5,4 @@ export * from './invalid-user-id.exception';
 export * from './login-failed.exception';
 export * from './unauthorized.exception';
 export * from './validation.exception';
+export * from './invalid-jwt.exception';

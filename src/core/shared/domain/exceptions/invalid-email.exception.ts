@@ -1,9 +1,9 @@
 import { DomainException } from './base.exception';
 
 class InvalidEmailException extends DomainException {
-  constructor(email: string) {
+  constructor() {
     // We log the specific email internally for debugging
-    super(`Validation failed for email: ${email}`, 'UNAUTHORIZED');
+    super(`Validation failed for email`, 'UNAUTHORIZED');
   }
 }
 

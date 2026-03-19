@@ -1,2 +1,2 @@
-export * from './argon-password-hasher.service';
-export * from './uuidv4-id-generator.service';
+export * from './password-hasher.service';
+export * from './id-generator.service';

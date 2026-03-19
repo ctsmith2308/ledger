@@ -15,7 +15,7 @@ class UserId extends ValueObject<UserIdProps> {
 
   public static create(id: string): Result<UserId, InvalidUserIdException> {
     if (!id || id.length < 5) {
-      return Result.fail(new InvalidUserIdException(id));
+      return Result.fail(new InvalidUserIdException());
     }
 
     return Result.ok(new UserId({ value: id }));
