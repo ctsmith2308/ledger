@@ -2,6 +2,41 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * TODO: Migrate components off hardcoded Tailwind colors (bg-white, text-zinc-900, etc.)
+ * and onto the semantic tokens already mapped in @theme inline below.
+ *
+ * How it works:
+ *   - CSS variables are defined in :root (light) and .dark (dark) blocks.
+ *   - @theme inline maps those variables to Tailwind tokens (bg-background, text-foreground, etc.).
+ *   - When next-themes toggles the `.dark` class on <html>, the variables switch automatically.
+ *   - Components that use semantic tokens get dark mode for free — no `dark:` variants needed.
+ *
+ * Token reference:
+ *   bg-background          — page background (white / zinc-950)
+ *   text-foreground        — primary text (zinc-900 / zinc-50)
+ *   bg-card                — card/surface background
+ *   text-card-foreground   — text on cards
+ *   bg-muted               — subtle backgrounds (zinc-50 / zinc-800)
+ *   text-muted-foreground  — secondary/subdued text (zinc-500 / zinc-400)
+ *   border-border          — dividers and borders
+ *   bg-primary             — primary action background
+ *   text-primary-foreground — text on primary backgrounds
+ *
+ * Migration pattern:
+ *   bg-white              → bg-background
+ *   bg-zinc-50            → bg-muted
+ *   text-zinc-900         → text-foreground
+ *   text-zinc-500/600     → text-muted-foreground
+ *   border-zinc-100/200   → border-border
+ *
+ * Until migrated, `dark:` variants are applied manually as a stopgap.
+ */
+
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

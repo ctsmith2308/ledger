@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logger, resolveTraceId, JwtService } from '@/core/shared/infrastructure';
+import {
+  logger,
+  resolveTraceId,
+  JwtService,
+} from '@/core/shared/infrastructure';
 
 export const proxy = async (req: NextRequest): Promise<NextResponse | null> => {
   const token = req.cookies.get('session')?.value;

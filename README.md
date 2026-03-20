@@ -1,6 +1,19 @@
 # Ledger
 
-A personal finance management app built with Next.js, Prisma, PostgreSQL, and Redis.
+A portfolio project built to production-grade standards — not to compete with Mint, but to demonstrate how I think about systems. The feature set is a vehicle. The architectural decisions are the point.
+
+→ **[Architecture decisions & reasoning](./docs/architecture.md)** — the full written record: DDD-lite, CQRS command bus, modular monolith, server actions transport, Feature-Sliced Design, and the experiments that didn't make it (NestJS boilerplate, tRPC bridge, Fastify gateway).
+
+---
+
+| | |
+|---|---|
+| **Live demo** | [ledger.vercel.app](#) |
+| **Architecture doc** | [docs/architecture.md](./docs/architecture.md) |
+| **Case studies** | [tRPC vs server actions](./docs/architecture.md#trpc-vs-server-actions) · [Nuxt → Next.js](./docs/architecture.md#nuxt-to-nextjs) |
+| **Source** | [github.com/ctsmith2308/ledger](https://github.com/ctsmith2308/ledger) |
+
+---
 
 ## Tech Stack
 
@@ -151,7 +164,14 @@ npm run test:int
 
 ## Architecture
 
-For architectural decisions and reasoning — server actions as transport, DDD-lite, explicit dependency wiring, validation abstraction, and more — see [docs/architecture.md](./docs/architecture.md).
+The full written record of every decision and experiment lives in **[docs/architecture.md](./docs/architecture.md)**. It covers:
+
+- **CQRS with a typed command bus** — phantom types, self-registration, return type inference without explicit generics
+- **Modular monolith** — domain boundaries enforced at the module level, no premature service extraction
+- **Domain-Driven Design (lite)** — aggregates, value objects, domain events, and repository interfaces
+- **Feature-Sliced Design (lite)** — one-way dependency rules without the full FSD specification overhead
+- **Server actions via `createAction`** — single catch boundary, session resolution, consistent error shape
+- **Experiments that didn't make it** — NestJS CQRS boilerplate, tRPC bridge, Fastify gateway, and the honest accounting of each
 
 ## Project Structure
 
