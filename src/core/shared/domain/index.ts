@@ -1,5 +1,7 @@
 export * from './exceptions';
 export * from './aggregate-root';
+export * from './bus';
+export * from './domain-event';
 export * from './handler';
 export * from './result';
 export * from './value-object';

@@ -1,14 +1,14 @@
-// import { Prisma } from '@generated/prisma/client';
 import { ZodError } from 'zod';
+import { Prisma } from 'prisma/generated/prisma/client';
 
 import { DomainException } from '../../domain';
 
-type NormalizedError = {
+type ErrorResponse = {
   code: string;
   message: string;
 };
 
-const domainTypeMap: Record<string, NormalizedError> = {
+const domainTypeMap: Record<string, ErrorResponse> = {
   UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Authentication required.' },
   LOGIN_FAILED: {
     code: 'UNAUTHORIZED',
@@ -42,7 +42,14 @@ const domainTypeMap: Record<string, NormalizedError> = {
   },
 };
 
-const mapError = (error: unknown): NormalizedError => {
+// https://www.prisma.io/docs/orm/reference/error-reference#error-codes
+const prismaErrorMap: Record<string, ErrorResponse> = {
+  P2002: domainTypeMap.CONFLICT, // unique constraint violation
+  P2025: domainTypeMap.NOT_FOUND, // record not found
+  P2003: domainTypeMap.CONFLICT, // foreign key constraint violation
+};
+
+const toErrorResponse = (error: unknown): ErrorResponse => {
   if (error instanceof DomainException) {
     return domainTypeMap[error.type] ?? domainTypeMap.SERVER_ERROR;
   }
@@ -51,9 +58,11 @@ const mapError = (error: unknown): NormalizedError => {
     return domainTypeMap.VALIDATION_ERROR;
   }
 
-  // if (error instanceof Prisma.PrismaClientKnownRequestError) { ... }
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return prismaErrorMap[error.code] ?? domainTypeMap.SERVER_ERROR;
+  }
 
   return domainTypeMap.SERVER_ERROR;
 };
 
-export { mapError, type NormalizedError };
+export { toErrorResponse, type ErrorResponse };

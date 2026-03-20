@@ -1,23 +1,23 @@
 import {
   IHandler,
+  IEventBus,
   IJwtService,
   InvalidEmailException,
   InvalidPasswordException,
   Result,
 } from '@/core/shared/domain';
+import { Email, IPasswordHasher, Password, UserLoggedInEvent } from '../../../domain';
+import { IUserRepository } from '../../../domain/repositories';
 import { LoginUserCommand, LoginUserResponse } from './login-user.command';
-import { Email, IPasswordHasher, Password } from '../../domain';
-import { IUserRepository } from '../../domain/repositories';
 
-class LoginUserHandler implements IHandler<
-  LoginUserCommand,
-  LoginUserResponse
-> {
+class LoginUserHandler implements IHandler<LoginUserCommand, LoginUserResponse> {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
     private readonly jwtService: IJwtService,
   ) {}
+
   async execute(command: LoginUserCommand): Promise<LoginUserResponse> {
     const emailResult = Email.create(command.email);
     if (emailResult.isFailure) return Result.fail(emailResult.error);
@@ -42,9 +42,13 @@ class LoginUserHandler implements IHandler<
       email: user.email.address,
     });
 
-    return signedJwt.isSuccess
-      ? Result.ok({ jwt: signedJwt.value })
-      : Result.fail(signedJwt.error);
+    if (signedJwt.isFailure) return Result.fail(signedJwt.error);
+
+    await this.eventBus.dispatch([
+      new UserLoggedInEvent(user.id.value, user.email.address),
+    ]);
+
+    return Result.ok({ jwt: signedJwt.value });
   }
 }
 

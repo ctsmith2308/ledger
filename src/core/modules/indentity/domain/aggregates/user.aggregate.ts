@@ -1,5 +1,6 @@
 import { AggregateRoot } from '@/core/shared/domain';
 import { UserId, Email, Password } from '../value-objects';
+import { UserRegisteredEvent } from '../events';
 
 class User extends AggregateRoot {
   private constructor(
@@ -15,7 +16,7 @@ class User extends AggregateRoot {
   static register(id: UserId, email: Email, passwordHash: Password): User {
     const user = new User(id, email, passwordHash);
 
-    // user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
 
     return user;
   }

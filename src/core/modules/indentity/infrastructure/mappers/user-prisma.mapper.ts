@@ -2,8 +2,8 @@ import { UserModel as PrismaUser } from 'prisma/generated/prisma/models/User';
 import { User } from '@/core/modules/indentity/domain/aggregates';
 import { UserId, Email, Password } from '@/core/modules/indentity/domain';
 
-class UserPrismaMapper {
-  static toDomain(raw: PrismaUser): User {
+const UserPrismaMapper = {
+  toDomain(raw: PrismaUser): User {
     const id = UserId.from(raw.id);
     const email = Email.from(raw.email);
     const password = Password.fromHash(raw.passwordHash);
@@ -15,9 +15,9 @@ class UserPrismaMapper {
       raw.mfaEnabled,
       raw.mfaSecret ?? undefined,
     );
-  }
+  },
 
-  static toPersistence(user: User) {
+  toPersistence(user: User) {
     return {
       id: user.id.value,
       email: user.email.address,
@@ -25,7 +25,7 @@ class UserPrismaMapper {
       mfaEnabled: user.mfaEnabled,
       mfaSecret: user.mfaSecret ?? null,
     };
-  }
-}
+  },
+};
 
 export { UserPrismaMapper };

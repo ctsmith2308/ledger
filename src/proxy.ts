@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { internalLogger } from '@/core/shared/infrastructure/loggers';
-import { resolveTraceId } from '@/core/shared/infrastructure/utils';
-import { JwtService } from '@/core/shared/infrastructure/services';
+import { logger, resolveTraceId, JwtService } from '@/core/shared/infrastructure';
 
 export const proxy = async (req: NextRequest): Promise<NextResponse | null> => {
   const token = req.cookies.get('session')?.value;
@@ -14,7 +12,7 @@ export const proxy = async (req: NextRequest): Promise<NextResponse | null> => {
   if (jwtVerifyResult.isFailure) {
     const traceId = resolveTraceId(req.headers.get('x-correlation-id'));
 
-    internalLogger(jwtVerifyResult.error, traceId);
+    logger.error(jwtVerifyResult.error, traceId);
 
     return NextResponse.redirect(new URL('/login', req.url));
   }

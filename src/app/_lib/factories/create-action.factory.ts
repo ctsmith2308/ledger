@@ -1,5 +1,5 @@
-import { mapError } from '@/core/shared/infrastructure/mappers';
-import { internalLogger } from '@/core/shared/infrastructure/loggers';
+import { toErrorResponse } from '@/core/shared/infrastructure';
+import { logger } from '@/core/shared/infrastructure';
 import { JwtData } from '@/core/shared/domain';
 import { SessionService } from '../services';
 
@@ -36,9 +36,9 @@ const createAction = <TInput, TOutput>(
 
       return { success: true, data };
     } catch (err: unknown) {
-      internalLogger(err);
+      logger.error(err);
 
-      const { code, message } = mapError(err);
+      const { code, message } = toErrorResponse(err);
 
       return { success: false, code, message };
     }

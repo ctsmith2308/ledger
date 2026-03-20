@@ -1,5 +1,6 @@
 const IdentityEvents = {
   USER_REGISTERED: 'identity.user_registered',
+  USER_LOGGED_IN: 'identity.user_logged_in',
   MFA_ENABLED: 'identity.mfa_enabled',
 } as const;
 

@@ -1,18 +1,18 @@
-import { IHandler, Result } from '@/core/shared/domain';
+import { IHandler, IEventBus, Result } from '@/core/shared/domain';
 import {
   IPasswordHasher,
   IIdGenerator,
   Email,
   Password,
   UserId,
-} from '../../domain';
-import { User } from '../../domain/aggregates';
-import { IUserRepository } from '../../domain/repositories';
+} from '../../../domain';
+import { User } from '../../../domain/aggregates';
+import { IUserRepository } from '../../../domain/repositories';
 import {
   RegisterUserCommand,
   RegisterUserResponse,
 } from './register-user.command';
-import { UserMapper } from '../mappers/user.mapper';
+import { UserMapper } from '../../mappers/user.mapper';
 
 class RegisterUserHandler implements IHandler<
   RegisterUserCommand,
@@ -20,9 +20,9 @@ class RegisterUserHandler implements IHandler<
 > {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
     private readonly idGenerator: IIdGenerator,
-    // private readonly eventBus: EventBus,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<RegisterUserResponse> {
@@ -50,6 +50,10 @@ class RegisterUserHandler implements IHandler<
     const user = User.register(userId, email, passwordHash);
 
     await this.userRepository.save(user);
+
+    const events = user.pullDomainEvents();
+
+    await this.eventBus.dispatch(events);
 
     const reponseDto = UserMapper.toResponseDTO(user);
 
