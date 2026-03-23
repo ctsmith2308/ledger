@@ -4,7 +4,7 @@ import {
   commandBus,
   loginUserSchema,
   LoginUserCommand,
-} from '@/core/modules/indentity';
+} from '@/core/modules/identity';
 import { SchemaValidator } from '@/core/shared/infrastructure';
 import { SessionService, createAction } from '@/app/_lib';
 

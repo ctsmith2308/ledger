@@ -1,6 +1,6 @@
 import { UserModel as PrismaUser } from 'prisma/generated/prisma/models/User';
-import { User } from '@/core/modules/indentity/domain/aggregates';
-import { UserId, Email, Password } from '@/core/modules/indentity/domain';
+import { User } from '@/core/modules/identity/domain/aggregates';
+import { UserId, Email, Password } from '@/core/modules/identity/domain';
 
 const UserPrismaMapper = {
   toDomain(raw: PrismaUser): User {

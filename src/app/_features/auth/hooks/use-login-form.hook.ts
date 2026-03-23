@@ -6,7 +6,7 @@ import { loginAction } from '../actions/login.action';
 import {
   loginUserSchema,
   type LoginUserInput,
-} from '@/core/modules/indentity/application/schema/login-user.schema';
+} from '@/core/modules/identity/application/schema/login-user.schema';
 
 const useLoginForm = () => {
   const router = useRouter();

@@ -17,7 +17,7 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { useRegisterForm, type RegisterFormApi } from '../composables';
+import { useRegisterForm, type RegisterFormApi } from '../hooks';
 
 // type RegisterFormApi = ReturnType<typeof useRegisterForm>['registerForm'];
 

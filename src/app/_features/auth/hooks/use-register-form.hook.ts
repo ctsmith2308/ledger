@@ -6,7 +6,7 @@ import { registerAction } from '../actions/register.action';
 import {
   registerUserSchema,
   type RegisterUserInput,
-} from '@/core/modules/indentity/application/schema';
+} from '@/core/modules/identity/application/schema';
 
 const useRegisterForm = () => {
   const router = useRouter();

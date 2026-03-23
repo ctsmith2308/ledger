@@ -17,7 +17,7 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { useLoginForm, type RegisterFormApi } from '../composables';
+import { useLoginForm, type RegisterFormApi } from '../hooks';
 
 function LoginForm() {
   const { form, formId, isPending } = useLoginForm();

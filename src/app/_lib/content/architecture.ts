@@ -377,7 +377,7 @@ const _eventBus = new SqsEventBus(sqsClient, QUEUE_URL);`,
     rationale: [
       'The one-way rule is enforced by convention and code review — not a linter today, but the rules are explicit and documented. Adding eslint-plugin-boundaries is a one-sprint addition.',
       'Each layer has a barrel `index.ts`. Consumers import from the barrel, not from deep internal paths. This means a layer\'s internal structure can be refactored without touching import paths outside it.',
-      'Feature modules own their complete slice — server actions, composables (hooks), and UI. Adding a feature means adding a folder, not touching shared infrastructure.',
+      'Feature modules own their complete slice — server actions, hooks, and UI. Adding a feature means adding a folder, not touching shared infrastructure.',
       'Primitive components (`_components/`) are stateless and have no feature dependencies. They can be extracted to a shared package with no refactoring.',
     ],
     tradeoffs: [
@@ -401,7 +401,7 @@ const _eventBus = new SqsEventBus(sqsClient, QUEUE_URL);`,
   _features/     # domain feature modules
     auth/
       actions/   # server actions
-      composables/ # client hooks (useLoginForm, useRegisterForm)
+      hooks/       # client hooks (useLoginForm, useRegisterForm)
       ui/        # feature-specific components (LoginForm, RegisterForm)
 
 # Dependency rule: lower layers never import from higher ones
@@ -414,12 +414,12 @@ const _eventBus = new SqsEventBus(sqsClient, QUEUE_URL);`,
     login.action.ts      # 'use server' — calls commandBus
     register.action.ts
     index.ts
-  composables/
-    use-login-form.ts    # TanStack Form + mutation
-    use-register-form.ts
+  hooks/
+    use-login-form.hook.ts    # TanStack Form + mutation
+    use-register-form.hook.ts
     index.ts
   ui/
-    login-form.tsx       # uses composables, _components only
+    login-form.tsx       # uses hooks, _components only
     register-form.tsx
     index.ts`,
       },

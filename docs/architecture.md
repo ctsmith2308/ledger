@@ -242,7 +242,7 @@ See [Application Layer — Command Bus](#command-bus--query-bus) for the full im
 src/
   core/                           # framework-agnostic domain and application logic
     modules/
-      indentity/                  # identity bounded context
+      identity/                   # identity bounded context
         domain/                   # pure business rules — no infrastructure dependencies
         application/              # commands, queries, handlers
           commands/
@@ -281,7 +281,7 @@ src/
     _features/                    # domain feature modules
       auth/
         actions/                  # server actions — thin transport wrappers
-        composables/              # client hooks (TanStack Form)
+        hooks/                    # client hooks (TanStack Form)
         ui/                       # feature-specific components
     (auth)/                       # auth route group with shared centered layout
     (dashboard)/                  # dashboard route group with shared header layout
@@ -603,7 +603,7 @@ FSD enforces strict one-way dependencies between UI layers. Lower layers never i
 | components | `_components/` | Primitive, stateless UI — button, input, card. No feature dependencies. |
 | widgets | `_widgets/` | Compositional blocks — headers, footers, dashboard shell. |
 | providers | `_providers/` | App-level context — theme, auth. |
-| features | `_features/` | Domain feature modules. Each owns actions, composables, and UI. |
+| features | `_features/` | Domain feature modules. Each owns actions, hooks, and UI. |
 
 **Dependency rule:** `_lib` → `_components` → `_widgets` → `_features` → routes. No layer imports from above itself. Features never import from other features. Cross-feature sharing belongs in `_lib` or `_components`.
 
@@ -617,12 +617,12 @@ _features/auth/
     login.action.ts       # 'use server' — calls commandBus, thin wrapper
     register.action.ts
     index.ts
-  composables/
-    use-login-form.ts     # TanStack Form + action mutation
-    use-register-form.ts
+  hooks/
+    use-login-form.hook.ts     # TanStack Form + action mutation
+    use-register-form.hook.ts
     index.ts
   ui/
-    login-form.tsx        # uses composables + _components only
+    login-form.tsx        # uses hooks + _components only
     register-form.tsx
     index.ts
 ```

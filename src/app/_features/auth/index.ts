@@ -1,3 +1,3 @@
 export * from './actions';
-export * from './composables';
+export * from './hooks';
 export * from './ui';

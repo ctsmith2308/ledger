@@ -187,7 +187,7 @@ src/app/
   _features/        # FSD feature slices
     auth/
       actions/      # Server actions (register, login) — transport layer
-      composables/  # Client hooks — form state, mutations
+      hooks/        # Client hooks — form state, mutations
       ui/           # Form components
   _lib/
     utils/          # Pure utilities (cn, withAction, withAuth)

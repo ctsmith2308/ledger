@@ -1,6 +1,6 @@
 'use server';
 
-import { commandBus, registerUserSchema, RegisterUserCommand } from '@/core/modules/indentity';
+import { commandBus, registerUserSchema, RegisterUserCommand } from '@/core/modules/identity';
 import { SchemaValidator } from '@/core/shared/infrastructure';
 import { createAction } from '@/app/_lib';
 

@@ -18,7 +18,8 @@ const caseStudies: CaseStudy[] = [
   {
     slug: 'trpc-vs-server-actions',
     title: 'tRPC vs Next.js server actions',
-    subtitle: 'Why the project moved from tRPC to server actions, and what that decision actually cost.',
+    subtitle:
+      'Why the project moved from tRPC to server actions, and what that decision actually cost.',
     badge: 'Migration',
     summary:
       'Ledger started with tRPC as the API layer — end-to-end type safety, a clean procedure model, and genuine framework portability. The switch to Next.js server actions was a deliberate tradeoff: less portability, significantly less ceremony. Here is the honest accounting of both sides.',
@@ -30,11 +31,31 @@ const caseStudies: CaseStudy[] = [
           headers: ['Concern', 'tRPC', 'Server Actions'],
           rows: [
             ['API layer', 'tRPC — adapter swap to port', 'Next.js only'],
-            ['Auth', 'httpOnly cookie via tRPC context', 'Next.js session/cookie handling'],
-            ['Server state', 'TanStack Query — React, Vue, Svelte adapters', 'use(), useFormState() — React only'],
-            ['Type safety', 'End-to-end via tRPC, no code generation', 'Server action return types only'],
-            ['Middleware', 'Once in procedure.ts, applied everywhere', 'Per-action wrapper (createAction HOF)'],
-            ['Bundle', 'tRPC client + TanStack Query', 'Zero additional client bundle'],
+            [
+              'Auth',
+              'httpOnly cookie via tRPC context',
+              'Next.js session/cookie handling',
+            ],
+            [
+              'Server state',
+              'TanStack Query — React, Vue, Svelte adapters',
+              'use(), useFormState() — React only',
+            ],
+            [
+              'Type safety',
+              'End-to-end via tRPC, no code generation',
+              'Server action return types only',
+            ],
+            [
+              'Middleware',
+              'Once in procedure.ts, applied everywhere',
+              'Per-action wrapper (createAction HOF)',
+            ],
+            [
+              'Bundle',
+              'tRPC client + TanStack Query',
+              'Zero additional client bundle',
+            ],
           ],
         },
       },
@@ -44,7 +65,7 @@ const caseStudies: CaseStudy[] = [
       },
       {
         heading: 'What the createAction factory recovers',
-        body: 'The main thing tRPC provided was a shared middleware model. `createAction` replicates this: `protected: true` resolves the session before the handler runs, the catch block maps all failures to a consistent `ActionResult<T>`, and TypeScript narrows the handler signature based on the config discriminant. It is not as elegant as tRPC\'s procedure chain, but it covers the use cases this project actually has.',
+        body: "The main thing tRPC provided was a shared middleware model. `createAction` replicates this: `protected: true` resolves the session before the handler runs, the catch block maps all failures to a consistent `ActionResult<T>`, and TypeScript narrows the handler signature based on the config discriminant. It is not as elegant as tRPC's procedure chain, but it covers the use cases this project actually has.",
         code: {
           label: 'createAction vs tRPC procedure — equivalent patterns',
           code: `// tRPC — middleware chain
@@ -67,9 +88,69 @@ const getProfileAction = createAction({ protected: true, handler: async (session
     ],
   },
   {
+    slug: 'nestjs-overhead',
+    title: 'NestJS — the overhead audit',
+    subtitle:
+      'The project ran through a NestJS phase. The wins were real but narrow. The overhead was not.',
+    badge: 'Architecture',
+    summary:
+      'NestJS has genuine strengths: a module system, first-class decorators, and a clear opinion on application structure. The question was whether those strengths justified the weight they came with. For this project, the honest answer was no.',
+    sections: [
+      {
+        heading: 'What NestJS brought',
+        body: "NestJS provides a structured module system, a built-in DI container, and a decorator-driven model that maps cleanly onto familiar patterns from Angular and Spring. The opinions are well-considered and the ecosystem is mature. For teams onboarding developers at scale, the conventions are a genuine asset — everyone lands in the same place.",
+      },
+      {
+        heading: 'Where the overhead accumulated',
+        body: "The DI container was the main cost. Every dependency had to be registered, decorated, and resolved through the framework machinery. Adding a new service meant touching the module definition, the provider list, and the injection tokens — three files for what should be a one-line constructor argument. The decorator surface area grew fast, and the mental model required to reason about instantiation order was non-trivial.",
+        table: {
+          headers: ['Concern', 'NestJS', 'Static factories + closures'],
+          rows: [
+            ['Dependency wiring', 'DI container, decorators, modules', 'Explicit constructor arguments'],
+            ['New service cost', 'Provider registration + module update', 'Add parameter, done'],
+            ['Testability', 'TestingModule setup per test', 'Pass mock directly'],
+            ['Framework coupling', 'Deep — decorators throughout', 'None in domain/application layers'],
+            ['Onboarding overhead', 'High — container mental model required', 'Low — plain TypeScript'],
+          ],
+        },
+      },
+      {
+        heading: 'The wins were real but narrow',
+        body: 'The structured module system did enforce boundaries. The decorator-based guard and middleware model was consistent. For a large team working on a long-lived service, those rails are worth paying for. For a single-developer portfolio project with explicit DDD boundaries already enforced by convention, the container added indirection without adding value.',
+      },
+      {
+        heading: 'What replaced it',
+        body: 'Static factory functions and manual constructor injection. Each module exposes a factory that wires its own dependencies explicitly. The result is plain TypeScript: no decorators, no container, no registration step. Dependencies are visible at the call site, testable by passing a mock directly, and trivially traceable through a standard IDE.',
+        code: {
+          label: 'NestJS provider vs static factory — equivalent wiring',
+          code: `// NestJS — container registration
+@Module({
+  providers: [UserRepository, PasswordHasher, RegisterUserHandler],
+  exports: [RegisterUserHandler],
+})
+export class IdentityModule {}
+
+// Static factory — explicit wiring
+const identityModule = {
+  registerUser: RegisterUserHandler.create({
+    userRepository: UserRepository.create(prisma),
+    hasher: BcryptHasher.create(),
+    idGenerator: CuidGenerator,
+  }),
+};`,
+        },
+      },
+      {
+        heading: 'The verdict',
+        body: 'NestJS is not the wrong tool — it is the right tool for a different context. The overhead is justified when the team size and service complexity are high enough that conventions and the container pay for themselves. This project is not that context. Manual wiring is clearer, faster to navigate, and has zero framework coupling in the layers that matter.',
+      },
+    ],
+  },
+  {
     slug: 'nuxt-to-nextjs',
     title: 'Nuxt → Next.js migration',
-    subtitle: 'The project started in Nuxt 3. Here is what moved, what did not, and why the switch happened.',
+    subtitle:
+      'The project started in Nuxt 3. Here is what moved, what did not, and why the switch happened.',
     badge: 'Migration',
     summary:
       'The initial version of Ledger was built in Nuxt 3 with a Vue frontend. The migration to Next.js was driven by ecosystem fit, not framework quality. Nuxt 3 is excellent — the decision was about where the hiring market and the portfolio narrative pointed.',
@@ -91,8 +172,8 @@ const getProfileAction = createAction({ protected: true, handler: async (session
         body: 'The entire transport and UI layer was a rewrite. Nuxt server routes became Next.js server actions. Vue composables became React hooks with TanStack Form. The Pinia stores became TanStack Query. The Nuxt auto-import conventions became explicit barrel imports. None of this was surprising — it was the expected cost of a framework migration.',
       },
       {
-        heading: 'The takeaway',
-        body: 'A domain-pure architecture made a full framework migration a transport and UI rewrite rather than a full rewrite. The core never changed. If the project moves again — to SvelteKit, Remix, or something that doesn\'t exist yet — the same separation means the same outcome. That is the portability argument in practice.',
+        heading: 'The validation',
+        body: 'The migration proved the architectural premise. src/core/ — domain logic, application handlers, repository interfaces — moved without a single modification. Zero Next.js dependencies in the domain layer meant the transport swap was surgical. That outcome was not accidental. It was the result of enforcing the dependency rule from day one.',
       },
     ],
   },
@@ -103,4 +184,10 @@ const getCaseStudy = (slug: string): CaseStudy | undefined =>
 
 const getCaseSlugs = (): string[] => caseStudies.map((c) => c.slug);
 
-export { caseStudies, getCaseStudy, getCaseSlugs, type CaseStudy, type CaseStudySection };
+export {
+  caseStudies,
+  getCaseStudy,
+  getCaseSlugs,
+  type CaseStudy,
+  type CaseStudySection,
+};
