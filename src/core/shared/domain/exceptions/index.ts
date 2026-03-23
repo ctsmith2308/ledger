@@ -6,3 +6,4 @@ export * from './login-failed.exception';
 export * from './unauthorized.exception';
 export * from './validation.exception';
 export * from './invalid-jwt.exception';
+export * from './rate-limit.exception';

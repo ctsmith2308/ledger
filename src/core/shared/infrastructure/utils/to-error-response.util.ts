@@ -10,6 +10,10 @@ type ErrorResponse = {
 
 const domainTypeMap: Record<string, ErrorResponse> = {
   UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Authentication required.' },
+  RATE_LIMIT_EXCEEDED: {
+    code: 'RATE_LIMIT_EXCEEDED',
+    message: 'Too many requests.',
+  },
   LOGIN_FAILED: {
     code: 'UNAUTHORIZED',
     message: "The details you've entered don't match our records.",
