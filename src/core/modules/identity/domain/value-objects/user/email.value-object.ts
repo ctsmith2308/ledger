@@ -17,7 +17,7 @@ class Email extends ValueObject<EmailProps> {
     const trimmedEmail = (email ?? '').trim();
 
     if (!Email.isValid(trimmedEmail)) {
-      return Result.fail(new InvalidEmailException(trimmedEmail));
+      return Result.fail(new InvalidEmailException());
     }
 
     const emailInstance = new Email({
@@ -27,13 +27,13 @@ class Email extends ValueObject<EmailProps> {
     return Result.ok(emailInstance);
   }
 
+  get value(): string {
+    return this.props.value;
+  }
+
   private static isValid(email: string): boolean {
     const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     return isValid;
-  }
-
-  get address(): string {
-    return this.props.value;
   }
 
   public static from(address: string): Email {

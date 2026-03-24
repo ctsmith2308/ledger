@@ -27,7 +27,7 @@ class UserRepository implements IUserRepository {
 
   async findByEmail(email: Email): Promise<User | null> {
     const record = await this.prisma.user.findUnique({
-      where: { email: email.address },
+      where: { email: email.value },
     });
 
     return record ? UserPrismaMapper.toDomain(record) : null;

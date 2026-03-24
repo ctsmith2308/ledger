@@ -1,13 +1,25 @@
 import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
 import { Result, UnauthorizedException } from '@/core/shared/domain';
 import { JwtService } from '@/core/shared/infrastructure';
 
-// We define the config here so it's consistent across the app
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
+type AuthContext = NextRequest | undefined;
+
 const SessionService = {
-  async get() {
-    const cookieStore = await cookies();
+  async get(ctx?: AuthContext) {
+    let cookieStore;
+
+    if (ctx) {
+      // We are in Middleware (ie. proxy.ts) Middlware only has access to request not server side cookies() method.
+      cookieStore = ctx.cookies;
+    } else {
+      // We are in a Server Component, Server Action, or Route Handler
+      // In Next.js 15, this must be awaited
+      cookieStore = await cookies();
+    }
+
     const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
     if (!token) return Result.fail(new UnauthorizedException());
@@ -32,10 +44,6 @@ const SessionService = {
     const cookieStore = await cookies();
 
     cookieStore.delete(SESSION_COOKIE_NAME);
-  },
-
-  async verify(token: string) {
-    return await JwtService.verify(token);
   },
 };
 

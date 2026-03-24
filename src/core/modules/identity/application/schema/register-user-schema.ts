@@ -7,8 +7,8 @@ const registerUserSchema = z.object({
     .max(32, 'Email must be at most 32 characters.'),
   password: z
     .string()
-    .min(20, 'Password must be at least 20 characters.')
-    .max(100, 'Password must be at most 100 characters.'),
+    .min(10, 'Password must be at least 10 characters.')
+    .max(100, 'Password must be at most 32 characters.'),
 });
 
 type RegisterUserInput = z.infer<typeof registerUserSchema>;

@@ -17,11 +17,11 @@ class Password extends ValueObject<PasswordProps> {
     plainText: string,
   ): Result<Password, InvalidPasswordException> {
     if (!Password.hasSpecial(plainText)) {
-      return Result.fail(new InvalidPasswordException(plainText));
+      return Result.fail(new InvalidPasswordException());
     }
 
     if (!Password.hasNumber(plainText)) {
-      return Result.fail(new InvalidPasswordException(plainText));
+      return Result.fail(new InvalidPasswordException());
     }
 
     const passwordInstance = new Password({ value: plainText });

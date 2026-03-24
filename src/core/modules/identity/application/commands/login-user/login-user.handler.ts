@@ -39,13 +39,13 @@ class LoginUserHandler implements IHandler<LoginUserCommand, LoginUserResponse> 
 
     const signedJwt = await this.jwtService.sign({
       sub: user.id.value,
-      email: user.email.address,
+      email: user.email.value,
     });
 
     if (signedJwt.isFailure) return Result.fail(signedJwt.error);
 
     await this.eventBus.dispatch([
-      new UserLoggedInEvent(user.id.value, user.email.address),
+      new UserLoggedInEvent(user.id.value, user.email.value),
     ]);
 
     return Result.ok({ jwt: signedJwt.value });

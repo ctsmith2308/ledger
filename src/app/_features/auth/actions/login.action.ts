@@ -17,7 +17,7 @@ const handler = async (input: unknown) => {
 
   const { jwt } = result.getValueOrThrow();
 
-  SessionService.set(jwt);
+  await SessionService.set(jwt);
 };
 
 const loginAction = createAction({ handler });

@@ -20,20 +20,24 @@ model User {
   passwordHash String   @map("password_hash")
   mfaEnabled   Boolean  @default(false) @map("mfa_enabled")
   mfaSecret    String?  @map("mfa_secret")
-  createdAt    DateTime @default(now()) @map("created_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  profile      UserProfile?
 
   @@schema("identity")
   @@map("users")
 }
 
 model UserProfile {
-  id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       Int
-  firstName    String 
-  lastName     String
+  userId    String   @id @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  timezone  String?  @default("America/Denver")
+  currency  String?  @default("USD")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@schema("identity")
-  @@map("user profiles")
+  @@map("user_profiles")
 }
 
