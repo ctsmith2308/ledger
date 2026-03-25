@@ -1,4 +1,4 @@
-import { UserSessionModel } from 'prisma/generated/prisma/models/UserSession';
+import { UserSessionModel } from '@generated-prisma/models/UserSession';
 import { UserSession } from '@/core/modules/identity/domain/aggregates';
 import { SessionId, UserId } from '@/core/modules/identity/domain';
 

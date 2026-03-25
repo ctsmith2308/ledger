@@ -1,5 +1,5 @@
 import { ZodError } from 'zod';
-import { Prisma } from 'prisma/generated/prisma/client';
+import { Prisma } from '@generated-prisma/client';
 
 import { DomainException } from '../../domain';
 

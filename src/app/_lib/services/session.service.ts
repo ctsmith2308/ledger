@@ -1,30 +1,36 @@
 import { cookies } from 'next/headers';
-import { NextRequest } from 'next/server';
+import { cache } from 'react';
+
 import { Result, UnauthorizedException } from '@/core/shared/domain';
-import { identityController } from '@/core/modules/identity';
+import {
+  IdentityController,
+  identityController,
+} from '@/core/modules/identity';
+
+type ResolveCookies = typeof cookies;
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
-type AuthContext = NextRequest | undefined;
+const getUserSession =
+  identityController.getUserSession.bind(identityController);
 
-const SessionService = {
-  async get(ctx?: AuthContext) {
-    let cookieStore;
-
-    if (ctx) {
-      cookieStore = ctx.cookies;
-    } else {
-      cookieStore = await cookies();
-    }
+const getSessionCurry =
+  (
+    cookies: ResolveCookies,
+    getUserSession: IdentityController['getUserSession'],
+  ) =>
+  async () => {
+    const cookieStore = await cookies();
 
     const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
     if (!token) return Result.fail(new UnauthorizedException());
 
-    return identityController.getUserSession(token);
-  },
+    return getUserSession(token);
+  };
 
-  async set(sessionId: string) {
+const setSessionCurry =
+  (cookies: ResolveCookies) => async (sessionId: string) => {
     const cookieStore = await cookies();
 
     cookieStore.set(SESSION_COOKIE_NAME, sessionId, {
@@ -34,13 +40,10 @@ const SessionService = {
       path: '/',
       maxAge: Number(process.env.SESSION_DURATION_SECONDS ?? 604800),
     });
-  },
+  };
 
-  async delete() {
-    const cookieStore = await cookies();
+const getSession = cache(getSessionCurry(cookies, getUserSession));
 
-    cookieStore.delete(SESSION_COOKIE_NAME);
-  },
-};
+const setSession = setSessionCurry(cookies);
 
-export { SessionService };
+export { getSession, setSession, getSessionCurry, setSessionCurry };

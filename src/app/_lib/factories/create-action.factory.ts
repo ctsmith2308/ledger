@@ -1,56 +1,46 @@
 import { toErrorResponse, logger } from '@/core/shared/infrastructure';
-import { SessionService, RateLimitService } from '../services';
+import { getSession, checkRateLimit } from '../services';
 
 type ActionSuccess<T> = { success: true; data: T };
 type ActionFailure = { success: false; code: string; message: string };
 type ActionResult<T> = ActionSuccess<T> | ActionFailure;
 
-type BaseConfig = {
-  rateLimit?: boolean;
+type PublicContext = Record<string, never>;
+type AuthContext = { userId: string };
+
+type ActionCtx = PublicContext | AuthContext;
+
+type Middleware = (ctx: ActionCtx) => Promise<ActionCtx>;
+
+const withAuth: Middleware = async (ctx) => {
+  const result = await getSession();
+
+  const session = result.getValueOrThrow();
+
+  return { ...ctx, userId: session.userId };
 };
 
-type ProtectedConfig<TSession extends { userId: string }, TInput, TOutput> = BaseConfig & {
-  protected: true;
-  handler: (session: TSession, input: TInput) => Promise<TOutput>;
+const withRateLimit: Middleware = async (ctx) => {
+  const result = await checkRateLimit();
+
+  result.getValueOrThrow();
+
+  return { ...ctx };
 };
 
-type UnprotectedConfig<TInput, TOutput> = BaseConfig & {
-  protected?: false;
-  handler: (input: TInput) => Promise<TOutput>;
-};
-
-const createAction = <TSession extends { userId: string }, TInput, TOutput>(
-  config:
-    | ProtectedConfig<TSession, TInput, TOutput>
-    | UnprotectedConfig<TInput, TOutput>,
+const createAction = <TInput, TOutput>(
+  handler: (ctx: ActionCtx, input: TInput) => Promise<TOutput>,
+  middleware: Middleware[] = [],
 ) => {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     try {
-      if (config.protected) {
-        const sessionToken = await SessionService.get();
+      let ctx: ActionCtx = {};
 
-        const session = sessionToken.getValueOrThrow() as unknown as TSession;
-
-        if (config.rateLimit) {
-          const rateLimitResult = await RateLimitService.checkLimit(
-            session.userId,
-          );
-
-          rateLimitResult.getValueOrThrow();
-        }
-
-        const data = await config.handler(session, input);
-
-        return { success: true, data };
+      for (const fn of middleware) {
+        ctx = await fn(ctx);
       }
 
-      if (config.rateLimit) {
-        const rateLimitResult = await RateLimitService.checkLimit();
-
-        rateLimitResult.getValueOrThrow();
-      }
-
-      const data = await config.handler(input);
+      const data = await handler(ctx, input);
 
       return { success: true, data };
     } catch (err: unknown) {
@@ -64,8 +54,12 @@ const createAction = <TSession extends { userId: string }, TInput, TOutput>(
 };
 
 export {
+  withAuth,
+  withRateLimit,
   createAction,
+  type ActionCtx,
   type ActionResult,
   type ActionSuccess,
   type ActionFailure,
+  type Middleware,
 };

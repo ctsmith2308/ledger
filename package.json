@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
+    "test:int:setup": "docker compose -f docker-compose.test.yml down -v && docker compose -f docker-compose.test.yml up -d --wait && npm run prisma:migrate:test",
     "prisma:migrate:test": "dotenvx run -f .env.test -- npx prisma migrate deploy",
     "test:int": "dotenvx run -f .env.test -- vitest run --config vitest.config.integration.ts",
     "test:int:watch": "dotenvx run -f .env.test -- vitest --config vitest.config.integration.ts",

@@ -1,4 +1,4 @@
-import { Result, ValueObject } from '@/core/shared';
+import { Result, ValueObject } from '@/core/shared/domain';
 
 interface LastNameProps {
   value: string;

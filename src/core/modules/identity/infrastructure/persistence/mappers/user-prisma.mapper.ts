@@ -1,4 +1,4 @@
-import { UserModel } from 'prisma/generated/prisma/models/User';
+import { UserModel } from '@generated-prisma/models/User';
 import { User } from '@/core/modules/identity/domain/aggregates';
 import { UserId, Email, Password } from '@/core/modules/identity/domain';
 

@@ -1,10 +1,18 @@
 'use server';
 
 import { identityController } from '@/core/modules/identity';
-import { registerUserSchema, type RegisterUserInput } from '../schema/register.schema';
-import { SchemaValidator, createAction } from '@/app/_lib';
+import {
+  registerUserSchema,
+  type RegisterUserInput,
+} from '../schema/register.schema';
+import {
+  SchemaValidator,
+  createAction,
+  withRateLimit,
+  type ActionCtx,
+} from '@/app/_lib';
 
-const handler = async (input: RegisterUserInput) => {
+const handler = async (_ctx: ActionCtx, input: RegisterUserInput) => {
   const dto = SchemaValidator.parse(
     registerUserSchema,
     input,
@@ -15,6 +23,6 @@ const handler = async (input: RegisterUserInput) => {
   return result.getValueOrThrow();
 };
 
-const registerAction = createAction({ handler, rateLimit: true });
+const registerAction = createAction(handler, [withRateLimit]);
 
 export { registerAction };
