@@ -42,7 +42,7 @@ const decisions: ArchitectureDecision[] = [
       },
       {
         pro: 'Each command folder is fully self-contained — command, handler, and registration in one place.',
-        con: 'The _deps.ts module creates a single shared instance of infrastructure dependencies. Parallel test runs require care to avoid shared state.',
+        con: 'Each command folder constructs its own infrastructure instances. Shared state across handlers (e.g. a singleton event bus) must be imported explicitly at each wiring site.',
       },
     ],
     codeBlocks: [
@@ -73,14 +73,21 @@ class LoginUserCommand extends Command<LoginUserResponse> {
       {
         label: 'Self-registration in the command folder index',
         code: `// commands/login-user/index.ts
-import { commandBus } from '@/core/shared/infrastructure';
-import { _repo, _eventBus, _passwordHasher, _jwtService } from '../../../_deps';
+import { commandBus, prisma, InProcessEventBus } from '@/core/shared/infrastructure';
+import { UserRepository, UserSessionRepository } from '../../../infrastructure/repository';
+import { PasswordHasher, IdGenerator } from '../../../infrastructure/services';
 import { LoginUserCommand } from './login-user.command';
 import { LoginUserHandler } from './login-user.handler';
 
 commandBus.register(
   LoginUserCommand,
-  new LoginUserHandler(_repo, _eventBus, _passwordHasher, _jwtService),
+  new LoginUserHandler(
+    new UserRepository(prisma),
+    new UserSessionRepository(prisma),
+    new InProcessEventBus(),
+    PasswordHasher,
+    IdGenerator,
+  ),
 );
 
 export { LoginUserCommand };
@@ -100,7 +107,7 @@ export type { LoginUserResponse } from './login-user.command';`,
     rationale: [
       'Domain boundaries are hard to get right on the first pass. A modular monolith lets you refine them cheaply — a microservice boundary is expensive to move once it\'s a network contract.',
       'The IEventBus interface means cross-module communication is already decoupled. Swapping InProcessEventBus for a durable queue (SQS, RabbitMQ) is an infrastructure change with no domain impact.',
-      'Manual dependency wiring (`_deps.ts`) makes the full dependency graph visible at compile time. There are no IoC container surprises, no runtime injection failures, and TypeScript catches missing dependencies before the app starts.',
+      'Manual dependency wiring — concrete infrastructure classes are imported and constructed directly in each command and query index file. The full dependency graph is visible at compile time. There are no IoC container surprises, no runtime injection failures, and TypeScript catches missing dependencies before the app starts.',
       'A single deployment unit is dramatically simpler to operate at this scale — one database connection, one process, one set of logs, one deploy pipeline.',
     ],
     tradeoffs: [
@@ -127,7 +134,6 @@ export type { LoginUserResponse } from './login-user.command';`,
       login-user/  # self-contained: command + handler + registration
       register-user/
   infrastructure/  # adapters — repository, services
-  _deps.ts         # shared infra instances for this module
   identity.module.ts  # side-effect imports trigger registration`,
       },
       {
@@ -168,7 +174,7 @@ const _eventBus = new SqsEventBus(sqsClient, queueUrl);`,
       },
       {
         pro: 'Domain layer is fully testable without infrastructure — unit tests run in milliseconds with no database.',
-        con: 'Manual wiring (`_deps.ts`) adds boilerplate that a DI container would eliminate. Acceptable at this scale; unwieldy at 50 modules.',
+        con: 'Manual wiring adds boilerplate that a DI container would eliminate. Acceptable at this scale; unwieldy at 50 modules.',
       },
       {
         pro: 'Repository interfaces make the persistence strategy swappable — Prisma today, anything else tomorrow.',
@@ -248,7 +254,7 @@ class UserRepository implements IUserRepository {
         con: 'In-process delivery is not durable. If the process crashes after save but before dispatch, events are lost. Acceptable for audit logs; not for financial operations.',
       },
       {
-        pro: 'The interface swap path to a durable queue is one line in _deps.ts.',
+        pro: 'The interface swap path to a durable queue is one line per wiring file — no domain changes required.',
         con: 'No retry, no dead-letter queue, no at-least-once delivery guarantee without swapping the implementation.',
       },
     ],
@@ -282,12 +288,12 @@ interface IEventBus {
       },
       {
         label: 'Swap path — replace InProcessEventBus with a durable queue',
-        code: `// _deps.ts — one line change, zero domain impact
+        code: `// commands/login-user/index.ts — one line change per wiring file, zero domain impact
 // Before
-const _eventBus = new InProcessEventBus();
+new LoginUserHandler(new UserRepository(prisma), new InProcessEventBus(), ...)
 
 // After
-const _eventBus = new SqsEventBus(sqsClient, QUEUE_URL);`,
+new LoginUserHandler(new UserRepository(prisma), new SqsEventBus(sqsClient, QUEUE_URL), ...)`,
       },
     ],
   },

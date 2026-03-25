@@ -6,13 +6,12 @@ import {
   Password,
   UserId,
 } from '../../../domain';
-import { User } from '../../../domain/aggregates';
 import { IUserRepository } from '../../../domain/repositories';
+import { User } from '../../../domain/aggregates';
 import {
   RegisterUserCommand,
   RegisterUserResponse,
 } from './register-user.command';
-import { UserMapper } from '../../mappers/user.mapper';
 
 class RegisterUserHandler implements IHandler<
   RegisterUserCommand,
@@ -31,12 +30,7 @@ class RegisterUserHandler implements IHandler<
     const email = emailResult.value;
 
     const existing = await this.userRepository.findByEmail(email);
-    if (existing) {
-      return Result.ok({
-        type: 'PENDING_VERIFICATION',
-        message: 'Check your email to proceed.',
-      });
-    }
+    if (existing) return Result.ok({ type: 'PENDING_VERIFICATION' });
 
     const passwordResult = Password.create(command.password);
     if (passwordResult.isFailure) return Result.fail(passwordResult.error);
@@ -55,9 +49,7 @@ class RegisterUserHandler implements IHandler<
 
     await this.eventBus.dispatch(events);
 
-    const reponseDto = UserMapper.toResponseDTO(user);
-
-    return Result.ok({ type: 'SUCCESS', ...reponseDto });
+    return Result.ok({ type: 'SUCCESS', user });
   }
 }
 

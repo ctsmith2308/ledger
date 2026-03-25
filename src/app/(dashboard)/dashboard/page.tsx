@@ -26,6 +26,7 @@ function DashboardPage() {
           </h2>
           <span className="text-xs text-zinc-400">View all</span>
         </div>
+
         <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
           <p className="text-sm font-medium text-zinc-500">
             No transactions yet

@@ -1,21 +1,29 @@
 import {
   IHandler,
   IEventBus,
-  IJwtService,
   InvalidEmailException,
   InvalidPasswordException,
   Result,
 } from '@/core/shared/domain';
-import { Email, IPasswordHasher, Password, UserLoggedInEvent } from '../../../domain';
-import { IUserRepository } from '../../../domain/repositories';
+import {
+  Email,
+  IPasswordHasher,
+  IIdGenerator,
+  Password,
+  SessionId,
+  UserLoggedInEvent,
+} from '../../../domain';
+import { IUserRepository, IUserSessionRepository } from '../../../domain/repositories';
+import { UserSession } from '../../../domain/aggregates';
 import { LoginUserCommand, LoginUserResponse } from './login-user.command';
 
 class LoginUserHandler implements IHandler<LoginUserCommand, LoginUserResponse> {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly sessionRepository: IUserSessionRepository,
     private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
-    private readonly jwtService: IJwtService,
+    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(command: LoginUserCommand): Promise<LoginUserResponse> {
@@ -37,18 +45,19 @@ class LoginUserHandler implements IHandler<LoginUserCommand, LoginUserResponse> 
 
     if (!passwordMatch) return Result.fail(new InvalidPasswordException());
 
-    const signedJwt = await this.jwtService.sign({
-      sub: user.id.value,
-      email: user.email.value,
-    });
+    const sessionIdResult = SessionId.create(this.idGenerator.generate());
+    if (sessionIdResult.isFailure) return Result.fail(sessionIdResult.error);
+    const sessionId = sessionIdResult.value;
 
-    if (signedJwt.isFailure) return Result.fail(signedJwt.error);
+    const session = UserSession.create(sessionId, user.id);
+
+    await this.sessionRepository.save(session);
 
     await this.eventBus.dispatch([
       new UserLoggedInEvent(user.id.value, user.email.value),
     ]);
 
-    return Result.ok({ jwt: signedJwt.value });
+    return Result.ok(session);
   }
 }
 

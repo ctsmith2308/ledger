@@ -1,13 +1,16 @@
 'use server';
 
-import { commandBus, registerUserSchema, RegisterUserCommand } from '@/core/modules/identity';
+import { coreApi, RegisterUserInput, registerUserSchema } from '@/core';
 import { SchemaValidator } from '@/core/shared/infrastructure';
 import { createAction } from '@/app/_lib';
 
-const handler = async (input: unknown) => {
-  const dto = SchemaValidator.parse(registerUserSchema, input).getValueOrThrow();
+const handler = async (input: RegisterUserInput) => {
+  const dto = SchemaValidator.parse(
+    registerUserSchema,
+    input,
+  ).getValueOrThrow();
 
-  const result = await commandBus.dispatch(new RegisterUserCommand(dto.email, dto.password));
+  const result = await coreApi.identity.registerUser(dto.email, dto.password);
 
   return result.getValueOrThrow();
 };

@@ -10,6 +10,9 @@ type ErrorResponse = {
 
 const domainTypeMap: Record<string, ErrorResponse> = {
   UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Authentication required.' },
+  SESSION_EXPIRED: { code: 'UNAUTHORIZED', message: 'Authentication required.' },
+  SESSION_REVOKED: { code: 'UNAUTHORIZED', message: 'Authentication required.' },
+  INVALID_SESSION_ID: { code: 'UNAUTHORIZED', message: 'Authentication required.' },
   RATE_LIMIT_EXCEEDED: {
     code: 'RATE_LIMIT_EXCEEDED',
     message: 'Too many requests.',
@@ -40,6 +43,7 @@ const domainTypeMap: Record<string, ErrorResponse> = {
   },
   CONFLICT: { code: 'CONFLICT', message: 'Resource already exists.' },
   NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
+  USER_NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
   SERVER_ERROR: {
     code: 'SERVER_ERROR',
     message: 'Internal Server Error',

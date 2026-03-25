@@ -7,3 +7,7 @@ export * from './unauthorized.exception';
 export * from './validation.exception';
 export * from './invalid-jwt.exception';
 export * from './rate-limit.exception';
+export * from './session-expired.exception';
+export * from './session-revoked.exception';
+export * from './invalid-session-id.exception';
+export * from './user-not-found.exception';

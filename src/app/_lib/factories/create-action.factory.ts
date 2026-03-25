@@ -1,6 +1,5 @@
 import { toErrorResponse } from '@/core/shared/infrastructure';
 import { logger } from '@/core/shared/infrastructure';
-import { JwtData } from '@/core/shared/domain';
 import { SessionService, RateLimitService } from '../services';
 
 type ActionSuccess<T> = { success: true; data: T };
@@ -11,9 +10,9 @@ type BaseConfig = {
   rateLimit?: boolean;
 };
 
-type ProtectedConfig<TInput, TOutput> = BaseConfig & {
+type ProtectedConfig<TSession extends { userId: string }, TInput, TOutput> = BaseConfig & {
   protected: true;
-  handler: (session: JwtData, input: TInput) => Promise<TOutput>;
+  handler: (session: TSession, input: TInput) => Promise<TOutput>;
 };
 
 type UnprotectedConfig<TInput, TOutput> = BaseConfig & {
@@ -21,18 +20,22 @@ type UnprotectedConfig<TInput, TOutput> = BaseConfig & {
   handler: (input: TInput) => Promise<TOutput>;
 };
 
-const createAction = <TInput, TOutput>(
-  config: ProtectedConfig<TInput, TOutput> | UnprotectedConfig<TInput, TOutput>,
+const createAction = <TSession extends { userId: string }, TInput, TOutput>(
+  config:
+    | ProtectedConfig<TSession, TInput, TOutput>
+    | UnprotectedConfig<TInput, TOutput>,
 ) => {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     try {
       if (config.protected) {
         const sessionToken = await SessionService.get();
 
-        const session = sessionToken.getValueOrThrow();
+        const session = sessionToken.getValueOrThrow() as unknown as TSession;
 
         if (config.rateLimit) {
-          const rateLimitResult = await RateLimitService.checkLimit(session.sub);
+          const rateLimitResult = await RateLimitService.checkLimit(
+            session.userId,
+          );
 
           rateLimitResult.getValueOrThrow();
         }

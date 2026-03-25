@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { Result, UnauthorizedException } from '@/core/shared/domain';
-import { JwtService } from '@/core/shared/infrastructure';
+import { coreApi, type SessionDTO } from '@/core';
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
@@ -12,11 +12,8 @@ const SessionService = {
     let cookieStore;
 
     if (ctx) {
-      // We are in Middleware (ie. proxy.ts) Middlware only has access to request not server side cookies() method.
       cookieStore = ctx.cookies;
     } else {
-      // We are in a Server Component, Server Action, or Route Handler
-      // In Next.js 15, this must be awaited
       cookieStore = await cookies();
     }
 
@@ -24,19 +21,18 @@ const SessionService = {
 
     if (!token) return Result.fail(new UnauthorizedException());
 
-    return await JwtService.verify(token);
+    return coreApi.identity.getUserSession(token);
   },
 
-  async set(token: string) {
+  async set(sessionId: string) {
     const cookieStore = await cookies();
 
-    cookieStore.set(SESSION_COOKIE_NAME, token, {
+    cookieStore.set(SESSION_COOKIE_NAME, sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      // Set this to match your JWT expiry (e.g., 7 days)
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: Number(process.env.SESSION_DURATION_SECONDS ?? 604800),
     });
   },
 
@@ -47,4 +43,4 @@ const SessionService = {
   },
 };
 
-export { SessionService };
+export { SessionService, type SessionDTO };

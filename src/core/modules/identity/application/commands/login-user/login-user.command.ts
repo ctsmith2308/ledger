@@ -1,8 +1,7 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
+import { UserSession } from '../../../domain/aggregates';
 
-type LoginUserResponseData = { jwt: string };
-
-type LoginUserResponse = Result<LoginUserResponseData, DomainException>;
+type LoginUserResponse = Result<UserSession, DomainException>;
 
 class LoginUserCommand extends Command<LoginUserResponse> {
   constructor(
@@ -13,5 +12,4 @@ class LoginUserCommand extends Command<LoginUserResponse> {
   }
 }
 
-export { LoginUserCommand };
-export type { LoginUserResponse, LoginUserResponseData };
+export { LoginUserCommand, type LoginUserResponse };

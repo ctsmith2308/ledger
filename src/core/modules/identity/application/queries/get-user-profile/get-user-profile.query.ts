@@ -1,10 +1,10 @@
 import { Query, DomainException, Result } from '@/core/shared/domain';
-import { User } from '../../../domain/aggregates';
+import { UserProfile } from '../../../domain/aggregates';
 
-type GetUserProfileResponse = Result<User, DomainException>;
+type GetUserProfileResponse = Result<UserProfile, DomainException>;
 
 class GetUserProfileQuery extends Query<GetUserProfileResponse> {
-  constructor(readonly jwt: string) {
+  constructor(readonly userId: string) {
     super();
   }
 }

@@ -15,16 +15,30 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  mfaEnabled   Boolean  @default(false) @map("mfa_enabled")
-  mfaSecret    String?  @map("mfa_secret")
-  createdAt    DateTime     @default(now()) @map("created_at")
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  mfaEnabled   Boolean       @default(false) @map("mfa_enabled")
+  mfaSecret    String?       @map("mfa_secret")
+  createdAt    DateTime      @default(now()) @map("created_at")
   profile      UserProfile?
+  sessions     UserSession[]
 
   @@schema("identity")
   @@map("users")
+}
+
+model UserSession {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@schema("identity")
+  @@map("user_sessions")
 }
 
 model UserProfile {

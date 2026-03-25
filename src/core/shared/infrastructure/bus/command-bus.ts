@@ -24,6 +24,7 @@ class CommandBus {
     if (!handler) {
       throw new Error(`No handler registered for command: ${key}`);
     }
+
     return handler.execute(command) as Promise<T['_response']>;
   }
 }

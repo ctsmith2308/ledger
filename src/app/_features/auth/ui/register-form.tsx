@@ -19,8 +19,6 @@ import {
 
 import { useRegisterForm, type RegisterFormApi } from '../hooks';
 
-// type RegisterFormApi = ReturnType<typeof useRegisterForm>['registerForm'];
-
 const formType = 'register-account-form';
 
 function RegisterForm() {

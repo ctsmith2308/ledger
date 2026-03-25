@@ -1,10 +1,11 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
+import { User } from '../../../domain/aggregates';
 
-type RegisterUserResponseData =
-  | { type: 'SUCCESS'; id: string }
-  | { type: 'PENDING_VERIFICATION'; message: string };
+type RegisterUserResult =
+  | { type: 'SUCCESS'; user: User }
+  | { type: 'PENDING_VERIFICATION' };
 
-type RegisterUserResponse = Result<RegisterUserResponseData, DomainException>;
+type RegisterUserResponse = Result<RegisterUserResult, DomainException>;
 
 class RegisterUserCommand extends Command<RegisterUserResponse> {
   constructor(
@@ -15,5 +16,4 @@ class RegisterUserCommand extends Command<RegisterUserResponse> {
   }
 }
 
-export { RegisterUserCommand };
-export type { RegisterUserResponse, RegisterUserResponseData };
+export { RegisterUserCommand, type RegisterUserResponse, type RegisterUserResult };
