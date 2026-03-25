@@ -1,8 +1,8 @@
 'use server';
 
-import { coreApi, RegisterUserInput, registerUserSchema } from '@/core';
-import { SchemaValidator } from '@/core/shared/infrastructure';
-import { createAction } from '@/app/_lib';
+import { identityController } from '@/core/modules/identity';
+import { registerUserSchema, type RegisterUserInput } from '../schema/register.schema';
+import { SchemaValidator, createAction } from '@/app/_lib';
 
 const handler = async (input: RegisterUserInput) => {
   const dto = SchemaValidator.parse(
@@ -10,11 +10,11 @@ const handler = async (input: RegisterUserInput) => {
     input,
   ).getValueOrThrow();
 
-  const result = await coreApi.identity.registerUser(dto.email, dto.password);
+  const result = await identityController.registerUser(dto.email, dto.password);
 
   return result.getValueOrThrow();
 };
 
-const registerAction = createAction({ handler });
+const registerAction = createAction({ handler, rateLimit: true });
 
 export { registerAction };

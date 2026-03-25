@@ -5,9 +5,12 @@ import {
   SessionExpiredException,
   SessionRevokedException,
 } from '@/core/shared/domain';
-import { UserSession } from '../../../domain/aggregates';
-import { SessionId } from '../../../domain';
-import { IUserSessionRepository } from '../../../domain/repositories';
+
+import {
+  SessionId,
+  IUserSessionRepository,
+} from '@/core/modules/identity/domain';
+
 import {
   GetUserSessionQuery,
   GetUserSessionResponse,
@@ -21,8 +24,10 @@ class GetUserSessionHandler implements IHandler<
 
   async execute(query: GetUserSessionQuery): Promise<GetUserSessionResponse> {
     const sessionIdResult = SessionId.create(query.token);
+
     if (sessionIdResult.isFailure)
       return Result.fail(new UnauthorizedException());
+
     const sessionId = sessionIdResult.value;
 
     const session = await this.sessionRepository.findById(sessionId);

@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { IIdGenerator } from '../../domain';
+import { IIdGenerator } from '@/core/modules/identity/domain';
 
 const IdGenerator: IIdGenerator = {
   generate(): string {

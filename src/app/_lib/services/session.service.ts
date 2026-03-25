@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { Result, UnauthorizedException } from '@/core/shared/domain';
-import { coreApi, type SessionDTO } from '@/core';
+import { identityController } from '@/core/modules/identity';
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
@@ -21,7 +21,7 @@ const SessionService = {
 
     if (!token) return Result.fail(new UnauthorizedException());
 
-    return coreApi.identity.getUserSession(token);
+    return identityController.getUserSession(token);
   },
 
   async set(sessionId: string) {
@@ -43,4 +43,4 @@ const SessionService = {
   },
 };
 
-export { SessionService, type SessionDTO };
+export { SessionService };

@@ -3,7 +3,7 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
 import { registerAction } from '../actions/register.action';
-import { registerUserSchema, type RegisterUserInput } from '@/core';
+import { registerUserSchema } from '../schema/register.schema';
 
 const useRegisterForm = () => {
   const router = useRouter();
@@ -19,9 +19,7 @@ const useRegisterForm = () => {
   const form = useForm({
     defaultValues: { email: '', password: '' },
     validators: { onSubmit: registerUserSchema },
-    onSubmit: async ({ value }) => {
-      mutate(value);
-    },
+    onSubmit: ({ value }) => mutate(value),
   });
 
   return { form, formId: 'register-account-form', isPending };
@@ -29,4 +27,4 @@ const useRegisterForm = () => {
 
 type RegisterFormApi = ReturnType<typeof useRegisterForm>['form'];
 
-export { useRegisterForm, registerUserSchema, type RegisterFormApi };
+export { useRegisterForm, type RegisterFormApi };

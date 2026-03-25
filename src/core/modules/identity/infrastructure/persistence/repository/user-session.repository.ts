@@ -1,7 +1,5 @@
 import { PrismaService } from '@/core/shared/infrastructure';
-import { SessionId, UserId } from '@/core/modules/identity/domain';
-import { UserSession } from '../../../domain/aggregates';
-import { IUserSessionRepository } from '../../../domain/repositories';
+import { SessionId, UserId, UserSession, IUserSessionRepository } from '@/core/modules/identity/domain';
 import { UserSessionPrismaMapper } from '../mappers/user-session-prisma.mapper';
 
 class UserSessionRepository implements IUserSessionRepository {

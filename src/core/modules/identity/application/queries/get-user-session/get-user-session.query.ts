@@ -1,5 +1,5 @@
 import { Query, DomainException, Result } from '@/core/shared/domain';
-import { UserSession } from '../../../domain/aggregates';
+import { UserSession } from '@/core/modules/identity/domain';
 
 type GetUserSessionResponse = Result<UserSession, DomainException>;
 

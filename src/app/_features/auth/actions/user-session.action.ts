@@ -1,6 +1,6 @@
 'use server';
 
-import { coreApi } from '@/core';
+import { identityController } from '@/core/modules/identity';
 import { SessionService, createAction } from '@/app/_lib';
 
 const handler = async () => {
@@ -8,7 +8,7 @@ const handler = async () => {
 
   const { userId } = session.getValueOrThrow();
 
-  const result = await coreApi.identity.getUserProfile(userId);
+  const result = await identityController.getUserProfile(userId);
 
   return result.getValueOrThrow();
 };

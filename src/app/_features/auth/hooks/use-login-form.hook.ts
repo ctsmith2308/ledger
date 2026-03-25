@@ -3,16 +3,13 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
 import { loginAction } from '../actions/login.action';
-import {
-  loginUserSchema,
-  type LoginUserInput,
-} from '@/core';
+import { loginUserSchema } from '../schema/login.schema';
 
 const useLoginForm = () => {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (data: LoginUserInput) => loginAction(data),
+    mutationFn: loginAction,
     onSuccess: (result) => {
       if (result.success) router.push('/dashboard');
       else console.log('trigger error toast', result.message);
@@ -22,9 +19,7 @@ const useLoginForm = () => {
   const form = useForm({
     defaultValues: { email: '', password: '' },
     validators: { onSubmit: loginUserSchema },
-    onSubmit: async ({ value }) => {
-      mutate(value);
-    },
+    onSubmit: ({ value }) => mutate(value),
   });
 
   return { form, formId: 'login-form', isPending };

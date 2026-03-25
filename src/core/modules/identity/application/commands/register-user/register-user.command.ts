@@ -1,5 +1,5 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
-import { User } from '../../../domain/aggregates';
+import { User } from '@/core/modules/identity/domain';
 
 type RegisterUserResult =
   | { type: 'SUCCESS'; user: User }

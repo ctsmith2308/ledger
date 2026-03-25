@@ -1,6 +1,5 @@
 import { IHandler, Result, UserNotFoundException } from '@/core/shared/domain';
-import { UserId } from '../../../domain/value-objects';
-import { IUserProfileRepository } from '../../../domain/repositories';
+import { UserId, IUserProfileRepository } from '@/core/modules/identity/domain';
 import {
   GetUserProfileQuery,
   GetUserProfileResponse,

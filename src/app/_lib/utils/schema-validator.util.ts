@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 import {
-  DomainException,
   Result,
+  DomainException,
   ValidationException,
 } from '@/core/shared/domain';
 

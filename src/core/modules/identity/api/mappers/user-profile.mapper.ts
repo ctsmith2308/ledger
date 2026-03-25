@@ -1,10 +1,5 @@
-import { UserProfile } from '../../domain/aggregates';
-
-type UserProfileDTO = {
-  userId: string;
-  firstName: string;
-  lastName: string;
-};
+import { UserProfile } from '@/core/modules/identity/domain';
+import { UserProfileDTO } from '../identity.dto';
 
 const UserProfileMapper = {
   toDTO(profile: UserProfile): UserProfileDTO {
@@ -16,4 +11,4 @@ const UserProfileMapper = {
   },
 };
 
-export { UserProfileMapper, type UserProfileDTO };
+export { UserProfileMapper };

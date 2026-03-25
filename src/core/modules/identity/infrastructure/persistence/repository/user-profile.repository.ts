@@ -1,7 +1,5 @@
 import { PrismaService } from '@/core/shared/infrastructure';
-import { UserId } from '@/core/modules/identity/domain';
-import { IUserProfileRepository } from '../../../domain/repositories';
-import { UserProfile } from '../../../domain/aggregates';
+import { UserId, UserProfile, IUserProfileRepository } from '@/core/modules/identity/domain';
 import { UserProfilePrismaMapper } from '../mappers/user-profile-prisma.mapper';
 
 class UserProfileRepository implements IUserProfileRepository {

@@ -2,12 +2,13 @@ import { IHandler, IEventBus, Result } from '@/core/shared/domain';
 import {
   IPasswordHasher,
   IIdGenerator,
+  IUserRepository,
   Email,
   Password,
   UserId,
-} from '../../../domain';
-import { IUserRepository } from '../../../domain/repositories';
-import { User } from '../../../domain/aggregates';
+  User,
+} from '@/core/modules/identity/domain';
+
 import {
   RegisterUserCommand,
   RegisterUserResponse,

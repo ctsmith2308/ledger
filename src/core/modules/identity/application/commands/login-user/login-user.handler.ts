@@ -5,19 +5,25 @@ import {
   InvalidPasswordException,
   Result,
 } from '@/core/shared/domain';
+
 import {
   Email,
   IPasswordHasher,
   IIdGenerator,
+  IUserRepository,
+  IUserSessionRepository,
   Password,
   SessionId,
   UserLoggedInEvent,
-} from '../../../domain';
-import { IUserRepository, IUserSessionRepository } from '../../../domain/repositories';
-import { UserSession } from '../../../domain/aggregates';
+  UserSession,
+} from '@/core/modules/identity/domain';
+
 import { LoginUserCommand, LoginUserResponse } from './login-user.command';
 
-class LoginUserHandler implements IHandler<LoginUserCommand, LoginUserResponse> {
+class LoginUserHandler implements IHandler<
+  LoginUserCommand,
+  LoginUserResponse
+> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly sessionRepository: IUserSessionRepository,

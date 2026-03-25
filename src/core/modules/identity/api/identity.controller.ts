@@ -1,9 +1,14 @@
 import { Result } from '@/core/shared/domain';
+
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
-import { RegisterUserCommand } from '../application/commands/register-user';
-import { LoginUserCommand } from '../application/commands/login-user';
-import { GetUserSessionQuery } from '../application/queries/get-user-session';
-import { GetUserProfileQuery } from '../application/queries/get-user-profile';
+
+import {
+  RegisterUserCommand,
+  LoginUserCommand,
+  GetUserSessionQuery,
+  GetUserProfileQuery,
+} from '../application';
+
 import { UserMapper, UserSessionMapper, UserProfileMapper } from './mappers';
 
 class IdentityController {

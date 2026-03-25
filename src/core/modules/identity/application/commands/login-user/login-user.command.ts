@@ -1,5 +1,6 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
-import { UserSession } from '../../../domain/aggregates';
+
+import { UserSession } from '@/core/modules/identity/domain';
 
 type LoginUserResponse = Result<UserSession, DomainException>;
 

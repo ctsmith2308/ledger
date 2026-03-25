@@ -1,9 +1,5 @@
-import { UserSession } from '../../domain/aggregates';
-
-type SessionDTO = {
-  sessionId: string;
-  userId: string;
-};
+import { UserSession } from '@/core/modules/identity/domain';
+import { SessionDTO } from '../identity.dto';
 
 const UserSessionMapper = {
   toDTO(session: UserSession): SessionDTO {
@@ -14,4 +10,4 @@ const UserSessionMapper = {
   },
 };
 
-export { UserSessionMapper, type SessionDTO };
+export { UserSessionMapper };
