@@ -1,28 +1,19 @@
 'use server';
 
 import { identityController } from '@/core/modules/identity';
-import {
-  registerUserSchema,
-  type RegisterUserInput,
-} from '../schema/register.schema';
-import {
-  SchemaValidator,
-  createAction,
-  withRateLimit,
-  type ActionCtx,
-} from '@/app/_lib';
+import { actionClient, withRateLimit } from '@/app/_lib/safe-action';
+import { registerUserSchema } from '../schema/register.schema';
 
-const handler = async (_ctx: ActionCtx, input: RegisterUserInput) => {
-  const dto = SchemaValidator.parse(
-    registerUserSchema,
-    input,
-  ).getValueOrThrow();
+const registerAction = actionClient
+  .use(withRateLimit)
+  .inputSchema(registerUserSchema)
+  .action(async ({ parsedInput }) => {
+    const result = await identityController.registerUser(
+      parsedInput.email,
+      parsedInput.password,
+    );
 
-  const result = await identityController.registerUser(dto.email, dto.password);
-
-  return result.getValueOrThrow();
-};
-
-const registerAction = createAction(handler, [withRateLimit]);
+    return result.getValueOrThrow();
+  });
 
 export { registerAction };

@@ -1,17 +1,13 @@
-'use client';
-
 import {
-  useBudgets,
+  getBudgetsAction,
   BudgetList,
   CreateBudgetForm,
 } from '@/app/_features/budgets';
 
-function BudgetsPage() {
-  const { data, isLoading } = useBudgets();
+import { execute } from '@/app/_lib/safe-action';
 
-  const budgets = data?.success ? data.data : [];
-
-  if (isLoading) return null;
+async function BudgetsPage() {
+  const budgets = await execute(getBudgetsAction());
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">

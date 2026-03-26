@@ -11,10 +11,8 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@/app/_components",
-    "utils": "@/app/_lib/utils",
-    "ui": "@/app/_components/ui",
-    "lib": "@/app/_lib",
-    "hooks": "@/app/_lib/hooks"
+    "utils": "@/app/_lib/tailwind",
+    "ui": "@/app/_components",
+    "lib": "@/app/_lib"
   }
 }

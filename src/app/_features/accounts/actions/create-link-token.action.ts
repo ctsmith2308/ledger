@@ -1,21 +1,14 @@
 'use server';
 
 import { bankingController } from '@/core/modules/banking';
-import {
-  createAction,
-  withAuth,
-  type ActionCtx,
-  type AuthContext,
-} from '@/app/_lib';
+import { actionClient, withAuth } from '@/app/_lib/safe-action';
 
-const handler = async (ctx: ActionCtx, _input: void) => {
-  const { userId } = ctx as AuthContext;
+const createLinkTokenAction = actionClient
+  .use(withAuth)
+  .action(async ({ ctx }) => {
+    const result = await bankingController.createLinkToken(ctx.userId);
 
-  const result = await bankingController.createLinkToken(userId);
-
-  return result.getValueOrThrow();
-};
-
-const createLinkTokenAction = createAction(handler, [withAuth]);
+    return result.getValueOrThrow();
+  });
 
 export { createLinkTokenAction };

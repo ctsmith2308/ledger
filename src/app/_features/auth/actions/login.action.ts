@@ -1,27 +1,22 @@
 'use server';
 
 import { identityController } from '@/core/modules/identity';
+import { actionClient, withRateLimit } from '@/app/_lib/safe-action';
+import { setSession } from '@/app/_lib/session';
+import { loginUserSchema } from '../schema/login.schema';
 
-import {
-  SchemaValidator,
-  withRateLimit,
-  createAction,
-  type ActionCtx,
-} from '@/app/_lib';
+const loginAction = actionClient
+  .use(withRateLimit)
+  .inputSchema(loginUserSchema)
+  .action(async ({ parsedInput }) => {
+    const result = await identityController.loginUser(
+      parsedInput.email,
+      parsedInput.password,
+    );
 
-import { LoginUserInput, loginUserSchema } from '../schema/login.schema';
-import { setSession } from '@/app/_lib/services/session.service';
+    const { sessionId } = result.getValueOrThrow();
 
-const handler = async (_ctx: ActionCtx, input: LoginUserInput) => {
-  const dto = SchemaValidator.parse(loginUserSchema, input).getValueOrThrow();
-
-  const result = await identityController.loginUser(dto.email, dto.password);
-
-  const { sessionId } = result.getValueOrThrow();
-
-  await setSession(sessionId);
-};
-
-const loginAction = createAction(handler, [withRateLimit]);
+    await setSession(sessionId);
+  });
 
 export { loginAction };

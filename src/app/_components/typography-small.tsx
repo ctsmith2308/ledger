@@ -1,4 +1,4 @@
-import { cn } from '@/app/_lib/utils';
+import { cn } from '@/app/_lib/tailwind';
 import { TypographySmallProps } from './types';
 
 function TypographySmall({ children, className }: TypographySmallProps) {

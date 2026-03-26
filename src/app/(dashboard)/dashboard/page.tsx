@@ -1,27 +1,24 @@
-'use client';
-
 import { SummaryCard } from '@/app/_widgets';
-import { useAccounts, ConnectAccountCard } from '@/app/_features/accounts';
 import {
-  useTransactions,
+  getAccountsAction,
+  calcTotalBalance,
+  ConnectAccountCard,
+} from '@/app/_features/accounts';
+import {
+  getTransactionsAction,
+  calcMonthlySpending,
   TransactionList,
 } from '@/app/_features/transactions';
+import { execute } from '@/app/_lib/safe-action';
 
-function DashboardPage() {
-  const accounts = useAccounts();
-  const transactions = useTransactions();
+async function DashboardPage() {
+  const [accounts, transactions] = await Promise.all([
+    execute(getAccountsAction()),
+    execute(getTransactionsAction()),
+  ]);
 
-  const accountList =
-    accounts.data?.success ? accounts.data.data : [];
-  const transactionList =
-    transactions.data?.success ? transactions.data.data : [];
-
-  const totalBalance = accountList.reduce(
-    (sum, a) => sum + (a.currentBalance ?? 0),
-    0,
-  );
-
-  const monthlySpending = _calcMonthlySpending(transactionList);
+  const totalBalance = calcTotalBalance(accounts);
+  const monthlySpending = calcMonthlySpending(transactions);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -43,33 +40,15 @@ function DashboardPage() {
         />
         <SummaryCard
           label="Linked Accounts"
-          value={String(accountList.length)}
+          value={String(accounts.length)}
         />
       </div>
 
-      {accountList.length === 0 &&
-        !accounts.isLoading &&
-        <ConnectAccountCard />}
+      {accounts.length === 0 && <ConnectAccountCard />}
 
-      <TransactionList transactions={transactionList.slice(0, 5)} />
+      <TransactionList transactions={transactions.slice(0, 5)} />
     </main>
   );
 }
-
-const _calcMonthlySpending = (
-  transactions: { date: string; amount: number }[],
-): number => {
-  const now = new Date();
-  return transactions
-    .filter((tx) => {
-      const txDate = new Date(tx.date);
-      return (
-        txDate.getMonth() === now.getMonth() &&
-        txDate.getFullYear() === now.getFullYear() &&
-        tx.amount > 0
-      );
-    })
-    .reduce((sum, tx) => sum + tx.amount, 0);
-};
 
 export default DashboardPage;

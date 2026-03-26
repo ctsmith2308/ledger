@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { Menu, User } from 'lucide-react';
-import { Button, ThemeToggle } from '@/app/_components';
+import { Button } from '@/app/_components';
+import { ThemeToggle } from './theme-toggle';
 
 function DashboardHeader() {
   return (

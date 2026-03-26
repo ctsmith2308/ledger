@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Separator as SeparatorPrimitive } from "radix-ui"
 
-import { cn } from "@/app/_lib/utils"
+import { cn } from "@/app/_lib/tailwind"
 
 function Separator({
   className,

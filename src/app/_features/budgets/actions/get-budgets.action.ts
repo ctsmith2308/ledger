@@ -1,21 +1,14 @@
 'use server';
 
 import { budgetsController } from '@/core/modules/budgets';
-import {
-  createAction,
-  withAuth,
-  type ActionCtx,
-  type AuthContext,
-} from '@/app/_lib';
+import { actionClient, withAuth } from '@/app/_lib/safe-action';
 
-const handler = async (ctx: ActionCtx, _input: void) => {
-  const { userId } = ctx as AuthContext;
+const getBudgetsAction = actionClient
+  .use(withAuth)
+  .action(async ({ ctx }) => {
+    const result = await budgetsController.getBudgets(ctx.userId);
 
-  const result = await budgetsController.getBudgets(userId);
-
-  return result.getValueOrThrow();
-};
-
-const getBudgetsAction = createAction(handler, [withAuth]);
+    return result.getValueOrThrow();
+  });
 
 export { getBudgetsAction };

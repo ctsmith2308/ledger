@@ -3,3 +3,4 @@ export * from './landing-footer';
 export * from './landing-header';
 export * from './loading-skeleton';
 export * from './summary-card';
+export * from './theme-toggle';

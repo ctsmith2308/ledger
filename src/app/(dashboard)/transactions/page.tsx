@@ -1,16 +1,11 @@
-'use client';
-
 import {
-  useTransactions,
+  getTransactionsAction,
   TransactionList,
 } from '@/app/_features/transactions';
+import { execute } from '@/app/_lib/safe-action';
 
-function TransactionsPage() {
-  const { data, isLoading } = useTransactions();
-
-  const transactions = data?.success ? data.data : [];
-
-  if (isLoading) return null;
+async function TransactionsPage() {
+  const transactions = await execute(getTransactionsAction());
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">

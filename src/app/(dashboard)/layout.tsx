@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { DashboardHeader } from '@/app/_widgets';
-import { getSession } from '@/app/_lib/services/session.service';
+import { getSession } from '@/app/_lib/session';
 
 export default async function DashboardLayout({
   children,

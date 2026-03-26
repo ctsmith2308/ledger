@@ -1,4 +1,4 @@
-import { cn } from '@/app/_lib/utils';
+import { cn } from '@/app/_lib/tailwind';
 
 import { ParagraphProps } from './types';
 

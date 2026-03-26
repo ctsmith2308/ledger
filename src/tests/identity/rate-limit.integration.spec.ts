@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
-import { checkLimitCurry } from '@/app/_lib/services/rate-limit.service';
+import { checkLimitCurry } from '@/app/_lib/rate-limit';
 import { RateLimitException } from '@/core/shared/domain';
 
 const redis = Redis.fromEnv();

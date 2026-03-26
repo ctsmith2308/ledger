@@ -1,4 +1,4 @@
-import { cn } from '@/app/_lib/utils';
+import { cn } from '@/app/_lib/tailwind';
 import { HeaderProps } from './types';
 
 function Header({ size, children, className }: HeaderProps) {

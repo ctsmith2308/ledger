@@ -3,6 +3,7 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 
+import { execute } from '@/app/_lib/safe-action';
 import { createBudgetAction } from '../actions';
 
 const formSchema = z.object({
@@ -14,9 +15,10 @@ const useCreateBudgetForm = () => {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: createBudgetAction,
-    onSuccess: (result) => {
-      if (result.success) router.refresh();
+    mutationFn: (input: { category: string; monthlyLimit: number }) =>
+      execute(createBudgetAction(input)),
+    onSuccess: () => {
+      router.refresh();
     },
   });
 

@@ -1,35 +1,20 @@
 'use server';
 
 import { budgetsController } from '@/core/modules/budgets';
-import {
-  SchemaValidator,
-  createAction,
-  withAuth,
-  type ActionCtx,
-  type AuthContext,
-} from '@/app/_lib';
-import {
-  createBudgetSchema,
-  type CreateBudgetInput,
-} from '../schema/create-budget.schema';
+import { actionClient, withAuth } from '@/app/_lib/safe-action';
+import { createBudgetSchema } from '../schema/create-budget.schema';
 
-const handler = async (ctx: ActionCtx, input: CreateBudgetInput) => {
-  const { userId } = ctx as AuthContext;
+const createBudgetAction = actionClient
+  .use(withAuth)
+  .inputSchema(createBudgetSchema)
+  .action(async ({ ctx, parsedInput }) => {
+    const result = await budgetsController.createBudget(
+      ctx.userId,
+      parsedInput.category,
+      parsedInput.monthlyLimit,
+    );
 
-  const dto = SchemaValidator.parse(
-    createBudgetSchema,
-    input,
-  ).getValueOrThrow();
-
-  const result = await budgetsController.createBudget(
-    userId,
-    dto.category,
-    dto.monthlyLimit,
-  );
-
-  return result.getValueOrThrow();
-};
-
-const createBudgetAction = createAction(handler, [withAuth]);
+    return result.getValueOrThrow();
+  });
 
 export { createBudgetAction };

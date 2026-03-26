@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { usePlaidLink } from 'react-plaid-link';
 
+import { execute } from '@/app/_lib/safe-action';
 import {
   createLinkTokenAction,
   exchangePublicTokenAction,
@@ -14,21 +15,19 @@ const usePlaidLinkFlow = () => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
 
   const createToken = useMutation({
-    mutationFn: createLinkTokenAction,
-    onSuccess: (result) => {
-      if (result.success) {
-        setLinkToken(result.data.linkToken);
-      }
+    mutationFn: () =>
+      execute(createLinkTokenAction()),
+    onSuccess: (data) => {
+      setLinkToken(data.linkToken);
     },
   });
 
   const exchangeToken = useMutation({
-    mutationFn: exchangePublicTokenAction,
-    onSuccess: async (result) => {
-      if (result.success) {
-        await syncTransactionsAction();
-        router.refresh();
-      }
+    mutationFn: (input: { publicToken: string }) =>
+      execute(exchangePublicTokenAction(input)),
+    onSuccess: async () => {
+      await syncTransactionsAction();
+      router.refresh();
     },
   });
 

@@ -1,21 +1,14 @@
 'use server';
 
 import { transactionsController } from '@/core/modules/transactions';
-import {
-  createAction,
-  withAuth,
-  type ActionCtx,
-  type AuthContext,
-} from '@/app/_lib';
+import { actionClient, withAuth } from '@/app/_lib/safe-action';
 
-const handler = async (ctx: ActionCtx, _input: void) => {
-  const { userId } = ctx as AuthContext;
+const syncTransactionsAction = actionClient
+  .use(withAuth)
+  .action(async ({ ctx }) => {
+    const result = await transactionsController.syncTransactions(ctx.userId);
 
-  const result = await transactionsController.syncTransactions(userId);
-
-  return result.getValueOrThrow();
-};
-
-const syncTransactionsAction = createAction(handler, [withAuth]);
+    return result.getValueOrThrow();
+  });
 
 export { syncTransactionsAction };

@@ -12,7 +12,7 @@ export * from './separator';
 export * from './skeleton';
 export * from './spinner';
 export * from './textarea';
-export * from './theme-toggle';
+
 export * from './typography-large';
 export * from './typography-muted';
 export * from './typography-small';

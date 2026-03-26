@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
+import { execute } from '@/app/_lib/safe-action';
 import { loginAction } from '../actions/login.action';
 import { loginUserSchema } from '../schema/login.schema';
 
@@ -9,10 +10,10 @@ const useLoginForm = () => {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: loginAction,
-    onSuccess: (result) => {
-      if (result.success) router.push('/dashboard');
-      else console.log('trigger error toast', result.message);
+    mutationFn: (input: { email: string; password: string }) =>
+      execute(loginAction(input)),
+    onSuccess: () => {
+      router.push('/dashboard');
     },
   });
 

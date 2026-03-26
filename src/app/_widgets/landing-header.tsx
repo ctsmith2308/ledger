@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Button, ThemeToggle } from '@/app/_components';
+import { Button } from '@/app/_components';
+import { ThemeToggle } from './theme-toggle';
 
 function LandingHeader() {
   return (

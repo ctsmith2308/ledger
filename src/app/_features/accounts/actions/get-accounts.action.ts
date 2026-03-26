@@ -1,21 +1,14 @@
 'use server';
 
 import { bankingController } from '@/core/modules/banking';
-import {
-  createAction,
-  withAuth,
-  type ActionCtx,
-  type AuthContext,
-} from '@/app/_lib';
+import { actionClient, withAuth } from '@/app/_lib/safe-action';
 
-const handler = async (ctx: ActionCtx, _input: void) => {
-  const { userId } = ctx as AuthContext;
+const getAccountsAction = actionClient
+  .use(withAuth)
+  .action(async ({ ctx }) => {
+    const result = await bankingController.getAccounts(ctx.userId);
 
-  const result = await bankingController.getAccounts(userId);
-
-  return result.getValueOrThrow();
-};
-
-const getAccountsAction = createAction(handler, [withAuth]);
+    return result.getValueOrThrow();
+  });
 
 export { getAccountsAction };
