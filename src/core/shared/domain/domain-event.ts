@@ -4,12 +4,28 @@ const IdentityEvents = {
   MFA_ENABLED: 'identity.mfa_enabled',
 } as const;
 
-const AccountEvents = {
-  ACCOUNT_CREATED: 'accounts.account_created',
+const BankingEvents = {
+  BANK_ACCOUNT_LINKED: 'banking.bank_account_linked',
+  ACCOUNTS_SYNCED: 'banking.accounts_synced',
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const AllEvents = { ...IdentityEvents, ...AccountEvents };
+const TransactionEvents = {
+  TRANSACTION_CREATED: 'transactions.transaction_created',
+  TRANSACTIONS_SYNCED: 'transactions.transactions_synced',
+} as const;
+
+const BudgetEvents = {
+  BUDGET_CREATED: 'budgets.budget_created',
+  BUDGET_THRESHOLD_REACHED: 'budgets.budget_threshold_reached',
+  BUDGET_EXCEEDED: 'budgets.budget_exceeded',
+} as const;
+
+const AllEvents = {
+  ...IdentityEvents,
+  ...BankingEvents,
+  ...TransactionEvents,
+  ...BudgetEvents,
+};
 
 type EventType = (typeof AllEvents)[keyof typeof AllEvents];
 
@@ -25,4 +41,11 @@ abstract class DomainEvent {
   }
 }
 
-export { type EventType, IdentityEvents, AccountEvents, DomainEvent };
+export {
+  type EventType,
+  IdentityEvents,
+  BankingEvents,
+  TransactionEvents,
+  BudgetEvents,
+  DomainEvent,
+};

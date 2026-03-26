@@ -1,5 +1,1 @@
-interface IIdGenerator {
-  generate(): string;
-}
-
-export { type IIdGenerator };
+export { type IIdGenerator } from '@/core/shared/domain';

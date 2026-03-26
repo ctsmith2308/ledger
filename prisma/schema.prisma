@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity"]
+  schemas  = ["identity", "banking", "transactions", "budgets"]
 }
 
 model User {
@@ -53,5 +53,84 @@ model UserProfile {
 
   @@schema("identity")
   @@map("user_profiles")
+}
+
+// ─── Banking Context ────────────────────────────────────────────────
+
+model PlaidItem {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  plaidItemId   String        @unique @map("plaid_item_id")
+  accessToken   String        @map("access_token")
+  institutionId String?       @map("institution_id")
+  cursor        String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  bankAccounts  BankAccount[]
+
+  @@index([userId])
+  @@schema("banking")
+  @@map("plaid_items")
+}
+
+model BankAccount {
+  id               String   @id @default(uuid())
+  plaidItemId      String   @map("plaid_item_id")
+  plaidItem        PlaidItem @relation(fields: [plaidItemId], references: [id], onDelete: Cascade)
+  plaidAccountId   String   @unique @map("plaid_account_id")
+  name             String
+  officialName     String?  @map("official_name")
+  mask             String?
+  type             String
+  subtype          String?
+  availableBalance Decimal? @map("available_balance") @db.Decimal(12, 2)
+  currentBalance   Decimal? @map("current_balance") @db.Decimal(12, 2)
+  currencyCode     String?  @default("USD") @map("currency_code")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([plaidItemId])
+  @@schema("banking")
+  @@map("bank_accounts")
+}
+
+// ─── Transactions Context ───────────────────────────────────────────
+
+model Transaction {
+  id                 String   @id @default(uuid())
+  accountId          String   @map("account_id")
+  userId             String   @map("user_id")
+  plaidTransactionId String   @unique @map("plaid_transaction_id")
+  amount             Decimal  @db.Decimal(12, 2)
+  date               DateTime @db.Date
+  name               String
+  merchantName       String?  @map("merchant_name")
+  category           String?
+  detailedCategory   String?  @map("detailed_category")
+  pending            Boolean  @default(false)
+  paymentChannel     String?  @map("payment_channel")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([userId, category])
+  @@schema("transactions")
+  @@map("transactions")
+}
+
+// ─── Budgets Context ────────────────────────────────────────────────
+
+model Budget {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  category     String
+  monthlyLimit Decimal  @map("monthly_limit") @db.Decimal(12, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, category])
+  @@index([userId])
+  @@schema("budgets")
+  @@map("budgets")
 }
 

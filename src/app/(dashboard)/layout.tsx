@@ -21,7 +21,7 @@ export default async function DashboardLayout({
       redirect('/login');
     }
 
-    // Bubble up to error.tsx for other errors.
+    // Bubble up to global error boundary for other errors.
     throw error;
   }
 

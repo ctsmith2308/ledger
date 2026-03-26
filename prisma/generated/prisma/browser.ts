@@ -32,3 +32,23 @@ export type UserSession = Prisma.UserSessionModel
  * 
  */
 export type UserProfile = Prisma.UserProfileModel
+/**
+ * Model PlaidItem
+ * 
+ */
+export type PlaidItem = Prisma.PlaidItemModel
+/**
+ * Model BankAccount
+ * 
+ */
+export type BankAccount = Prisma.BankAccountModel
+/**
+ * Model Transaction
+ * 
+ */
+export type Transaction = Prisma.TransactionModel
+/**
+ * Model Budget
+ * 
+ */
+export type Budget = Prisma.BudgetModel

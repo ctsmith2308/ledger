@@ -53,7 +53,11 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   UserSession: 'UserSession',
-  UserProfile: 'UserProfile'
+  UserProfile: 'UserProfile',
+  PlaidItem: 'PlaidItem',
+  BankAccount: 'BankAccount',
+  Transaction: 'Transaction',
+  Budget: 'Budget'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -106,6 +110,70 @@ export const UserProfileScalarFieldEnum = {
 } as const
 
 export type UserProfileScalarFieldEnum = (typeof UserProfileScalarFieldEnum)[keyof typeof UserProfileScalarFieldEnum]
+
+
+export const PlaidItemScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  plaidItemId: 'plaidItemId',
+  accessToken: 'accessToken',
+  institutionId: 'institutionId',
+  cursor: 'cursor',
+  createdAt: 'createdAt'
+} as const
+
+export type PlaidItemScalarFieldEnum = (typeof PlaidItemScalarFieldEnum)[keyof typeof PlaidItemScalarFieldEnum]
+
+
+export const BankAccountScalarFieldEnum = {
+  id: 'id',
+  plaidItemId: 'plaidItemId',
+  plaidAccountId: 'plaidAccountId',
+  name: 'name',
+  officialName: 'officialName',
+  mask: 'mask',
+  type: 'type',
+  subtype: 'subtype',
+  availableBalance: 'availableBalance',
+  currentBalance: 'currentBalance',
+  currencyCode: 'currencyCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BankAccountScalarFieldEnum = (typeof BankAccountScalarFieldEnum)[keyof typeof BankAccountScalarFieldEnum]
+
+
+export const TransactionScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  userId: 'userId',
+  plaidTransactionId: 'plaidTransactionId',
+  amount: 'amount',
+  date: 'date',
+  name: 'name',
+  merchantName: 'merchantName',
+  category: 'category',
+  detailedCategory: 'detailedCategory',
+  pending: 'pending',
+  paymentChannel: 'paymentChannel',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
+export const BudgetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  monthlyLimit: 'monthlyLimit',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BudgetScalarFieldEnum = (typeof BudgetScalarFieldEnum)[keyof typeof BudgetScalarFieldEnum]
 
 
 export const SortOrder = {

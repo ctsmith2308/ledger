@@ -44,6 +44,16 @@ const domainTypeMap: Record<string, ErrorResponse> = {
   CONFLICT: { code: 'CONFLICT', message: 'Resource already exists.' },
   NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
   USER_NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
+  ACCOUNT_NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
+  BUDGET_NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
+  PLAID_ERROR: {
+    code: 'PLAID_ERROR',
+    message: 'A banking service error occurred.',
+  },
+  INVALID_AMOUNT: {
+    code: 'VALIDATION_ERROR',
+    message: 'The request contains invalid data.',
+  },
   SERVER_ERROR: {
     code: 'SERVER_ERROR',
     message: 'Internal Server Error',

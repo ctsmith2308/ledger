@@ -58,6 +58,7 @@ export {
   withRateLimit,
   createAction,
   type ActionCtx,
+  type AuthContext,
   type ActionResult,
   type ActionSuccess,
   type ActionFailure,
