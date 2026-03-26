@@ -3,8 +3,8 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
-import { registerAction } from '../actions/register.action';
-import { registerUserSchema } from '../schema/register.schema';
+
+import { registerAction, registerUserSchema } from '@/app/_entities/identity';
 
 const useRegisterForm = () => {
   const router = useRouter();

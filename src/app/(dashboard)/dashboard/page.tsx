@@ -1,15 +1,12 @@
-import { SummaryCard } from '@/app/_widgets';
-import {
-  getAccountsAction,
-  calcTotalBalance,
-  ConnectAccountCard,
-} from '@/app/_features/accounts';
-import {
-  getTransactionsAction,
-  calcMonthlySpending,
-  TransactionList,
-} from '@/app/_features/transactions';
 import { execute } from '@/app/_lib/safe-action';
+
+import { getAccountsAction, calcTotalBalance } from '@/app/_entities/banking';
+import { getTransactionsAction, calcMonthlySpending } from '@/app/_entities/transactions';
+
+import { TransactionList } from '@/app/_features/transactions';
+import { ConnectAccountCard } from '@/app/_features/plaid';
+
+import { SummaryCard } from '@/app/_widgets';
 
 async function DashboardPage() {
   const [accounts, transactions] = await Promise.all([

@@ -17,7 +17,7 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { useLoginForm, type RegisterFormApi } from '../hooks';
+import { useLoginForm, type LoginFormApi } from '../hooks';
 
 function LoginForm() {
   const { form, formId, isPending } = useLoginForm();
@@ -67,7 +67,7 @@ function LoginForm() {
   );
 }
 
-function EmailField({ form }: { form: RegisterFormApi }) {
+function EmailField({ form }: { form: LoginFormApi }) {
   return (
     <form.Field name="email">
       {(field) => {
@@ -100,7 +100,7 @@ function EmailField({ form }: { form: RegisterFormApi }) {
   );
 }
 
-function PasswordField({ form }: { form: RegisterFormApi }) {
+function PasswordField({ form }: { form: LoginFormApi }) {
   return (
     <form.Field name="password">
       {(field) => {

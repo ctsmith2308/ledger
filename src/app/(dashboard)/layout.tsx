@@ -1,27 +1,26 @@
 import { redirect } from 'next/navigation';
+
+import { execute, ActionError } from '@/app/_lib/safe-action';
+
+import { getUserSessionAction } from '@/app/_entities/identity';
+
 import { DashboardHeader } from '@/app/_widgets';
-import { getSession } from '@/app/_lib/session';
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const result = await getSession();
-
-  if (result.isFailure) {
-    const error = result.error.type;
-
-    // REPACKAGE: Redirect for any "Auth" related domain exception
+  try {
+    await execute(getUserSessionAction());
+  } catch (error) {
     if (
-      error === 'UNAUTHORIZED' ||
-      error === 'SESSION_EXPIRED' ||
-      error === 'SESSION_REVOKED'
+      error instanceof ActionError &&
+      error.code === 'UNAUTHORIZED'
     ) {
       redirect('/login');
     }
 
-    // Bubble up to global error boundary for other errors.
     throw error;
   }
 

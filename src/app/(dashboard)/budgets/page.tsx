@@ -1,10 +1,8 @@
-import {
-  getBudgetsAction,
-  BudgetList,
-  CreateBudgetForm,
-} from '@/app/_features/budgets';
-
 import { execute } from '@/app/_lib/safe-action';
+
+import { getBudgetsAction } from '@/app/_entities/budgets';
+
+import { BudgetList, CreateBudgetForm } from '@/app/_features/budgets';
 
 async function BudgetsPage() {
   const budgets = await execute(getBudgetsAction());

@@ -31,7 +31,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "src/app/_lib/utils/tailwind-class-merger"
+    "src/app/_lib/tailwind/tailwind-class-merger"
   ],
   "exclude": ["node_modules"]
 }

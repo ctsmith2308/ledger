@@ -1,8 +1,8 @@
-import {
-  getTransactionsAction,
-  TransactionList,
-} from '@/app/_features/transactions';
 import { execute } from '@/app/_lib/safe-action';
+
+import { getTransactionsAction } from '@/app/_entities/transactions';
+
+import { TransactionList } from '@/app/_features/transactions';
 
 async function TransactionsPage() {
   const transactions = await execute(getTransactionsAction());

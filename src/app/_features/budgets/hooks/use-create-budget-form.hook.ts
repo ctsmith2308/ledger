@@ -1,15 +1,12 @@
 import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
-import { z } from 'zod';
 
 import { execute } from '@/app/_lib/safe-action';
-import { createBudgetAction } from '../actions';
 
-const formSchema = z.object({
-  category: z.string().min(1, 'Category is required.'),
-  monthlyLimit: z.string().min(1, 'Monthly limit is required.'),
-});
+import { createBudgetAction } from '@/app/_entities/budgets';
+
+import { createBudgetFormSchema } from '../schema/create-budget-form.schema';
 
 const useCreateBudgetForm = () => {
   const router = useRouter();
@@ -24,7 +21,7 @@ const useCreateBudgetForm = () => {
 
   const form = useForm({
     defaultValues: { category: '', monthlyLimit: '' },
-    validators: { onSubmit: formSchema },
+    validators: { onSubmit: createBudgetFormSchema },
     onSubmit: ({ value }) =>
       mutate({
         category: value.category,
