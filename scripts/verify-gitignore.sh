@@ -44,6 +44,7 @@ assert_not_ignored() {
 }
 
 echo "Checking critical ignore rules..."
+assert_ignored "/resources"
 assert_ignored "node_modules/dummy.txt" "/node_modules"
 assert_ignored ".next/dummy.txt" "/.next/"
 assert_ignored ".env.local" ".env"
