@@ -1,7 +1,7 @@
 import {
   commandBus,
   queryBus,
-  InProcessEventBus,
+  eventBus,
   prisma,
 } from '@/core/shared/infrastructure';
 
@@ -10,6 +10,8 @@ import {
   RegisterUserHandler,
   LoginUserCommand,
   LoginUserHandler,
+  LogoutUserCommand,
+  LogoutUserHandler,
   GetUserSessionQuery,
   GetUserSessionHandler,
   GetUserProfileQuery,
@@ -39,7 +41,7 @@ class IdentityModule {
     const services = {
       passwordHasher: PasswordHasher,
       idGenerator: IdGenerator,
-      eventBus: new InProcessEventBus(),
+      eventBus,
     };
 
     commandBus.register(
@@ -61,6 +63,11 @@ class IdentityModule {
         services.passwordHasher,
         services.idGenerator,
       ),
+    );
+
+    commandBus.register(
+      LogoutUserCommand,
+      new LogoutUserHandler(repos.userSessionRepository),
     );
 
     queryBus.register(

@@ -431,6 +431,278 @@ new LoginUserHandler(new UserRepository(prisma), new SqsEventBus(sqsClient, QUEU
       },
     ],
   },
+  {
+    slug: 'cqrs-read-model',
+    title: 'CQRS read model — same database, separate schema',
+    subtitle:
+      'A separate read model is justified. A separate database is not — yet.',
+    badge: 'System design',
+    context:
+      'The Transactions context has fundamentally different read and write patterns. Writes enforce business rules against normalised tables — one transaction at a time, validated through the aggregate. Reads serve dashboard queries — spending rollups by category, monthly trends, budget-vs-actual comparisons. Running aggregation queries across the normalised write model on every dashboard load is wasteful and couples read performance to write-model schema decisions.',
+    decision:
+      'Maintain a denormalised rollup table in the same Postgres instance, materialised from domain events. The `GetSpendingByCategory` query handler reads from the rollup — not from the transactions table. A dedicated read replica is the documented scaling trigger, not a day-one requirement.',
+    rationale: [
+      'The rollup table is shaped exactly for the query pattern — one row per user, category, and period. Dashboard queries are single-row lookups, not aggregations across thousands of transactions.',
+      'The `TransactionCreated` event handler updates the rollup incrementally. Each new transaction bumps `totalCents` and increments `transactionCount` for its category and period. The read model is eventually consistent — acceptable for a reporting-heavy domain.',
+      'Same Postgres instance avoids the operational cost of a second database — no cross-database connection management, no replication lag monitoring, no separate backup strategy. The schema boundary is sufficient isolation at this scale.',
+      'The extraction path is documented: when read query volume justifies it, point the query handler at a read replica. The handler code does not change — only the connection string. This is the same interface-swap pattern used throughout the project.',
+    ],
+    tradeoffs: [
+      {
+        pro: 'Dashboard queries are O(1) lookups against pre-computed data, not O(n) aggregations across transactions.',
+        con: 'The rollup must be kept in sync via event handlers. A missed event means stale data until the next full recomputation.',
+      },
+      {
+        pro: 'Same database instance — zero additional infrastructure, one connection pool, one deploy target.',
+        con: 'Write-heavy bursts can still contend with read queries on shared Postgres resources. A read replica eliminates this at the cost of operational complexity.',
+      },
+      {
+        pro: 'The event-driven materialisation pattern is the same one used with a dedicated read replica or a projection store — the code is already shaped for the next step.',
+        con: 'The DurableEventBus persists events before dispatch, but a crash between rollup write and status update could cause a duplicate replay. Idempotent upserts mitigate this.',
+      },
+    ],
+    codeBlocks: [
+      {
+        label: 'Rollup table — the read model schema',
+        code: `// Prisma schema — denormalised, query-optimised
+model CategoryRollup {
+  id               String @id @default(uuid())
+  userId           String @map("user_id")
+  category         String
+  period           String // "2026-03"
+  totalCents       Int    @map("total_cents")
+  transactionCount Int    @map("transaction_count")
+
+  @@unique([userId, category, period])
+  @@index([userId, period])
+  @@schema("transactions_read")
+  @@map("category_rollups")
+}`,
+      },
+      {
+        label:
+          'Event handler — materialises the read model on TransactionCreated',
+        code: `// Listens for TransactionCreated, updates the rollup incrementally
+async handle(event: TransactionCreatedEvent): Promise<void> {
+  await prisma.categoryRollup.upsert({
+    where: {
+      userId_category_period: {
+        userId: event.userId,
+        category: event.category,
+        period: formatPeriod(event.date), // "2026-03"
+      },
+    },
+    update: {
+      totalCents: { increment: event.amountCents },
+      transactionCount: { increment: 1 },
+    },
+    create: {
+      userId: event.userId,
+      category: event.category,
+      period: formatPeriod(event.date),
+      totalCents: event.amountCents,
+      transactionCount: 1,
+    },
+  });
+}`,
+      },
+      {
+        label:
+          'Query handler — reads from rollup, not from transactions table',
+        code: `// GetSpendingByCategoryHandler — hits the read model
+async execute(
+  query: GetSpendingByCategoryQuery,
+): Promise<Result<SpendingByCategory[]>> {
+  const rollups = await this.rollupRepository.findByUserAndPeriod(
+    query.userId,
+    query.period,
+  );
+
+  return Result.ok(rollups);
+}`,
+      },
+    ],
+  },
+  {
+    slug: 'event-handler-ordering',
+    title: 'Event handler ordering — sequential dispatch with a documented extraction path',
+    subtitle:
+      'Registration order is implicit coupling. It works in-process. A message broker would make the dependency explicit.',
+    badge: 'Infrastructure',
+    context:
+      'When a `TransactionCreated` event fires, two handlers respond: `updateCategoryRollup` (transactions module) materialises the read model, and `recordSpend` (budgets module) checks the rollup against budget limits to detect threshold breaches. The second handler depends on the first having completed — it reads from the rollup that the first handler writes. Running them in parallel via `Promise.all` creates a race condition where `recordSpend` reads stale data.',
+    decision:
+      'The in-process event bus dispatches handlers sequentially in registration order. The transactions module registers `updateCategoryRollup` before the budgets module registers `recordSpend`, so the rollup is always fresh when the spend check runs. This is an implicit ordering guarantee — it works because module initialisation order is deterministic and controlled in the composition root.',
+    rationale: [
+      'Sequential dispatch eliminates the race condition with zero additional infrastructure. The rollup write completes before the spend check reads.',
+      'Registration order is deterministic — modules initialise in a fixed order in the composition root. The dependency is implicit but stable.',
+      'The in-process bus is a stand-in for a real message broker. Sequential dispatch matches the semantics of ordered delivery (SQS FIFO, Kafka partition ordering) without the infrastructure cost.',
+    ],
+    tradeoffs: [
+      {
+        pro: 'Zero infrastructure cost — no queues, no retry logic, no dead-letter handling. The ordering guarantee is free.',
+        con: 'The ordering dependency is implicit in registration order, not explicit in the code. A developer reordering module initialisation could break the guarantee without a compiler warning.',
+      },
+      {
+        pro: 'Sequential dispatch is simple to reason about — each handler runs to completion before the next starts.',
+        con: 'A slow handler blocks all downstream handlers for that event. No parallelism for independent handlers that could safely run concurrently.',
+      },
+      {
+        pro: 'The pattern maps directly to message broker semantics — swapping to SQS FIFO or Kafka ordered partitions requires no handler changes.',
+        con: 'The current approach conflates two concerns (rollup materialisation and budget checking) into one event subscription. A message broker would separate them more cleanly.',
+      },
+    ],
+    codeBlocks: [
+      {
+        label: 'Sequential dispatch — handlers run in registration order',
+        code: `// InProcessEventBus — sequential, not parallel
+async dispatch(events: DomainEvent[]): Promise<void> {
+  for (const event of events) {
+    const handlers = this._handlers.get(event.eventType) ?? [];
+    for (const handler of handlers) {
+      await handler(event); // completes before next handler starts
+    }
+  }
+}`,
+      },
+      {
+        label: 'Registration order — transactions before budgets',
+        code: `// transactions/index.ts — registers first
+eventBus.register(
+  TransactionEvents.TRANSACTION_CREATED,
+  createUpdateCategoryRollupHandler(repos.categoryRollupRepository),
+);
+
+// budgets/index.ts — registers second, reads from fresh rollup
+eventBus.register(
+  TransactionEvents.TRANSACTION_CREATED,
+  createRecordSpendHandler(
+    repos.budgetRepository,
+    repos.categoryRollupRepository,
+    eventBus,
+  ),
+);`,
+      },
+      {
+        label: 'Extraction path — explicit event chain replaces implicit ordering',
+        code: `// With a message broker, break the implicit dependency:
+//
+// 1. updateCategoryRollup subscribes to "transaction.created"
+// 2. After writing the rollup, it publishes "rollup.updated"
+// 3. recordSpend subscribes to "rollup.updated" — not "transaction.created"
+//
+// Each handler reacts to the event that represents its precondition.
+// No ordering dependency. No implicit coupling.
+//
+// transaction.created → updateCategoryRollup → rollup.updated → recordSpend`,
+      },
+    ],
+  },
+  {
+    slug: 'durable-event-bus',
+    title: 'Durable event bus — persist first, dispatch second',
+    subtitle:
+      'Every event hits Postgres before any handler runs. Durability and observability without an external broker.',
+    badge: 'Infrastructure',
+    context:
+      'The original in-process event bus dispatched events directly to handlers in memory. If the process crashed between persisting an aggregate and dispatching its events, the events were lost — the rollup would never update, the budget check would never run. In a fintech domain, silent data loss in the event pipeline is not acceptable. The question was whether to add an external message broker or solve durability within the existing infrastructure.',
+    decision:
+      'Replace the in-process event bus with a `DurableEventBus` that persists every event to a `domain_events` table in Postgres before dispatching to handlers. The table is append-only and serves three roles: durable delivery guarantee, audit trail, and failure tracking. Handlers still run in-process and sequentially — the persistence layer wraps the existing dispatch model without changing handler code. An external message broker (Redis Streams, SQS) is the documented scaling trigger for multi-instance fan-out, not for durability.',
+    rationale: [
+      'Persist-first guarantees no event is lost. If the process crashes after the write but before dispatch, the event exists in the database and can be replayed. This is the same guarantee a message broker provides — achieved with infrastructure already in place.',
+      'The `domain_events` table is the audit trail. In a fintech application, knowing what happened and when is a compliance concern. Every event is queryable by aggregate, type, status, and timestamp.',
+      'Failed handlers are tracked with attempt count and error message. A `replayFailed()` method retries events under the max attempt threshold. No silent failures — every error is visible in the database and logs.',
+      'The `IEventBus` interface is unchanged. The swap from `InProcessEventBus` to `DurableEventBus` was a single-line change in the singleton file. No module code was modified — every module already imported the shared `eventBus` singleton.',
+    ],
+    tradeoffs: [
+      {
+        pro: 'Every event is persisted before handlers run. Crash-safe, replayable, auditable.',
+        con: 'Every event adds a database write before dispatch. At high throughput this adds latency and write load to Postgres.',
+      },
+      {
+        pro: 'The `domain_events` table is queryable — event history, failure rates, processing latency are all SQL queries away.',
+        con: 'The table grows with every event. Requires a retention policy — archive or purge processed events older than 30–90 days. A scheduled cleanup job or Postgres table partitioning by month keeps the table lean.',
+      },
+      {
+        pro: 'No new infrastructure. Postgres is already the primary datastore. The event store is another schema in the same instance.',
+        con: 'Still single-process dispatch. Multiple ECS instances would each run their own handlers independently. Multi-instance fan-out requires an external broker.',
+      },
+    ],
+    codeBlocks: [
+      {
+        label: 'DurableEventBus — persist, then dispatch, then mark processed',
+        code: `class DurableEventBus implements IEventBus {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async dispatch(events: DomainEvent[]): Promise<void> {
+    for (const event of events) {
+      // 1. Persist to domain_events table (status: "pending")
+      const record = await this._persist(event);
+      // 2. Run handlers sequentially
+      // 3. On success → status: "processed"
+      // 4. On failure → status: "failed", attempts++, error logged
+      await this._process(event, record.id);
+    }
+  }
+
+  async replayFailed(): Promise<number> {
+    // Pick up failed events under MAX_ATTEMPTS, retry in order
+  }
+}`,
+      },
+      {
+        label: 'Event store schema — append-only, indexed for queries',
+        code: `model DomainEventRecord {
+  id          String    @id @default(uuid())
+  aggregateId String    @map("aggregate_id")
+  eventType   String    @map("event_type")
+  payload     Json
+  status      String    @default("pending") // pending | processed | failed
+  attempts    Int       @default(0)
+  error       String?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([eventType, status])  // find pending/failed by type
+  @@index([aggregateId])        // event history for an entity
+  @@index([createdAt])          // retention cleanup
+  @@schema("events")
+}`,
+      },
+      {
+        label: 'Observability — SQL queries replace broker dashboards',
+        code: `-- What failed and why?
+SELECT event_type, error, attempts
+FROM events.domain_events
+WHERE status = 'failed';
+
+-- Processing latency by event type
+SELECT event_type,
+  avg(processed_at - created_at) as avg_latency
+FROM events.domain_events
+WHERE status = 'processed'
+GROUP BY event_type;
+
+-- Retention cleanup — archive processed events older than 90 days
+DELETE FROM events.domain_events
+WHERE status = 'processed'
+  AND created_at < now() - interval '90 days';`,
+      },
+      {
+        label: 'Scaling path — external broker replaces in-process dispatch',
+        code: `// Today: DurableEventBus — Postgres + in-process dispatch
+// Handles: durability, audit, replay, failure tracking
+//
+// Multi-instance trigger: Redis Streams or SQS replaces dispatch
+//
+// DurableEventBus (Postgres) → persist (source of truth, audit)
+// RedisStreamEventBus        → dispatch (fan-out, consumer groups)
+//
+// Both implement IEventBus. The composition root picks one.
+// Handler code never changes.`,
+      },
+    ],
+  },
 ];
 
 const getDecision = (slug: string): ArchitectureDecision | undefined =>

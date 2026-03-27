@@ -65,7 +65,7 @@ class Transaction extends AggregateRoot {
     );
 
     transaction.addDomainEvent(
-      new TransactionCreatedEvent(id, userId, amount, category),
+      new TransactionCreatedEvent(id, userId, amount, date, category),
     );
 
     return transaction;

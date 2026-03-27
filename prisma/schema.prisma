@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "banking", "transactions", "budgets"]
+  schemas  = ["identity", "banking", "transactions", "transactions_read", "budgets", "events"]
 }
 
 model User {
@@ -118,6 +118,22 @@ model Transaction {
   @@map("transactions")
 }
 
+// ─── Transactions Read Model ────────────────────────────────────────
+
+model CategoryRollup {
+  id               String @id @default(uuid())
+  userId           String @map("user_id")
+  category         String
+  period           String // "2026-03"
+  totalCents       Int    @map("total_cents")
+  transactionCount Int    @map("transaction_count")
+
+  @@unique([userId, category, period])
+  @@index([userId, period])
+  @@schema("transactions_read")
+  @@map("category_rollups")
+}
+
 // ─── Budgets Context ────────────────────────────────────────────────
 
 model Budget {
@@ -132,5 +148,25 @@ model Budget {
   @@index([userId])
   @@schema("budgets")
   @@map("budgets")
+}
+
+// ─── Event Store ────────────────────────────────────────────────────
+
+model DomainEventRecord {
+  id          String    @id @default(uuid())
+  aggregateId String    @map("aggregate_id")
+  eventType   String    @map("event_type")
+  payload     Json
+  status      String    @default("pending") // "pending" | "processed" | "failed"
+  attempts    Int       @default(0)
+  error       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  processedAt DateTime? @map("processed_at")
+
+  @@index([eventType, status])
+  @@index([aggregateId])
+  @@index([createdAt])
+  @@schema("events")
+  @@map("domain_events")
 }
 

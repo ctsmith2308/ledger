@@ -72,7 +72,17 @@ export type BankAccount = Prisma.BankAccountModel
  */
 export type Transaction = Prisma.TransactionModel
 /**
+ * Model CategoryRollup
+ * 
+ */
+export type CategoryRollup = Prisma.CategoryRollupModel
+/**
  * Model Budget
  * 
  */
 export type Budget = Prisma.BudgetModel
+/**
+ * Model DomainEventRecord
+ * 
+ */
+export type DomainEventRecord = Prisma.DomainEventRecordModel

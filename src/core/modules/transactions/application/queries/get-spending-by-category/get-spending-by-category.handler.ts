@@ -1,58 +1,41 @@
 import { IHandler, Result } from '@/core/shared/domain';
-import { ITransactionRepository } from '@/core/modules/transactions/domain';
+import { type ICategoryRollupRepository } from '@/core/modules/transactions/domain';
 
 import {
   GetSpendingByCategoryQuery,
   GetSpendingByCategoryResponse,
-  SpendingByCategory,
 } from './get-spending-by-category.query';
+
+const _formatPeriod = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
 
 class GetSpendingByCategoryHandler
   implements
     IHandler<GetSpendingByCategoryQuery, GetSpendingByCategoryResponse>
 {
   constructor(
-    private readonly transactionRepository: ITransactionRepository,
+    private readonly rollupRepository: ICategoryRollupRepository,
   ) {}
 
   async execute(
     query: GetSpendingByCategoryQuery,
   ): Promise<GetSpendingByCategoryResponse> {
-    const transactions = await this.transactionRepository.findByUserId(
+    const period = _formatPeriod(query.month);
+
+    const rollups = await this.rollupRepository.findByUserAndPeriod(
       query.userId,
+      period,
     );
 
-    const monthStart = new Date(
-      query.month.getFullYear(),
-      query.month.getMonth(),
-      1,
-    );
-    const monthEnd = new Date(
-      query.month.getFullYear(),
-      query.month.getMonth() + 1,
-      1,
-    );
+    const spending = rollups.map((r) => ({
+      category: r.category,
+      total: r.totalCents / 100,
+    }));
 
-    const filtered = transactions.filter((t) => {
-      const date = t.date;
-      return date >= monthStart && date < monthEnd;
-    });
-
-    const categoryMap = new Map<string, number>();
-
-    for (const transaction of filtered) {
-      const category = transaction.category ?? 'Uncategorized';
-      const current = categoryMap.get(category) ?? 0;
-      categoryMap.set(category, current + transaction.amount);
-    }
-
-    const grouped: SpendingByCategory[] = [];
-
-    for (const [category, total] of categoryMap) {
-      grouped.push({ category, total });
-    }
-
-    return Result.ok(grouped);
+    return Result.ok(spending);
   }
 }
 

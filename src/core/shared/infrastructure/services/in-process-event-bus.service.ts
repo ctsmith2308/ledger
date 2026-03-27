@@ -18,7 +18,9 @@ class InProcessEventBus implements IEventBus {
         continue;
       }
 
-      await Promise.all(handlers.map((handler) => handler(event)));
+      for (const handler of handlers) {
+        await handler(event);
+      }
     }
   }
 }

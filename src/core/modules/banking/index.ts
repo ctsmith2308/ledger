@@ -1,7 +1,7 @@
 import {
   commandBus,
   queryBus,
-  InProcessEventBus,
+  eventBus,
   prisma,
 } from '@/core/shared/infrastructure';
 
@@ -37,7 +37,7 @@ class BankingModule {
 
     const services = {
       idGenerator: IdGenerator,
-      eventBus: new InProcessEventBus(),
+      eventBus,
     };
 
     commandBus.register(

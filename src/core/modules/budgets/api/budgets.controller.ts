@@ -2,7 +2,11 @@ import { Result } from '@/core/shared/domain';
 
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
-import { CreateBudgetCommand, GetBudgetsQuery } from '../application';
+import {
+  CreateBudgetCommand,
+  DeleteBudgetCommand,
+  GetBudgetsQuery,
+} from '../application';
 
 import { BudgetMapper } from './mappers';
 
@@ -24,6 +28,12 @@ class BudgetsController {
     return result.isFailure
       ? Result.fail(result.error)
       : Result.ok(BudgetMapper.toDTO(result.value));
+  }
+
+  async deleteBudget(userId: string, budgetId: string) {
+    return this.commandBus.dispatch(
+      new DeleteBudgetCommand(userId, budgetId),
+    );
   }
 
   async getBudgets(userId: string) {

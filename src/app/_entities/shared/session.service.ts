@@ -23,8 +23,23 @@ const setCookieCurry =
     });
   };
 
+const deleteCookieCurry = (cookies: ResolveCookies) => async () => {
+  const cookieStore = await cookies();
+
+  cookieStore.delete(SESSION_COOKIE_NAME);
+};
+
 const getCookie = getCookieCurry(cookies);
 
 const setCookie = setCookieCurry(cookies);
 
-export { getCookie, setCookie, getCookieCurry, setCookieCurry };
+const deleteCookie = deleteCookieCurry(cookies);
+
+export {
+  getCookie,
+  setCookie,
+  deleteCookie,
+  getCookieCurry,
+  setCookieCurry,
+  deleteCookieCurry,
+};

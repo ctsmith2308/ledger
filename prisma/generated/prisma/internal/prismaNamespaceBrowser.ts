@@ -57,7 +57,9 @@ export const ModelName = {
   PlaidItem: 'PlaidItem',
   BankAccount: 'BankAccount',
   Transaction: 'Transaction',
-  Budget: 'Budget'
+  CategoryRollup: 'CategoryRollup',
+  Budget: 'Budget',
+  DomainEventRecord: 'DomainEventRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -164,6 +166,18 @@ export const TransactionScalarFieldEnum = {
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
 
 
+export const CategoryRollupScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  period: 'period',
+  totalCents: 'totalCents',
+  transactionCount: 'transactionCount'
+} as const
+
+export type CategoryRollupScalarFieldEnum = (typeof CategoryRollupScalarFieldEnum)[keyof typeof CategoryRollupScalarFieldEnum]
+
+
 export const BudgetScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -176,12 +190,34 @@ export const BudgetScalarFieldEnum = {
 export type BudgetScalarFieldEnum = (typeof BudgetScalarFieldEnum)[keyof typeof BudgetScalarFieldEnum]
 
 
+export const DomainEventRecordScalarFieldEnum = {
+  id: 'id',
+  aggregateId: 'aggregateId',
+  eventType: 'eventType',
+  payload: 'payload',
+  status: 'status',
+  attempts: 'attempts',
+  error: 'error',
+  createdAt: 'createdAt',
+  processedAt: 'processedAt'
+} as const
+
+export type DomainEventRecordScalarFieldEnum = (typeof DomainEventRecordScalarFieldEnum)[keyof typeof DomainEventRecordScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -198,4 +234,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

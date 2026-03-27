@@ -5,6 +5,7 @@ import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 import {
   RegisterUserCommand,
   LoginUserCommand,
+  LogoutUserCommand,
   GetUserSessionQuery,
   GetUserProfileQuery,
 } from '../application';
@@ -35,6 +36,12 @@ class IdentityController {
     return result.isFailure
       ? Result.fail(result.error)
       : Result.ok(UserSessionMapper.toDTO(result.value));
+  }
+
+  async logoutUser(sessionToken: string) {
+    return this.commandBus.dispatch(
+      new LogoutUserCommand(sessionToken),
+    );
   }
 
   async getUserSession(token: string) {

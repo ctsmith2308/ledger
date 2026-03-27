@@ -390,7 +390,9 @@ export const ModelName = {
   PlaidItem: 'PlaidItem',
   BankAccount: 'BankAccount',
   Transaction: 'Transaction',
-  Budget: 'Budget'
+  CategoryRollup: 'CategoryRollup',
+  Budget: 'Budget',
+  DomainEventRecord: 'DomainEventRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -406,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userSession" | "userProfile" | "plaidItem" | "bankAccount" | "transaction" | "budget"
+    modelProps: "user" | "userSession" | "userProfile" | "plaidItem" | "bankAccount" | "transaction" | "categoryRollup" | "budget" | "domainEventRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -854,6 +856,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CategoryRollup: {
+      payload: Prisma.$CategoryRollupPayload<ExtArgs>
+      fields: Prisma.CategoryRollupFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CategoryRollupFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CategoryRollupFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>
+        }
+        findFirst: {
+          args: Prisma.CategoryRollupFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CategoryRollupFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>
+        }
+        findMany: {
+          args: Prisma.CategoryRollupFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>[]
+        }
+        create: {
+          args: Prisma.CategoryRollupCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>
+        }
+        createMany: {
+          args: Prisma.CategoryRollupCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CategoryRollupCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>[]
+        }
+        delete: {
+          args: Prisma.CategoryRollupDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>
+        }
+        update: {
+          args: Prisma.CategoryRollupUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>
+        }
+        deleteMany: {
+          args: Prisma.CategoryRollupDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CategoryRollupUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CategoryRollupUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>[]
+        }
+        upsert: {
+          args: Prisma.CategoryRollupUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryRollupPayload>
+        }
+        aggregate: {
+          args: Prisma.CategoryRollupAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCategoryRollup>
+        }
+        groupBy: {
+          args: Prisma.CategoryRollupGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CategoryRollupGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CategoryRollupCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CategoryRollupCountAggregateOutputType> | number
+        }
+      }
+    }
     Budget: {
       payload: Prisma.$BudgetPayload<ExtArgs>
       fields: Prisma.BudgetFieldRefs
@@ -925,6 +1001,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BudgetCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BudgetCountAggregateOutputType> | number
+        }
+      }
+    }
+    DomainEventRecord: {
+      payload: Prisma.$DomainEventRecordPayload<ExtArgs>
+      fields: Prisma.DomainEventRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DomainEventRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DomainEventRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.DomainEventRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DomainEventRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>
+        }
+        findMany: {
+          args: Prisma.DomainEventRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>[]
+        }
+        create: {
+          args: Prisma.DomainEventRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>
+        }
+        createMany: {
+          args: Prisma.DomainEventRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DomainEventRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.DomainEventRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>
+        }
+        update: {
+          args: Prisma.DomainEventRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.DomainEventRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DomainEventRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DomainEventRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.DomainEventRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DomainEventRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.DomainEventRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDomainEventRecord>
+        }
+        groupBy: {
+          args: Prisma.DomainEventRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DomainEventRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DomainEventRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DomainEventRecordCountAggregateOutputType> | number
         }
       }
     }
@@ -1055,6 +1205,18 @@ export const TransactionScalarFieldEnum = {
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
 
 
+export const CategoryRollupScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  period: 'period',
+  totalCents: 'totalCents',
+  transactionCount: 'transactionCount'
+} as const
+
+export type CategoryRollupScalarFieldEnum = (typeof CategoryRollupScalarFieldEnum)[keyof typeof CategoryRollupScalarFieldEnum]
+
+
 export const BudgetScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1067,12 +1229,34 @@ export const BudgetScalarFieldEnum = {
 export type BudgetScalarFieldEnum = (typeof BudgetScalarFieldEnum)[keyof typeof BudgetScalarFieldEnum]
 
 
+export const DomainEventRecordScalarFieldEnum = {
+  id: 'id',
+  aggregateId: 'aggregateId',
+  eventType: 'eventType',
+  payload: 'payload',
+  status: 'status',
+  attempts: 'attempts',
+  error: 'error',
+  createdAt: 'createdAt',
+  processedAt: 'processedAt'
+} as const
+
+export type DomainEventRecordScalarFieldEnum = (typeof DomainEventRecordScalarFieldEnum)[keyof typeof DomainEventRecordScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1089,6 +1273,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -1157,6 +1350,34 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -1260,7 +1481,9 @@ export type GlobalOmitConfig = {
   plaidItem?: Prisma.PlaidItemOmit
   bankAccount?: Prisma.BankAccountOmit
   transaction?: Prisma.TransactionOmit
+  categoryRollup?: Prisma.CategoryRollupOmit
   budget?: Prisma.BudgetOmit
+  domainEventRecord?: Prisma.DomainEventRecordOmit
 }
 
 /* Types for Logging */

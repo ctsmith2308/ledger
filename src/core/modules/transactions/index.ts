@@ -1,7 +1,8 @@
+import { TransactionEvents } from '@/core/shared/domain';
 import {
   commandBus,
   queryBus,
-  InProcessEventBus,
+  eventBus,
   prisma,
   IdGenerator,
 } from '@/core/shared/infrastructure';
@@ -13,9 +14,13 @@ import {
   GetTransactionsHandler,
   GetSpendingByCategoryQuery,
   GetSpendingByCategoryHandler,
+  createUpdateCategoryRollupHandler,
 } from './application';
 
-import { TransactionRepository } from './infrastructure';
+import {
+  TransactionRepository,
+  CategoryRollupRepository,
+} from './infrastructure';
 
 import {
   PlaidItemRepository,
@@ -31,13 +36,18 @@ class TransactionsModule {
     const repos = {
       transactionRepository: new TransactionRepository(prisma),
       plaidItemRepository: new PlaidItemRepository(prisma),
+      categoryRollupRepository: new CategoryRollupRepository(prisma),
     };
 
     const services = {
       plaidClient: PlaidClientService.create(),
-      eventBus: new InProcessEventBus(),
       idGenerator: IdGenerator,
     };
+
+    eventBus.register(
+      TransactionEvents.TRANSACTION_CREATED,
+      createUpdateCategoryRollupHandler(repos.categoryRollupRepository),
+    );
 
     commandBus.register(
       SyncTransactionsCommand,
@@ -45,7 +55,7 @@ class TransactionsModule {
         repos.plaidItemRepository,
         repos.transactionRepository,
         services.plaidClient,
-        services.eventBus,
+        eventBus,
         services.idGenerator,
       ),
     );
@@ -57,7 +67,7 @@ class TransactionsModule {
 
     queryBus.register(
       GetSpendingByCategoryQuery,
-      new GetSpendingByCategoryHandler(repos.transactionRepository),
+      new GetSpendingByCategoryHandler(repos.categoryRollupRepository),
     );
 
     return new TransactionsController(commandBus, queryBus);

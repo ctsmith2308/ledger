@@ -1,7 +1,8 @@
+import { TransactionEvents } from '@/core/shared/domain';
 import {
   commandBus,
   queryBus,
-  InProcessEventBus,
+  eventBus,
   prisma,
   IdGenerator,
 } from '@/core/shared/infrastructure';
@@ -9,11 +10,16 @@ import {
 import {
   CreateBudgetCommand,
   CreateBudgetHandler,
+  DeleteBudgetCommand,
+  DeleteBudgetHandler,
   GetBudgetsQuery,
   GetBudgetsHandler,
+  createRecordSpendHandler,
 } from './application';
 
 import { BudgetRepository } from './infrastructure';
+
+import { CategoryRollupRepository } from '@/core/modules/transactions/infrastructure';
 
 import { BudgetsController } from './api';
 
@@ -23,20 +29,30 @@ class BudgetsModule {
   static init(): BudgetsController {
     const repos = {
       budgetRepository: new BudgetRepository(prisma),
+      categoryRollupRepository: new CategoryRollupRepository(prisma),
     };
 
-    const services = {
-      idGenerator: IdGenerator,
-      eventBus: new InProcessEventBus(),
-    };
+    eventBus.register(
+      TransactionEvents.TRANSACTION_CREATED,
+      createRecordSpendHandler(
+        repos.budgetRepository,
+        repos.categoryRollupRepository,
+        eventBus,
+      ),
+    );
 
     commandBus.register(
       CreateBudgetCommand,
       new CreateBudgetHandler(
         repos.budgetRepository,
-        services.eventBus,
-        services.idGenerator,
+        eventBus,
+        IdGenerator,
       ),
+    );
+
+    commandBus.register(
+      DeleteBudgetCommand,
+      new DeleteBudgetHandler(repos.budgetRepository),
     );
 
     queryBus.register(

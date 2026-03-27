@@ -8,6 +8,7 @@ interface IBudgetRepository {
     userId: string,
     category: string,
   ): Promise<Budget | null>;
+  deleteById(id: string): Promise<void>;
 }
 
 export { type IBudgetRepository };
