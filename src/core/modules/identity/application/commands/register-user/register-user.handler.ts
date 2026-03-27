@@ -1,12 +1,16 @@
-import { IHandler, IEventBus, Result } from '@/core/shared/domain';
+import { IHandler, IEventBus, Result, ValidationException } from '@/core/shared/domain';
 import {
   IPasswordHasher,
   IIdGenerator,
   IUserRepository,
+  IUserProfileRepository,
   Email,
   Password,
   UserId,
+  FirstName,
+  LastName,
   User,
+  UserProfile,
 } from '@/core/modules/identity/domain';
 
 import {
@@ -20,12 +24,23 @@ class RegisterUserHandler implements IHandler<
 > {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly userProfileRepository: IUserProfileRepository,
     private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
     private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<RegisterUserResponse> {
+    const firstNameResult = FirstName.create(command.firstName);
+    if (firstNameResult.isFailure)
+      return Result.fail(new ValidationException(firstNameResult.error.message));
+    const firstName = firstNameResult.value;
+
+    const lastNameResult = LastName.create(command.lastName);
+    if (lastNameResult.isFailure)
+      return Result.fail(new ValidationException(lastNameResult.error.message));
+    const lastName = lastNameResult.value;
+
     const emailResult = Email.create(command.email);
     if (emailResult.isFailure) return Result.fail(emailResult.error);
     const email = emailResult.value;
@@ -45,6 +60,10 @@ class RegisterUserHandler implements IHandler<
     const user = User.register(userId, email, passwordHash);
 
     await this.userRepository.save(user);
+
+    const profile = UserProfile.save(userId, firstName, lastName);
+
+    await this.userProfileRepository.save(profile);
 
     const events = user.pullDomainEvents();
 

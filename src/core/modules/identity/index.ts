@@ -48,6 +48,7 @@ class IdentityModule {
       RegisterUserCommand,
       new RegisterUserHandler(
         repos.userRepository,
+        repos.userProfileRepository,
         services.eventBus,
         services.passwordHasher,
         services.idGenerator,

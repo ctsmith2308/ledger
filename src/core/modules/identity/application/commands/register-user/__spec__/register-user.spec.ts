@@ -3,6 +3,7 @@ import { RegisterUserHandler } from '../register-user.handler';
 import { RegisterUserCommand } from '../register-user.command';
 import {
   type IUserRepository,
+  type IUserProfileRepository,
   type IPasswordHasher,
   type IIdGenerator,
   Email,
@@ -14,6 +15,7 @@ import { type IEventBus } from '@/core/shared/domain';
 
 const _makeHandler = (overrides: {
   userRepository?: Partial<IUserRepository>;
+  userProfileRepository?: Partial<IUserProfileRepository>;
   eventBus?: Partial<IEventBus>;
   hasher?: Partial<IPasswordHasher>;
   idGenerator?: Partial<IIdGenerator>;
@@ -23,6 +25,12 @@ const _makeHandler = (overrides: {
     findById: vi.fn(),
     findByEmail: vi.fn().mockResolvedValue(null),
     ...overrides.userRepository,
+  };
+
+  const userProfileRepository: IUserProfileRepository = {
+    save: vi.fn(),
+    findById: vi.fn(),
+    ...overrides.userProfileRepository,
   };
 
   const eventBus: IEventBus = {
@@ -44,16 +52,19 @@ const _makeHandler = (overrides: {
 
   const handler = new RegisterUserHandler(
     userRepository,
+    userProfileRepository,
     eventBus,
     hasher,
     idGenerator,
   );
 
-  return { handler, userRepository, eventBus, hasher, idGenerator };
+  return { handler, userRepository, userProfileRepository, eventBus, hasher, idGenerator };
 };
 
 describe('RegisterUserHandler', () => {
   const validCommand = new RegisterUserCommand(
+    'Test',
+    'User',
     'test@example.com',
     'Secure!1',
   );
@@ -85,6 +96,19 @@ describe('RegisterUserHandler', () => {
       await handler.execute(validCommand);
 
       expect(hasher.hash).toHaveBeenCalledWith('Secure!1');
+    });
+
+    it('creates a user profile with first and last name', async () => {
+      const { handler, userProfileRepository } = _makeHandler();
+
+      await handler.execute(validCommand);
+
+      expect(userProfileRepository.save).toHaveBeenCalledTimes(1);
+      const savedProfile = (
+        userProfileRepository.save as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(savedProfile.firstName.value).toBe('Test');
+      expect(savedProfile.lastName.value).toBe('User');
     });
 
     it('dispatches domain events', async () => {
@@ -135,12 +159,31 @@ describe('RegisterUserHandler', () => {
 
       expect(userRepository.save).not.toHaveBeenCalled();
     });
+
+    it('does not create a profile when duplicate exists', async () => {
+      const existingUser = User.reconstitute(
+        UserId.from('existing-id'),
+        Email.from('test@example.com'),
+        Password.fromHash('hash'),
+        false,
+      );
+
+      const { handler, userProfileRepository } = _makeHandler({
+        userRepository: {
+          findByEmail: vi.fn().mockResolvedValue(existingUser),
+        },
+      });
+
+      await handler.execute(validCommand);
+
+      expect(userProfileRepository.save).not.toHaveBeenCalled();
+    });
   });
 
   describe('validation failures', () => {
     it('fails with invalid email', async () => {
       const { handler } = _makeHandler();
-      const command = new RegisterUserCommand('bad-email', 'Secure!1');
+      const command = new RegisterUserCommand('Test', 'User', 'bad-email', 'Secure!1');
 
       const result = await handler.execute(command);
 
@@ -150,6 +193,8 @@ describe('RegisterUserHandler', () => {
     it('fails with invalid password (no special char)', async () => {
       const { handler } = _makeHandler();
       const command = new RegisterUserCommand(
+        'Test',
+        'User',
         'test@example.com',
         'NoSpecial1',
       );
@@ -162,6 +207,8 @@ describe('RegisterUserHandler', () => {
     it('fails with invalid password (no number)', async () => {
       const { handler } = _makeHandler();
       const command = new RegisterUserCommand(
+        'Test',
+        'User',
         'test@example.com',
         'NoNumber!',
       );
@@ -171,9 +218,51 @@ describe('RegisterUserHandler', () => {
       expect(result.isFailure).toBe(true);
     });
 
+    it('fails with empty first name', async () => {
+      const { handler } = _makeHandler();
+      const command = new RegisterUserCommand(
+        '',
+        'User',
+        'test@example.com',
+        'Secure!1',
+      );
+
+      const result = await handler.execute(command);
+
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('fails with empty last name', async () => {
+      const { handler } = _makeHandler();
+      const command = new RegisterUserCommand(
+        'Test',
+        '',
+        'test@example.com',
+        'Secure!1',
+      );
+
+      const result = await handler.execute(command);
+
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('does not call repository when first name is invalid', async () => {
+      const { handler, userRepository } = _makeHandler();
+      const command = new RegisterUserCommand(
+        '',
+        'User',
+        'test@example.com',
+        'Secure!1',
+      );
+
+      await handler.execute(command);
+
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+    });
+
     it('does not call repository when email is invalid', async () => {
       const { handler, userRepository } = _makeHandler();
-      const command = new RegisterUserCommand('bad', 'Secure!1');
+      const command = new RegisterUserCommand('Test', 'User', 'bad', 'Secure!1');
 
       await handler.execute(command);
 

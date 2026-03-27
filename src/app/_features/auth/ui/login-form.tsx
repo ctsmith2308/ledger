@@ -59,7 +59,7 @@ function LoginForm() {
           {/** Submit Button */}
           <Button type="submit" form={formId} disabled={isPending}>
             {isPending && <Spinner />}
-            Submit
+            Login
           </Button>
         </Field>
       </CardFooter>

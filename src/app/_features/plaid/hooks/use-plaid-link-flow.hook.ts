@@ -8,6 +8,7 @@ import { execute } from '@/app/_lib/safe-action';
 import {
   createLinkTokenAction,
   exchangePublicTokenAction,
+  type ExchangePublicTokenInput,
 } from '@/app/_entities/banking';
 import { syncTransactionsAction } from '@/app/_entities/transactions';
 
@@ -23,7 +24,7 @@ const usePlaidLinkFlow = () => {
   });
 
   const exchangeToken = useMutation({
-    mutationFn: (input: { publicToken: string }) =>
+    mutationFn: (input: ExchangePublicTokenInput) =>
       execute(exchangePublicTokenAction(input)),
     onSuccess: async () => {
       await execute(syncTransactionsAction());

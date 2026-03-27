@@ -4,7 +4,10 @@ import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
-import { createBudgetAction } from '@/app/_entities/budgets';
+import {
+  createBudgetAction,
+  type CreateBudgetInput,
+} from '@/app/_entities/budgets';
 
 import { createBudgetFormSchema } from '../schema/create-budget-form.schema';
 
@@ -12,7 +15,7 @@ const useCreateBudgetForm = () => {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (input: { category: string; monthlyLimit: number }) =>
+    mutationFn: (input: CreateBudgetInput) =>
       execute(createBudgetAction(input)),
     onSuccess: () => {
       router.refresh();

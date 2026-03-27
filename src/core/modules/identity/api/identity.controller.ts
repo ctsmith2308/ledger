@@ -18,9 +18,14 @@ class IdentityController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  async registerUser(email: string, password: string) {
+  async registerUser(
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+  ) {
     const result = await this.commandBus.dispatch(
-      new RegisterUserCommand(email, password),
+      new RegisterUserCommand(firstName, lastName, email, password),
     );
 
     return result.isFailure

@@ -9,6 +9,8 @@ type RegisterUserResponse = Result<RegisterUserResult, DomainException>;
 
 class RegisterUserCommand extends Command<RegisterUserResponse> {
   constructor(
+    readonly firstName: string,
+    readonly lastName: string,
     readonly email: string,
     readonly password: string,
   ) {

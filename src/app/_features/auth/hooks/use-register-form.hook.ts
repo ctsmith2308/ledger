@@ -4,13 +4,17 @@ import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
-import { registerAction, registerUserSchema } from '@/app/_entities/identity';
+import {
+  registerAction,
+  registerUserSchema,
+  type RegisterUserInput,
+} from '@/app/_entities/identity';
 
 const useRegisterForm = () => {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (input: { email: string; password: string }) =>
+    mutationFn: (input: RegisterUserInput) =>
       execute(registerAction(input)),
     onSuccess: () => {
       router.push('/login');
@@ -18,7 +22,7 @@ const useRegisterForm = () => {
   });
 
   const form = useForm({
-    defaultValues: { email: '', password: '' },
+    defaultValues: { firstName: '', lastName: '', email: '', password: '' },
     validators: { onSubmit: registerUserSchema },
     onSubmit: ({ value }) => mutate(value),
   });

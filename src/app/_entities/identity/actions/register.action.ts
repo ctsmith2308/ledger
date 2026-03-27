@@ -13,6 +13,8 @@ const registerAction = actionClient
   .inputSchema(registerUserSchema)
   .action(async ({ parsedInput }) => {
     const result = await identityController.registerUser(
+      parsedInput.firstName,
+      parsedInput.lastName,
       parsedInput.email,
       parsedInput.password,
     );

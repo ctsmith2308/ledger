@@ -4,13 +4,17 @@ import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
-import { loginAction, loginUserSchema } from '@/app/_entities/identity';
+import {
+  loginAction,
+  loginUserSchema,
+  type LoginUserInput,
+} from '@/app/_entities/identity';
 
 const useLoginForm = () => {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (input: { email: string; password: string }) =>
+    mutationFn: (input: LoginUserInput) =>
       execute(loginAction(input)),
     onSuccess: () => {
       router.push('/dashboard');

@@ -36,7 +36,7 @@ function RegisterForm() {
         <CardTitle>Create a new account</CardTitle>
 
         <CardDescription>
-          Enter your email below to create a new account
+          Enter your details below to create a new account
         </CardDescription>
 
         <CardAction>
@@ -47,10 +47,13 @@ function RegisterForm() {
       <CardContent>
         <form id={formType} onSubmit={handleSubmit}>
           <FieldGroup>
-            {/** Email Field */}
+            <div className="grid grid-cols-2 gap-3">
+              <FirstNameField form={form} />
+              <LastNameField form={form} />
+            </div>
+
             <EmailField form={form} />
 
-            {/** Password Field */}
             <PasswordField form={form} />
           </FieldGroup>
         </form>
@@ -58,7 +61,6 @@ function RegisterForm() {
 
       <CardFooter className="flex-col gap-2">
         <Field>
-          {/** Submit Button */}
           <Button type="submit" form={formType} disabled={isPending}>
             {isPending && <Spinner />}
             Submit
@@ -66,6 +68,66 @@ function RegisterForm() {
         </Field>
       </CardFooter>
     </Card>
+  );
+}
+
+function FirstNameField({ form }: { form: RegisterFormApi }) {
+  return (
+    <form.Field name="firstName">
+      {(field) => {
+        const isInvalid =
+          field.state.meta.isTouched && !field.state.meta.isValid;
+
+        return (
+          <Field data-invalid={isInvalid}>
+            <FieldLabel htmlFor={field.name}>First name</FieldLabel>
+
+            <Input
+              id={field.name}
+              name={field.name}
+              type="text"
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e) => field.handleChange(e.target.value)}
+              aria-invalid={isInvalid}
+              placeholder="John"
+            />
+
+            {isInvalid && <FieldError errors={field.state.meta.errors} />}
+          </Field>
+        );
+      }}
+    </form.Field>
+  );
+}
+
+function LastNameField({ form }: { form: RegisterFormApi }) {
+  return (
+    <form.Field name="lastName">
+      {(field) => {
+        const isInvalid =
+          field.state.meta.isTouched && !field.state.meta.isValid;
+
+        return (
+          <Field data-invalid={isInvalid}>
+            <FieldLabel htmlFor={field.name}>Last name</FieldLabel>
+
+            <Input
+              id={field.name}
+              name={field.name}
+              type="text"
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e) => field.handleChange(e.target.value)}
+              aria-invalid={isInvalid}
+              placeholder="Doe"
+            />
+
+            {isInvalid && <FieldError errors={field.state.meta.errors} />}
+          </Field>
+        );
+      }}
+    </form.Field>
   );
 }
 
@@ -78,10 +140,8 @@ function EmailField({ form }: { form: RegisterFormApi }) {
 
         return (
           <Field data-invalid={isInvalid}>
-            {/* Email Label */}
             <FieldLabel htmlFor={field.name}>Email</FieldLabel>
 
-            {/* Email Input */}
             <Input
               id={field.name}
               name={field.name}
@@ -93,7 +153,6 @@ function EmailField({ form }: { form: RegisterFormApi }) {
               placeholder="m@example.com"
             />
 
-            {/* Email Validation Error*/}
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );
@@ -111,10 +170,8 @@ function PasswordField({ form }: { form: RegisterFormApi }) {
 
         return (
           <Field data-invalid={isInvalid}>
-            {/* Password Label */}
             <FieldLabel htmlFor={field.name}>Password</FieldLabel>
 
-            {/* Password Input */}
             <Input
               id={field.name}
               name={field.name}
@@ -125,7 +182,6 @@ function PasswordField({ form }: { form: RegisterFormApi }) {
               aria-invalid={isInvalid}
             />
 
-            {/* Password Validation Error  */}
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );
