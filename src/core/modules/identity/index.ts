@@ -12,6 +12,10 @@ import {
   LoginUserHandler,
   LogoutUserCommand,
   LogoutUserHandler,
+  UpdateUserProfileCommand,
+  UpdateUserProfileHandler,
+  DeleteAccountCommand,
+  DeleteAccountHandler,
   GetUserSessionQuery,
   GetUserSessionHandler,
   GetUserProfileQuery,
@@ -69,6 +73,19 @@ class IdentityModule {
     commandBus.register(
       LogoutUserCommand,
       new LogoutUserHandler(repos.userSessionRepository),
+    );
+
+    commandBus.register(
+      UpdateUserProfileCommand,
+      new UpdateUserProfileHandler(repos.userProfileRepository),
+    );
+
+    commandBus.register(
+      DeleteAccountCommand,
+      new DeleteAccountHandler(
+        repos.userRepository,
+        repos.userSessionRepository,
+      ),
     );
 
     queryBus.register(

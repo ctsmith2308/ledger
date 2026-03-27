@@ -36,6 +36,7 @@ const _makeHandler = (overrides: {
     save: vi.fn(),
     findById: vi.fn(),
     findByEmail: vi.fn().mockResolvedValue(_existingUser()),
+    deleteById: vi.fn(),
     ...overrides.userRepository,
   };
 

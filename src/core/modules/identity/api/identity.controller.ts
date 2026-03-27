@@ -6,6 +6,8 @@ import {
   RegisterUserCommand,
   LoginUserCommand,
   LogoutUserCommand,
+  UpdateUserProfileCommand,
+  DeleteAccountCommand,
   GetUserSessionQuery,
   GetUserProfileQuery,
 } from '../application';
@@ -55,6 +57,24 @@ class IdentityController {
     return result.isFailure
       ? Result.fail(result.error)
       : Result.ok(UserSessionMapper.toDTO(result.value));
+  }
+
+  async updateUserProfile(
+    userId: string,
+    firstName: string,
+    lastName: string,
+  ) {
+    const result = await this.commandBus.dispatch(
+      new UpdateUserProfileCommand(userId, firstName, lastName),
+    );
+
+    return result.isFailure
+      ? Result.fail(result.error)
+      : Result.ok(UserProfileMapper.toDTO(result.value));
+  }
+
+  async deleteAccount(userId: string) {
+    return this.commandBus.dispatch(new DeleteAccountCommand(userId));
   }
 
   async getUserProfile(userId: string) {

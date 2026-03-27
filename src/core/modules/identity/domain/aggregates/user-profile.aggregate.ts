@@ -1,12 +1,11 @@
 import { AggregateRoot } from '@/core/shared/domain';
 import { UserId, FirstName, LastName } from '../value-objects';
-// import { UserRegisteredEvent } from '../events';
 
 class UserProfile extends AggregateRoot {
   private constructor(
     private readonly _id: UserId,
-    private readonly _firstName: FirstName,
-    private readonly _lastName: LastName,
+    private _firstName: FirstName,
+    private _lastName: LastName,
   ) {
     super();
   }
@@ -16,11 +15,7 @@ class UserProfile extends AggregateRoot {
     firstName: FirstName,
     lastName: LastName,
   ): UserProfile {
-    const user = new UserProfile(id, firstName, lastName);
-
-    // user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
-
-    return user;
+    return new UserProfile(id, firstName, lastName);
   }
 
   static reconstitute(
@@ -29,6 +24,11 @@ class UserProfile extends AggregateRoot {
     lastName: LastName,
   ): UserProfile {
     return new UserProfile(id, firstName, lastName);
+  }
+
+  updateName(firstName: FirstName, lastName: LastName): void {
+    this._firstName = firstName;
+    this._lastName = lastName;
   }
 
   get id() {
