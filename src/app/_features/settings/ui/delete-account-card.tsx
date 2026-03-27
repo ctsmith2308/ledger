@@ -7,6 +7,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
   Spinner,
 } from '@/app/_components';
 
@@ -31,18 +39,41 @@ function DeleteAccountCard() {
       </CardContent>
 
       <CardFooter>
-        <Button
-          variant="destructive"
-          disabled={isDeleting}
-          onClick={() => {
-            if (window.confirm('Are you sure? This cannot be undone.')) {
-              deleteAccount();
+        <Dialog>
+          <DialogTrigger
+            render={
+              <Button variant="destructive" disabled={isDeleting} />
             }
-          }}
-        >
-          {isDeleting && <Spinner />}
-          Delete account
-        </Button>
+          >
+            {isDeleting && <Spinner />}
+            Delete account
+          </DialogTrigger>
+
+          <DialogContent showCloseButton={false}>
+            <DialogHeader>
+              <DialogTitle>Delete your account?</DialogTitle>
+              <DialogDescription>
+                This will permanently delete your account, sessions,
+                profile, and all associated data. This action cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter>
+              <DialogClose render={<Button variant="outline" />}>
+                Cancel
+              </DialogClose>
+              <Button
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={() => deleteAccount()}
+              >
+                {isDeleting && <Spinner />}
+                Yes, delete my account
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardFooter>
     </Card>
   );
