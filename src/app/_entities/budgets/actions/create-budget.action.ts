@@ -2,7 +2,7 @@
 
 import { budgetsController } from '@/core/modules/budgets';
 
-import { actionClient } from '@/app/_lib/safe-action';
+import { actionClient } from '@/app/_lib/safe-action/action-client';
 
 import { withAuth } from '@/app/_entities/shared';
 

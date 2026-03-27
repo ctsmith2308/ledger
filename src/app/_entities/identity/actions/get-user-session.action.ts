@@ -3,7 +3,7 @@
 import { UnauthorizedException } from '@/core/shared/domain';
 import { identityController } from '@/core/modules/identity';
 
-import { actionClient } from '@/app/_lib/safe-action';
+import { actionClient } from '@/app/_lib/safe-action/action-client';
 
 import { getCookie } from '@/app/_entities/shared';
 

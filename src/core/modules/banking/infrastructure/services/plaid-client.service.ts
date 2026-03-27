@@ -6,6 +6,7 @@ import {
   CountryCode,
   Transaction,
 } from 'plaid';
+
 import {
   IPlaidClient,
   PlaidAccountData,
@@ -20,8 +21,7 @@ class PlaidClientService implements IPlaidClient {
     const configuration = new Configuration({
       basePath:
         PlaidEnvironments[
-          (process.env.PLAID_ENV as keyof typeof PlaidEnvironments) ??
-            'sandbox'
+          (process.env.PLAID_ENV as keyof typeof PlaidEnvironments) ?? 'sandbox'
         ],
       baseOptions: {
         headers: {
@@ -36,9 +36,7 @@ class PlaidClientService implements IPlaidClient {
     return new PlaidClientService(plaidApi);
   }
 
-  async createLinkToken(
-    userId: string,
-  ): Promise<{ linkToken: string }> {
+  async createLinkToken(userId: string): Promise<{ linkToken: string }> {
     const response = await this.plaidApi.linkTokenCreate({
       user: { client_user_id: userId },
       client_name: 'Ledger',
@@ -53,10 +51,9 @@ class PlaidClientService implements IPlaidClient {
   async exchangePublicToken(
     publicToken: string,
   ): Promise<{ accessToken: string; itemId: string }> {
-    const response =
-      await this.plaidApi.itemPublicTokenExchange({
-        public_token: publicToken,
-      });
+    const response = await this.plaidApi.itemPublicTokenExchange({
+      public_token: publicToken,
+    });
 
     return {
       accessToken: response.data.access_token,
