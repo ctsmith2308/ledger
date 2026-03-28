@@ -15,15 +15,17 @@ import {
   DialogContent,
 } from '@/app/_components';
 
+import { ROUTES } from '@/app/_lib/config';
+
 import { LogoutButton } from '@/app/_features/auth';
 
 import { AppHeader } from './app-header';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { href: '/budgets', label: 'Budgets', icon: PiggyBank },
-  { href: '/accounts', label: 'Accounts', icon: Landmark },
+  { href: ROUTES.overview, label: 'Overview', icon: LayoutDashboard },
+  { href: ROUTES.transactions, label: 'Transactions', icon: ArrowLeftRight },
+  { href: ROUTES.budgets, label: 'Budgets', icon: PiggyBank },
+  { href: ROUTES.accounts, label: 'Accounts', icon: Landmark },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -34,7 +36,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
       {navItems.map(({ href, label, icon: Icon }) => {
         const isActive =
           pathname === href ||
-          (href !== '/dashboard' && pathname.startsWith(href));
+          (href !== ROUTES.overview && pathname.startsWith(href));
 
         return (
           <Link key={href} href={href} onClick={onNavigate}>
@@ -70,16 +72,22 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function DashboardSidebar() {
+function DashboardSidebar({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <>
       <AppHeader onMenuToggle={() => setDrawerOpen(true)} />
 
-      <aside className="fixed left-0 top-14 hidden h-[calc(100vh-3.5rem)] w-60 border-r border-border bg-card lg:block">
-        <SidebarContent />
-      </aside>
+      <div className="mx-auto mt-14 flex h-[calc(100vh-3.5rem-1.5rem)] max-w-7xl gap-6 px-6 py-3">
+        <aside className="hidden w-56 shrink-0 rounded-xl border border-border bg-card lg:block">
+          <SidebarContent />
+        </aside>
+
+        <div className="min-w-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card">
+          {children}
+        </div>
+      </div>
 
       <Dialog open={drawerOpen} onOpenChange={(value) => setDrawerOpen(value)}>
         <DialogContent

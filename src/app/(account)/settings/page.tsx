@@ -2,10 +2,14 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 import { execute } from '@/app/_lib/safe-action';
+import { ROUTES } from '@/app/_lib/config';
 
 import { getUserProfileAction } from '@/app/_entities/identity';
 
-import { UpdateProfileForm, DeleteAccountCard } from '@/app/_features/user-account';
+import {
+  UpdateProfileForm,
+  DeleteAccountCard,
+} from '@/app/_features/user-account';
 import { LogoutButton } from '@/app/_features/auth';
 
 export default async function SettingsPage() {
@@ -14,11 +18,11 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
       <Link
-        href="/dashboard"
+        href={ROUTES.overview}
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to app
+        Back to Overview
       </Link>
 
       <div className="mb-8">

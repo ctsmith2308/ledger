@@ -8,7 +8,7 @@ function PageContainer({
   children: React.ReactNode;
 }) {
   return (
-    <main className={cn('px-6 py-8 lg:px-10', className)}>
+    <main className={cn('px-6 py-6', className)}>
       {children}
     </main>
   );

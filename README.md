@@ -1,5 +1,7 @@
 # Ledger
 
+> **License:** This code is published for portfolio review and educational reference only. See [LICENSE](./LICENSE) for terms.
+
 A portfolio project built to production-grade standards — not to compete with Mint, but to demonstrate how I think about systems. The feature set is a vehicle. The architectural decisions are the point.
 
 → **[Architecture decisions & reasoning](./docs/architecture.md)** — the full written record: DDD-lite, CQRS command bus, modular monolith, server actions transport, Feature-Sliced Design, and the experiments that didn't make it (NestJS boilerplate, tRPC bridge, Fastify gateway).

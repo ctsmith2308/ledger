@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { execute, ActionError } from '@/app/_lib/safe-action';
+import { ROUTES } from '@/app/_lib/config';
 
 import { getUserSessionAction } from '@/app/_entities/identity';
 
@@ -18,19 +19,17 @@ export default async function DashboardLayout({
       error instanceof ActionError &&
       error.code === 'UNAUTHORIZED'
     ) {
-      redirect('/login');
+      redirect(ROUTES.login);
     }
 
     throw error;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardSidebar />
-      {/* pt-14 clears the fixed header, lg:pl-60 clears the sidebar */}
-      <div className="pt-14 lg:pl-60">
+    <div className="h-screen overflow-hidden bg-background">
+      <DashboardSidebar>
         {children}
-      </div>
+      </DashboardSidebar>
     </div>
   );
 }

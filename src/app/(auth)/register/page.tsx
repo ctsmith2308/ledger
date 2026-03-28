@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { ROUTES } from '@/app/_lib/config';
+
 import { RegisterForm } from '@/app/_features/auth';
 
 export default function RegisterPage() {
@@ -11,7 +13,7 @@ export default function RegisterPage() {
         Already have an account?{' '}
 
         <Link
-          href="/login"
+          href={ROUTES.login}
           className="font-medium text-foreground underline underline-offset-4 hover:text-emerald-600"
         >
           Sign in

@@ -6,6 +6,7 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
+import { ROUTES } from '@/app/_lib/config';
 
 import {
   loginAction,
@@ -33,7 +34,7 @@ const useDemoLoginForm = () => {
     mutationFn: (input: LoginUserInput) =>
       execute(loginAction(input)),
     onSuccess: () => {
-      router.push('/dashboard');
+      router.push(ROUTES.overview);
     },
   });
 

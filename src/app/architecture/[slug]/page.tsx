@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { ROUTES } from '@/app/_lib/config';
 import { getDecision, getSlugs, decisions } from '@/app/_lib/content/architecture';
 import { caseStudies } from '@/app/_lib/content/case-studies';
 
@@ -26,7 +27,7 @@ export default async function ArchitectureDecisionPage({
           <div className="mb-10 flex items-center gap-2 text-sm text-muted-foreground">
             <Link href="/" className="transition-colors hover:text-foreground">Home</Link>
             <span>/</span>
-            <Link href="/architecture" className="transition-colors hover:text-foreground">Architecture</Link>
+            <Link href={ROUTES.architecture} className="transition-colors hover:text-foreground">Architecture</Link>
             <span>/</span>
             <span className="text-foreground">{title}</span>
           </div>
@@ -108,7 +109,7 @@ export default async function ArchitectureDecisionPage({
 
           <div className="mt-16 border-t border-border pt-8">
             <Link
-              href="/architecture"
+              href={ROUTES.architecture}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               ← All architecture decisions

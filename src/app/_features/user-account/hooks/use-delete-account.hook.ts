@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
+import { ROUTES } from '@/app/_lib/config';
 
 import { deleteAccountAction } from '@/app/_entities/identity';
 
@@ -13,7 +14,7 @@ const useDeleteAccount = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: () => execute(deleteAccountAction()),
     onSuccess: () => {
-      router.push('/login');
+      router.push(ROUTES.login);
     },
   });
 

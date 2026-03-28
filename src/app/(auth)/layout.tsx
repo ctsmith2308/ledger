@@ -1,4 +1,4 @@
-import { PublicHeader } from '@/app/_widgets';
+import { SiteHeader, ThemeToggle } from '@/app/_widgets';
 
 export default function AuthLayout({
   children,
@@ -7,7 +7,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <PublicHeader />
+      <SiteHeader right={<ThemeToggle />} />
 
       <main className="flex flex-1 items-center justify-center px-4 pt-16 py-12">
         {children}

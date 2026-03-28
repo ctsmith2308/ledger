@@ -3,6 +3,7 @@ import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
+import { ROUTES } from '@/app/_lib/config';
 
 import {
   registerAction,
@@ -17,7 +18,7 @@ const useRegisterForm = () => {
     mutationFn: (input: RegisterUserInput) =>
       execute(registerAction(input)),
     onSuccess: () => {
-      router.push('/login');
+      router.push(ROUTES.login);
     },
   });
 

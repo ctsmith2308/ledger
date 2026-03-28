@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 import { execute } from '@/app/_lib/safe-action';
+import { ROUTES } from '@/app/_lib/config';
 
 import { getUserProfileAction } from '@/app/_entities/identity';
 import { getAccountsAction, calcTotalsByType } from '@/app/_entities/banking';
@@ -13,19 +14,11 @@ import {
 
 import { TransactionList } from '@/app/_features/transactions';
 import { ConnectAccountCard } from '@/app/_features/plaid';
+import { AccountTotalsTable } from '@/app/_features/accounts';
 
-import { PageContainer, PageHeader } from '@/app/_widgets';
+import { PageContainer, PageHeader, SummaryCard } from '@/app/_widgets';
 
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/app/_components';
-
-async function DashboardPage() {
+async function OverviewPage() {
   const [profile, accounts, transactions] = await Promise.all([
     execute(getUserProfileAction()),
     execute(getAccountsAction()),
@@ -44,32 +37,20 @@ async function DashboardPage() {
         description="Here's a summary of your finances."
       />
 
-      {/* Spending callouts */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Monthly Spending
-          </p>
+        <SummaryCard
+          label="Monthly Spending"
+          value={hasAccounts ? `$${monthlySpending.toFixed(2)}` : '—'}
+        />
 
-          <p className="mt-1 text-xl font-semibold text-foreground">
-            {hasAccounts ? `$${monthlySpending.toFixed(2)}` : '—'}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            This Week&apos;s Spending
-          </p>
-
-          <p className="mt-1 text-xl font-semibold text-foreground">
-            {hasAccounts ? `$${weeklySpending.toFixed(2)}` : '—'}
-          </p>
-        </div>
+        <SummaryCard
+          label="This Week's Spending"
+          value={hasAccounts ? `$${weeklySpending.toFixed(2)}` : '—'}
+        />
       </div>
 
       {!hasAccounts && <ConnectAccountCard />}
 
-      {/* Recent transactions */}
       {hasAccounts && (
         <div className="mb-8">
           <div className="mb-3 flex items-center justify-between">
@@ -78,7 +59,7 @@ async function DashboardPage() {
             </h2>
 
             <Link
-              href="/transactions"
+              href={ROUTES.transactions}
               className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               View all
@@ -86,11 +67,10 @@ async function DashboardPage() {
             </Link>
           </div>
 
-          <TransactionList transactions={transactions.slice(0, 5)} />
+          <TransactionList transactions={transactions.slice(0, 10)} />
         </div>
       )}
 
-      {/* Account totals by type */}
       {hasAccounts && (
         <div>
           <div className="mb-3 flex items-center justify-between">
@@ -99,7 +79,7 @@ async function DashboardPage() {
             </h2>
 
             <Link
-              href="/accounts"
+              href={ROUTES.accounts}
               className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               View all
@@ -107,37 +87,11 @@ async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="rounded-xl border border-border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {accountTotals.map((row) => (
-                  <TableRow key={row.type}>
-                    <TableCell className="font-medium text-foreground">
-                      {row.type}
-                    </TableCell>
-
-                    <TableCell
-                      className={`text-right font-semibold ${row.isLiability ? 'text-red-600' : 'text-green-600'}`}
-                    >
-                      ${row.total.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <AccountTotalsTable totals={accountTotals} limit={4} />
         </div>
       )}
     </PageContainer>
   );
 }
 
-export default DashboardPage;
+export default OverviewPage;

@@ -2,7 +2,7 @@
 
 import { ErrorView } from '@/app/_widgets';
 
-export default function DashboardError({
+export default function AccountError({
   reset,
 }: {
   error: Error & { digest?: string };
