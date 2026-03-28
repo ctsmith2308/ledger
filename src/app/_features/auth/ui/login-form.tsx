@@ -14,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  PasswordInput,
   Spinner,
 } from '@/app/_components';
 
@@ -36,10 +37,6 @@ function LoginForm() {
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
-
-        <CardAction>
-          <Button variant="link">Sign Up</Button>
-        </CardAction>
       </CardHeader>
 
       <CardContent>
@@ -118,11 +115,9 @@ function PasswordField({ form }: { form: LoginFormApi }) {
               Forgot your password?
             </a>
 
-            {/* Password Input */}
-            <Input
+            <PasswordInput
               id={field.name}
               name={field.name}
-              type="password"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}

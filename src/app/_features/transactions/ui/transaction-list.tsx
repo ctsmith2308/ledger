@@ -1,42 +1,211 @@
+'use client';
+
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  type ColumnDef,
+  type SortingState,
+  flexRender,
+} from '@tanstack/react-table';
+import { useState } from 'react';
+import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+
 import { type TransactionDTO } from '@/core/modules/transactions';
+
+import {
+  Button,
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/app/_components';
+
+const PAGE_SIZE = 25;
+
+const columns: ColumnDef<TransactionDTO>[] = [
+  {
+    accessorKey: 'merchantName',
+    header: 'Merchant',
+    cell: ({ row }) => (
+      <span className="font-medium text-foreground">
+        {row.original.merchantName ?? row.original.name}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'date',
+    header: ({ column }) => (
+      <span
+        className="inline-flex cursor-pointer items-center gap-1"
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+      >
+        Date
+        <ArrowUpDown className="size-3" />
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span className="text-muted-foreground">
+        {row.original.date.split('T')[0]}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'category',
+    header: 'Category',
+    cell: ({ row }) => (
+      <span className="text-muted-foreground">
+        {row.original.category ?? '—'}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'amount',
+    header: ({ column }) => (
+      <span
+        className="inline-flex cursor-pointer items-center gap-1"
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+      >
+        Amount
+        <ArrowUpDown className="size-3" />
+      </span>
+    ),
+    meta: { align: 'right' },
+    cell: ({ row }) => {
+      const amount = row.original.amount;
+      const isExpense = amount > 0;
+
+      return (
+        <span
+          className={`font-semibold ${isExpense ? 'text-red-600' : 'text-green-600'}`}
+        >
+          {isExpense ? '-' : '+'}${Math.abs(amount).toFixed(2)}
+        </span>
+      );
+    },
+  },
+];
 
 function TransactionList({
   transactions,
+  paginate = true,
 }: {
   transactions: TransactionDTO[];
+  paginate?: boolean;
 }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white">
-      <div className="border-b border-zinc-100 px-5 py-4">
-        <h2 className="text-sm font-semibold text-zinc-900">
-          All Transactions
-        </h2>
-      </div>
+  const [sorting, setSorting] = useState<SortingState>([]);
 
-      <ul className="divide-y divide-zinc-100">
-        {transactions.map((tx) => (
-          <li
-            key={tx.id}
-            className="flex items-center justify-between px-5 py-3"
-          >
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-zinc-900">
-                {tx.merchantName ?? tx.name}
-              </span>
-              <span className="text-xs text-zinc-400">
-                {tx.date.split('T')[0]}
-                {tx.category ? ` · ${tx.category}` : ''}
-              </span>
-            </div>
-            <span
-              className={`text-sm font-semibold ${tx.amount > 0 ? 'text-red-600' : 'text-green-600'}`}
+  const table = useReactTable({
+    data: transactions,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    ...(paginate ? { getPaginationRowModel: getPaginationRowModel() } : {}),
+    onSortingChange: setSorting,
+    state: { sorting },
+    initialState: {
+      pagination: { pageSize: PAGE_SIZE },
+    },
+  });
+
+  const pageCount = table.getPageCount();
+  const currentPage = table.getState().pagination.pageIndex + 1;
+
+  return (
+    <div className="rounded-xl border border-border bg-card">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const align =
+                  (header.column.columnDef.meta as { align?: string })
+                    ?.align === 'right'
+                    ? 'text-right'
+                    : '';
+
+                return (
+                  <TableHead key={header.id} className={align}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+
+        <TableBody>
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => {
+                  const align =
+                    (cell.column.columnDef.meta as { align?: string })
+                      ?.align === 'right'
+                      ? 'text-right'
+                      : '';
+
+                  return (
+                    <TableCell key={cell.id} className={align}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="h-24 text-center text-muted-foreground"
+              >
+                No transactions found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      {paginate && pageCount > 1 && (
+        <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            Page {currentPage} of {pageCount}
+          </p>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={!table.getCanPreviousPage()}
+              onClick={() => table.previousPage()}
+              aria-label="Previous page"
             >
-              {tx.amount > 0 ? '-' : '+'}$
-              {Math.abs(tx.amount).toFixed(2)}
-            </span>
-          </li>
-        ))}
-      </ul>
+              <ChevronLeft className="size-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={!table.getCanNextPage()}
+              onClick={() => table.nextPage()}
+              aria-label="Next page"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

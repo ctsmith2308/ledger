@@ -1,21 +1,36 @@
 'use client';
 
+import { Plus } from 'lucide-react';
+
 import {
   Button,
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
   Input,
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
   Spinner,
 } from '@/app/_components';
+
+import { TRANSACTION_CATEGORIES } from '@/app/_entities/transactions';
 
 import {
   useCreateBudgetForm,
   type CreateBudgetFormApi,
 } from '../hooks';
 
-function CreateBudgetForm() {
+function CreateBudgetButton() {
   const { form, formId, isPending } = useCreateBudgetForm();
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -24,23 +39,35 @@ function CreateBudgetForm() {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4">
-      <h3 className="mb-4 text-sm font-semibold text-zinc-900">
-        Create Budget
-      </h3>
+    <Dialog>
+      <DialogTrigger render={<Button size="sm" />}>
+        <Plus className="size-4" />
+        New budget
+      </DialogTrigger>
 
-      <form id={formId} onSubmit={handleSubmit}>
-        <FieldGroup>
-          <CategoryField form={form} />
-          <MonthlyLimitField form={form} />
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create budget</DialogTitle>
 
-          <Button type="submit" disabled={isPending} className="w-full">
-            {isPending && <Spinner />}
-            Create Budget
-          </Button>
-        </FieldGroup>
-      </form>
-    </div>
+          <DialogDescription>
+            Set a monthly spending limit for a category.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form id={formId} onSubmit={handleSubmit}>
+          <FieldGroup>
+            <CategoryField form={form} />
+
+            <MonthlyLimitField form={form} />
+
+            <Button type="submit" disabled={isPending} className="w-full">
+              {isPending && <Spinner />}
+              Create budget
+            </Button>
+          </FieldGroup>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -53,17 +80,25 @@ function CategoryField({ form }: { form: CreateBudgetFormApi }) {
 
         return (
           <Field data-invalid={isInvalid}>
-            <FieldLabel htmlFor={field.name}>Category</FieldLabel>
-            <Input
-              id={field.name}
-              name={field.name}
-              type="text"
+            <FieldLabel>Category</FieldLabel>
+
+            <Select
               value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-              aria-invalid={isInvalid}
-              placeholder="e.g. FOOD_AND_DRINK"
-            />
+              onValueChange={(value) => field.handleChange(value)}
+            >
+              <SelectTrigger className="w-full" aria-invalid={isInvalid}>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {TRANSACTION_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat.replaceAll('_', ' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );
@@ -81,7 +116,8 @@ function MonthlyLimitField({ form }: { form: CreateBudgetFormApi }) {
 
         return (
           <Field data-invalid={isInvalid}>
-            <FieldLabel htmlFor={field.name}>Monthly Limit</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Monthly limit</FieldLabel>
+
             <Input
               id={field.name}
               name={field.name}
@@ -93,6 +129,7 @@ function MonthlyLimitField({ form }: { form: CreateBudgetFormApi }) {
               aria-invalid={isInvalid}
               placeholder="500.00"
             />
+
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );
@@ -101,4 +138,4 @@ function MonthlyLimitField({ form }: { form: CreateBudgetFormApi }) {
   );
 }
 
-export { CreateBudgetForm };
+export { CreateBudgetButton };

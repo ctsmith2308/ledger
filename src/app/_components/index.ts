@@ -8,11 +8,15 @@ export * from './header';
 export * from './input';
 export * from './input-group';
 export * from './label';
+export * from './list';
 export * from './menubar';
 export * from './paragraph';
+export * from './password-input';
+export * from './select';
 export * from './separator';
 export * from './skeleton';
 export * from './spinner';
+export * from './table';
 export * from './textarea';
 
 export * from './typography-large';

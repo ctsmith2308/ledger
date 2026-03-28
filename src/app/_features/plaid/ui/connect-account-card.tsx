@@ -10,17 +10,17 @@ function ConnectAccountCard() {
   const { connect, open, isPending, isReady } = usePlaidLinkFlow();
 
   return (
-    <div className="mb-8 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-8">
+    <div className="mb-8 rounded-xl border border-dashed border-border bg-muted px-5 py-8">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Building2 className="size-8 text-zinc-400" />
+        <Building2 className="size-8 text-muted-foreground" />
 
-        <h3 className="text-sm font-semibold text-zinc-900">
-          Connect your bank account
+        <h3 className="text-sm font-semibold text-foreground">
+          Connect your to your financial institution.
         </h3>
 
-        <p className="max-w-sm text-xs text-zinc-500">
-          Link your bank account to automatically import transactions and track
-          your spending.
+        <p className="max-w-sm text-xs text-muted-foreground">
+          Link your account to automatically import transactions, savings,
+          investments and track your spending.
         </p>
 
         <Button
@@ -29,6 +29,7 @@ function ConnectAccountCard() {
           className="mt-2"
         >
           {isPending && <Spinner />}
+
           {isReady ? 'Open Plaid Link' : 'Connect Account'}
         </Button>
       </div>

@@ -1,10 +1,19 @@
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function SummaryCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+    <div className="rounded-xl border border-border bg-card px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold text-zinc-900">{value}</p>
+
+      <p className="mt-1 text-xl font-semibold text-foreground">
+        {value}
+      </p>
     </div>
   );
 }

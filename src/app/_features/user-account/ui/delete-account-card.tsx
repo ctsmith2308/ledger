@@ -32,7 +32,7 @@ function DeleteAccountCard() {
       </CardHeader>
 
       <CardContent>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Permanently delete your account and all associated data. This
           action cannot be undone.
         </p>

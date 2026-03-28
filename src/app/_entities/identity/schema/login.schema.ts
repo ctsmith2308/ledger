@@ -1,8 +1,10 @@
 import { z } from 'zod';
 
+import { emailField, passwordField } from './fields';
+
 const loginUserSchema = z.object({
-  email: z.string(),
-  password: z.string(),
+  email: emailField,
+  password: passwordField,
 });
 
 type LoginUserInput = z.infer<typeof loginUserSchema>;

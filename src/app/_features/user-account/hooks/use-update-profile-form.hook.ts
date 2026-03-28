@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
@@ -12,8 +13,12 @@ import {
   type UpdateProfileInput,
 } from '@/app/_entities/identity';
 
-const useUpdateProfileForm = (initial: { firstName: string; lastName: string }) => {
+const useUpdateProfileForm = (initial: {
+  firstName: string;
+  lastName: string;
+}) => {
   const router = useRouter();
+  const pendingValues = useRef<UpdateProfileInput | null>(null);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: UpdateProfileInput) =>
@@ -24,12 +29,24 @@ const useUpdateProfileForm = (initial: { firstName: string; lastName: string }) 
   });
 
   const form = useForm({
-    defaultValues: { firstName: initial.firstName, lastName: initial.lastName },
+    defaultValues: {
+      firstName: initial.firstName,
+      lastName: initial.lastName,
+    },
     validators: { onSubmit: updateProfileSchema },
-    onSubmit: ({ value }) => mutate(value),
+    onSubmit: ({ value }) => {
+      pendingValues.current = value;
+    },
   });
 
-  return { form, formId: 'update-profile-form', isPending };
+  const onConfirm = () => {
+    if (pendingValues.current) {
+      mutate(pendingValues.current);
+      pendingValues.current = null;
+    }
+  };
+
+  return { form, formId: 'update-profile-form', isPending, onConfirm };
 };
 
 type UpdateProfileFormApi = ReturnType<typeof useUpdateProfileForm>['form'];

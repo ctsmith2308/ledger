@@ -14,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  PasswordInput,
   Spinner,
 } from '@/app/_components';
 
@@ -38,10 +39,6 @@ function RegisterForm() {
         <CardDescription>
           Enter your details below to create a new account
         </CardDescription>
-
-        <CardAction>
-          <Button variant="link">Sign in</Button>
-        </CardAction>
       </CardHeader>
 
       <CardContent>
@@ -172,10 +169,9 @@ function PasswordField({ form }: { form: RegisterFormApi }) {
           <Field data-invalid={isInvalid}>
             <FieldLabel htmlFor={field.name}>Password</FieldLabel>
 
-            <Input
+            <PasswordInput
               id={field.name}
               name={field.name}
-              type="password"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}

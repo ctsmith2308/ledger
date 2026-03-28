@@ -4,7 +4,7 @@ import { execute, ActionError } from '@/app/_lib/safe-action';
 
 import { getUserSessionAction } from '@/app/_entities/identity';
 
-import { DashboardHeader } from '@/app/_widgets';
+import { DashboardSidebar } from '@/app/_widgets';
 
 export default async function DashboardLayout({
   children,
@@ -25,9 +25,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <DashboardHeader />
-      <div className="pt-14">{children}</div>
+    <div className="min-h-screen bg-background">
+      <DashboardSidebar />
+      {/* pt-14 clears the fixed header, lg:pl-60 clears the sidebar */}
+      <div className="pt-14 lg:pl-60">
+        {children}
+      </div>
     </div>
   );
 }
