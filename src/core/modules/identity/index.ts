@@ -72,12 +72,12 @@ class IdentityModule {
 
     commandBus.register(
       LogoutUserCommand,
-      new LogoutUserHandler(repos.userSessionRepository),
+      new LogoutUserHandler(repos.userSessionRepository, services.eventBus),
     );
 
     commandBus.register(
       UpdateUserProfileCommand,
-      new UpdateUserProfileHandler(repos.userProfileRepository),
+      new UpdateUserProfileHandler(repos.userProfileRepository, services.eventBus),
     );
 
     commandBus.register(
@@ -85,6 +85,7 @@ class IdentityModule {
       new DeleteAccountHandler(
         repos.userRepository,
         repos.userSessionRepository,
+        services.eventBus,
       ),
     );
 

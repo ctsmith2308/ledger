@@ -332,15 +332,51 @@ class User extends AggregateRoot {
 
 ### Domain Events
 
-Events are raised on the aggregate, stored internally, and pulled after persistence:
+Events follow two ownership patterns depending on whether the event describes the aggregate's own state change or a use-case-level fact.
+
+**Aggregate-raised events** — the event describes what the aggregate did. The aggregate calls `addDomainEvent()` inside its mutation method. The handler pulls events after persistence and dispatches them.
 
 ```ts
-// In the handler — after save
+// Aggregate owns the event
+class User extends AggregateRoot {
+  static register(id: UserId, email: Email, passwordHash: Password): User {
+    const user = new User(id, email, passwordHash);
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
+    return user;
+  }
+}
+
+// Handler — pull after persistence
+await this.userRepository.save(user);
 const events = user.pullDomainEvents();
 await this.eventBus.dispatch(events);
 ```
 
-Pulling after save prevents dispatching events for operations that fail to persist. Current events: `UserRegisteredEvent`, `UserLoggedInEvent`.
+**Handler-dispatched events** — the event describes what the use case accomplished. No single aggregate owns the action (no aggregate exists, the aggregate is being destroyed, or the event is a use-case coordination fact). The handler dispatches directly via `eventBus.dispatch()`.
+
+```ts
+// No aggregate to raise the event — handler dispatches directly
+await this.sessionRepository.revokeById(sessionId);
+
+if (session) {
+  await this.eventBus.dispatch([
+    new UserLoggedOutEvent(session.userId.value),
+  ]);
+}
+```
+
+Both paths flow through the same `DurableEventBus` and land in the `domain_events` table. Pulling after save prevents dispatching events for operations that fail to persist.
+
+| Event | Owner | Pattern |
+|---|---|---|
+| `UserRegisteredEvent` | `User.register()` | Aggregate-raised |
+| `UserProfileUpdatedEvent` | `UserProfile.updateName()` | Aggregate-raised |
+| `UserLoggedInEvent` | `LoginUserHandler` | Handler-dispatched |
+| `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
+| `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
+| `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |
+
+**Why not full event sourcing:** The system persists events durably for audit, cross-module communication, and failure replay — but aggregates are reconstituted from database snapshots via `reconstitute()`, not from event replay. Full event sourcing would require every event to flow through an aggregate, aggregate reconstitution from event streams, and a message broker for reliable delivery and projection rebuilds. The infrastructure cost is not justified at the current scale. The `IEventBus` interface preserves the upgrade path.
 
 ### Result Type
 
@@ -470,19 +506,19 @@ const prisma = globalForPrisma.prisma ?? new PrismaService();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 ```
 
-### In-Process Event Bus
+### Durable Event Bus
 
-`InProcessEventBus` implements `IEventBus`. Handlers run in parallel via `Promise.all`. The interface is defined in the domain layer — swapping to a durable queue (SQS, RabbitMQ) is a one-line change in `_deps.ts` with zero domain impact:
+`DurableEventBus` implements `IEventBus`. Every event is persisted to the `domain_events` table in Postgres before any handler executes. Handlers run sequentially in registration order. The interface is defined in the domain layer — swapping to a message broker is a one-line change in the singleton with zero domain impact:
 
 ```ts
-// Today
-const _eventBus = new InProcessEventBus();
+// Today — Postgres-backed, in-process dispatch
+const eventBus = new DurableEventBus(prisma);
 
-// Tomorrow — zero domain changes
-const _eventBus = new SqsEventBus(sqsClient, QUEUE_URL);
+// Tomorrow — external broker for multi-instance fan-out, zero domain changes
+const eventBus = new SqsEventBus(sqsClient, QUEUE_URL);
 ```
 
-**Known limitation:** In-process delivery is not durable. A process crash between save and dispatch loses events. Acceptable for audit logs at this scale; not acceptable for financial operations at scale.
+The `domain_events` table serves three roles: durable delivery guarantee (persist before dispatch), audit trail (queryable by aggregate, type, status, timestamp), and failure tracking (attempt count, error message, `replayFailed()` for retry). See the `durable-event-bus` architecture decision for the full rationale.
 
 ### JWT Service
 

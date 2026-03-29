@@ -9,10 +9,12 @@ import {
   User,
   Password,
 } from '@/core/modules/identity/domain';
+import { type IEventBus } from '@/core/shared/domain';
 
 const _makeHandler = (overrides: {
   userRepository?: Partial<IUserRepository>;
   sessionRepository?: Partial<IUserSessionRepository>;
+  eventBus?: Partial<IEventBus>;
 } = {}) => {
   const userRepository: IUserRepository = {
     save: vi.fn(),
@@ -30,9 +32,15 @@ const _makeHandler = (overrides: {
     ...overrides.sessionRepository,
   };
 
-  const handler = new DeleteAccountHandler(userRepository, sessionRepository);
+  const eventBus: IEventBus = {
+    dispatch: vi.fn(),
+    register: vi.fn(),
+    ...overrides.eventBus,
+  };
 
-  return { handler, userRepository, sessionRepository };
+  const handler = new DeleteAccountHandler(userRepository, sessionRepository, eventBus);
+
+  return { handler, userRepository, sessionRepository, eventBus };
 };
 
 const _existingUser = () =>

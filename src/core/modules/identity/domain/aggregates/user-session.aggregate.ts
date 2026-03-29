@@ -1,5 +1,6 @@
 import { AggregateRoot } from '@/core/shared/domain';
 import { SessionId, UserId } from '../value-objects';
+import { UserLoggedInEvent } from '../events';
 
 const SESSION_DURATION_MS = Number(process.env.SESSION_DURATION_SECONDS ?? 604800) * 1000;
 
@@ -17,13 +18,17 @@ class UserSession extends AggregateRoot {
   static create(id: SessionId, userId: UserId): UserSession {
     const now = new Date();
 
-    return new UserSession(
+    const session = new UserSession(
       id,
       userId,
       new Date(now.getTime() + SESSION_DURATION_MS),
       undefined,
       now,
     );
+
+    session.addDomainEvent(new UserLoggedInEvent(userId.value));
+
+    return session;
   }
 
   static reconstitute(

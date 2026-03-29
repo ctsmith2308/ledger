@@ -36,12 +36,43 @@ const securityHeaders = [
   },
 ];
 
+const noCacheHeaders = [
+  {
+    key: 'Cache-Control',
+    value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  },
+  {
+    key: 'Pragma',
+    value: 'no-cache',
+  },
+];
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   headers: async () => [
     {
       source: '/(.*)',
       headers: securityHeaders,
+    },
+    {
+      source: '/overview/:path*',
+      headers: noCacheHeaders,
+    },
+    {
+      source: '/transactions/:path*',
+      headers: noCacheHeaders,
+    },
+    {
+      source: '/budgets/:path*',
+      headers: noCacheHeaders,
+    },
+    {
+      source: '/accounts/:path*',
+      headers: noCacheHeaders,
+    },
+    {
+      source: '/settings/:path*',
+      headers: noCacheHeaders,
     },
   ],
 };

@@ -106,7 +106,7 @@ export type { LoginUserResponse } from './login-user.command';`,
       'Build a modular monolith. Domain boundaries are enforced at the module level with explicit dependency wiring and no cross-module imports. Each module owns its domain, application, and infrastructure layers. The event bus handles cross-module communication without tight coupling. Splitting into services later is a deployment decision, not an architectural rewrite.',
     rationale: [
       'Domain boundaries are hard to get right on the first pass. A modular monolith lets you refine them cheaply — a microservice boundary is expensive to move once it\'s a network contract.',
-      'The IEventBus interface means cross-module communication is already decoupled. Swapping InProcessEventBus for a durable queue (SQS, RabbitMQ) is an infrastructure change with no domain impact.',
+      'The IEventBus interface means cross-module communication is already decoupled. The DurableEventBus persists events to Postgres before dispatch. Swapping to an external broker (SQS, Redis Streams) for multi-instance fan-out is an infrastructure change with no domain impact.',
       'Manual dependency wiring — concrete infrastructure classes are imported and constructed directly in each command and query index file. The full dependency graph is visible at compile time. There are no IoC container surprises, no runtime injection failures, and TypeScript catches missing dependencies before the app starts.',
       'A single deployment unit is dramatically simpler to operate at this scale — one database connection, one process, one set of logs, one deploy pipeline.',
     ],
@@ -120,8 +120,8 @@ export type { LoginUserResponse } from './login-user.command';`,
         con: 'Module boundary discipline requires convention, not enforcement. A careless import can couple modules without a compiler warning.',
       },
       {
-        pro: 'The event bus interface already models the cross-module communication pattern that a message broker would use.',
-        con: 'In-process events are not durable. A crash before dispatch loses events. Acceptable now; not acceptable at scale.',
+        pro: 'The DurableEventBus persists every event to Postgres before handler execution — crash-safe, replayable, and auditable without an external broker.',
+        con: 'Still single-process dispatch. Multi-instance fan-out requires an external broker (SQS, Redis Streams). The IEventBus interface preserves the swap path.',
       },
     ],
     codeBlocks: [
@@ -143,11 +143,11 @@ interface IEventBus {
   dispatch(events: DomainEvent[]): Promise<void>;
 }
 
-// Today: in-process
-const _eventBus = new InProcessEventBus();
+// Today: DurableEventBus — Postgres persistence + in-process dispatch
+const eventBus = new DurableEventBus(prisma);
 
 // Tomorrow: swap one line, zero domain changes
-const _eventBus = new SqsEventBus(sqsClient, queueUrl);`,
+const eventBus = new SqsEventBus(sqsClient, queueUrl);`,
       },
     ],
   },
@@ -164,7 +164,7 @@ const _eventBus = new SqsEventBus(sqsClient, queueUrl);`,
       'Value objects validate invariants at construction time. `Email.create("not-an-email")` returns `Result.fail(new InvalidEmailException())` — invalid state can never be represented.',
       'The `Result<T, E>` type makes failure explicit at every boundary. No exceptions bubble silently through the call stack; every failure path is a typed value.',
       'Repository interfaces are defined in the domain layer and implemented in infrastructure. The domain can be tested without a database — pass a mock that implements `IUserRepository`.',
-      'Domain events (`UserRegistered`, `UserLoggedIn`) capture what happened in business terms. They\'re pulled from the aggregate after persistence and dispatched via the event bus — decoupling side effects from the core operation.',
+      'Domain events capture what happened in business terms. Aggregate-raised events (e.g., `UserRegistered`) are pulled after persistence and dispatched via the event bus. Handler-dispatched events (e.g., `UserLoggedIn`, `LoginFailed`) are dispatched directly for use-case facts that no single aggregate owns. Both flow through the same DurableEventBus.',
       'No IoC container means the full dependency graph is visible. `RegisterUserHandler` takes `IUserRepository`, `IEventBus`, `IPasswordHasher`, `IIdGenerator` — exactly what it needs, nothing hidden.',
     ],
     tradeoffs: [
@@ -200,8 +200,9 @@ const _validate = (value: string): InvalidEmailException | null => {
 };`,
       },
       {
-        label: 'Domain events on the aggregate',
-        code: `class User extends AggregateRoot {
+        label: 'Domain events — two ownership patterns',
+        code: `// Aggregate-raised: the aggregate owns the state change
+class User extends AggregateRoot {
   static register(id: UserId, email: Email, passwordHash: Password): User {
     const user = new User(id, email, passwordHash);
     user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
@@ -209,9 +210,12 @@ const _validate = (value: string): InvalidEmailException | null => {
   }
 }
 
-// In the handler — after save, pull and dispatch
+// Handler pulls after persistence
 const events = user.pullDomainEvents();
-await this.eventBus.dispatch(events);`,
+await this.eventBus.dispatch(events);
+
+// Handler-dispatched: no aggregate owns the action
+await this.eventBus.dispatch([new LoginFailedEvent(email, 'user_not_found')]);`,
       },
       {
         label: 'Repository interface in domain, implementation in infrastructure',
@@ -241,21 +245,22 @@ class UserRepository implements IUserRepository {
     context:
       'After a user registers, a welcome email should eventually be sent. After login, an audit log entry should be written. These are side effects — they should not be the core operation\'s responsibility. Putting them directly in the handler couples unrelated concerns and makes the handler harder to test.',
     decision:
-      'Domain events are raised on aggregates, pulled after persistence, and dispatched via an `IEventBus` interface. Today the implementation is in-process (`InProcessEventBus`). The interface is defined in the domain layer — swapping the implementation requires no domain changes.',
+      'Domain events are dispatched via an `IEventBus` interface backed by a `DurableEventBus` that persists every event to Postgres before handler execution. Events follow two ownership patterns: aggregate-raised events for state changes the aggregate owns, and handler-dispatched events for use-case-level facts that no single aggregate owns.',
     rationale: [
-      'The aggregate raises events (`user.addDomainEvent(new UserRegisteredEvent(...))`), not the handler. The aggregate describes what happened in business terms; the handler decides when to dispatch.',
-      'Events are pulled after the aggregate is persisted, not before. This avoids dispatching events for operations that fail to save.',
+      'Aggregate-raised events describe the aggregate\'s own state change (`user.addDomainEvent(new UserRegisteredEvent(...))`). The handler pulls them after persistence and dispatches them via the bus.',
+      'Handler-dispatched events describe use-case facts — login failures, logouts, account deletions — where no single aggregate owns the action. The handler dispatches directly via `eventBus.dispatch()`.',
+      'Events are pulled or dispatched after the operation succeeds, not before. This avoids dispatching events for operations that fail to persist.',
       'The `IEventBus` interface in the domain layer means the domain has zero knowledge of how events are delivered. In tests, pass a mock or no-op implementation.',
       'Handler registration (`eventBus.register(IdentityEvents.USER_REGISTERED, sendWelcomeEmail)`) is additive — new side effects don\'t touch existing code.',
     ],
     tradeoffs: [
       {
         pro: 'Handlers are focused — they don\'t know or care about side effects downstream.',
-        con: 'In-process delivery is not durable. If the process crashes after save but before dispatch, events are lost. Acceptable for audit logs; not for financial operations.',
+        con: 'Handler-dispatched events lack the compile-time traceability of aggregate-raised events. A developer must read the handler to know which events it emits.',
       },
       {
-        pro: 'The interface swap path to a durable queue is one line per wiring file — no domain changes required.',
-        con: 'No retry, no dead-letter queue, no at-least-once delivery guarantee without swapping the implementation.',
+        pro: 'The interface swap path to a message broker is one line in the singleton — no domain changes required.',
+        con: 'Still single-process dispatch. Multi-instance fan-out requires an external broker.',
       },
     ],
     codeBlocks: [
@@ -269,31 +274,32 @@ interface IEventBus {
 }`,
       },
       {
-        label: 'InProcessEventBus — handlers run in-process via Promise.all',
-        code: `class InProcessEventBus implements IEventBus {
-  private readonly _handlers = new Map<string, EventHandler[]>();
-
-  register<T extends DomainEvent>(eventType: string, handler: EventHandler<T>): void {
-    const existing = this._handlers.get(eventType) ?? [];
-    this._handlers.set(eventType, [...existing, handler as EventHandler]);
+        label: 'Aggregate-raised event — the aggregate owns the state change',
+        code: `class User extends AggregateRoot {
+  static register(id: UserId, email: Email, passwordHash: Password): User {
+    const user = new User(id, email, passwordHash);
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
+    return user;
   }
+}
 
-  async dispatch(events: DomainEvent[]): Promise<void> {
-    for (const event of events) {
-      const handlers = this._handlers.get(event.eventType) ?? [];
-      await Promise.all(handlers.map((h) => h(event)));
-    }
-  }
-}`,
+// Handler — pull after persistence
+await this.userRepository.save(user);
+const events = user.pullDomainEvents();
+await this.eventBus.dispatch(events);`,
       },
       {
-        label: 'Swap path — replace InProcessEventBus with a durable queue',
-        code: `// commands/login-user/index.ts — one line change per wiring file, zero domain impact
-// Before
-new LoginUserHandler(new UserRepository(prisma), new InProcessEventBus(), ...)
+        label: 'Handler-dispatched event — no aggregate owns the action',
+        code: `// LoginUserHandler — login is a use-case fact, not a session lifecycle fact
+const session = UserSession.create(sessionId, user.id);
+await this.sessionRepository.save(session);
+await this.eventBus.dispatch([new UserLoggedInEvent(user.id.value)]);
 
-// After
-new LoginUserHandler(new UserRepository(prisma), new SqsEventBus(sqsClient, QUEUE_URL), ...)`,
+// LogoutUserHandler — the aggregate is being revoked, not transitioned
+await this.sessionRepository.revokeById(sessionId);
+if (session) {
+  await this.eventBus.dispatch([new UserLoggedOutEvent(session.userId.value)]);
+}`,
       },
     ],
   },
@@ -555,7 +561,7 @@ async execute(
     codeBlocks: [
       {
         label: 'Sequential dispatch — handlers run in registration order',
-        code: `// InProcessEventBus — sequential, not parallel
+        code: `// DurableEventBus — sequential, not parallel
 async dispatch(events: DomainEvent[]): Promise<void> {
   for (const event of events) {
     const handlers = this._handlers.get(event.eventType) ?? [];
@@ -690,16 +696,17 @@ WHERE status = 'processed'
       },
       {
         label: 'Scaling path — external broker replaces in-process dispatch',
-        code: `// Today: DurableEventBus — Postgres + in-process dispatch
+        code: `// Today: DurableEventBus — Postgres persistence + in-process sequential dispatch
 // Handles: durability, audit, replay, failure tracking
 //
 // Multi-instance trigger: Redis Streams or SQS replaces dispatch
 //
-// DurableEventBus (Postgres) → persist (source of truth, audit)
-// RedisStreamEventBus        → dispatch (fan-out, consumer groups)
+// event-bus.singleton.ts — one line change
+// const eventBus = new DurableEventBus(prisma);          // today
+// const eventBus = new RedisStreamEventBus(redisClient);  // tomorrow
 //
-// Both implement IEventBus. The composition root picks one.
-// Handler code never changes.`,
+// Both implement IEventBus. Handler code never changes.
+// DurableEventBus can run alongside as audit-only (persist, no dispatch).`,
       },
     ],
   },

@@ -1,5 +1,6 @@
 import {
   IHandler,
+  IEventBus,
   Result,
   UserNotFoundException,
 } from '@/core/shared/domain';
@@ -7,6 +8,7 @@ import {
   IUserRepository,
   IUserSessionRepository,
   UserId,
+  AccountDeletedEvent,
 } from '@/core/modules/identity/domain';
 
 import {
@@ -20,6 +22,7 @@ class DeleteAccountHandler
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly sessionRepository: IUserSessionRepository,
+    private readonly eventBus: IEventBus,
   ) {}
 
   async execute(
@@ -36,6 +39,10 @@ class DeleteAccountHandler
     await this.sessionRepository.revokeAllForUser(userId);
 
     await this.userRepository.deleteById(userId);
+
+    await this.eventBus.dispatch([
+      new AccountDeletedEvent(command.userId),
+    ]);
 
     return Result.ok(undefined);
   }

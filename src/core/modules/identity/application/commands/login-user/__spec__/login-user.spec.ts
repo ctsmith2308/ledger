@@ -109,6 +109,19 @@ describe('LoginUserHandler', () => {
       expect(hasher.verify).toHaveBeenCalledWith('stored-hash', 'Secure!1');
     });
 
+    it('revokes existing sessions before creating a new one', async () => {
+      const { handler, sessionRepository } = _makeHandler();
+
+      await handler.execute(validCommand);
+
+      expect(sessionRepository.revokeAllForUser).toHaveBeenCalledTimes(1);
+
+      const revokeOrder = (sessionRepository.revokeAllForUser as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
+      const saveOrder = (sessionRepository.save as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
+
+      expect(revokeOrder).toBeLessThan(saveOrder);
+    });
+
     it('dispatches a login event', async () => {
       const { handler, eventBus } = _makeHandler();
 

@@ -8,9 +8,11 @@ import {
   LastName,
   UserProfile,
 } from '@/core/modules/identity/domain';
+import { type IEventBus } from '@/core/shared/domain';
 
 const _makeHandler = (overrides: {
   profileRepository?: Partial<IUserProfileRepository>;
+  eventBus?: Partial<IEventBus>;
 } = {}) => {
   const profileRepository: IUserProfileRepository = {
     save: vi.fn(),
@@ -18,9 +20,15 @@ const _makeHandler = (overrides: {
     ...overrides.profileRepository,
   };
 
-  const handler = new UpdateUserProfileHandler(profileRepository);
+  const eventBus: IEventBus = {
+    dispatch: vi.fn(),
+    register: vi.fn(),
+    ...overrides.eventBus,
+  };
 
-  return { handler, profileRepository };
+  const handler = new UpdateUserProfileHandler(profileRepository, eventBus);
+
+  return { handler, profileRepository, eventBus };
 };
 
 const _existingProfile = () =>

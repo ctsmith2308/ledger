@@ -1,11 +1,13 @@
 import {
   IHandler,
+  IEventBus,
   Result,
   UnauthorizedException,
 } from '@/core/shared/domain';
 import {
   SessionId,
   IUserSessionRepository,
+  UserLoggedOutEvent,
 } from '@/core/modules/identity/domain';
 
 import {
@@ -18,6 +20,7 @@ class LogoutUserHandler
 {
   constructor(
     private readonly sessionRepository: IUserSessionRepository,
+    private readonly eventBus: IEventBus,
   ) {}
 
   async execute(command: LogoutUserCommand): Promise<LogoutUserResponse> {
@@ -29,7 +32,15 @@ class LogoutUserHandler
 
     const sessionId = sessionIdResult.value;
 
+    const session = await this.sessionRepository.findById(sessionId);
+
     await this.sessionRepository.revokeById(sessionId);
+
+    if (session) {
+      await this.eventBus.dispatch([
+        new UserLoggedOutEvent(session.userId.value),
+      ]);
+    }
 
     return Result.ok(undefined);
   }

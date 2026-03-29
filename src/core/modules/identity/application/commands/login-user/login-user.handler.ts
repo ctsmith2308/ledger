@@ -14,7 +14,7 @@ import {
   IUserSessionRepository,
   Password,
   SessionId,
-  UserLoggedInEvent,
+  LoginFailedEvent,
   UserSession,
 } from '@/core/modules/identity/domain';
 
@@ -42,14 +42,29 @@ class LoginUserHandler implements IHandler<
     const plainPassword = passwordResult.value.content;
 
     const user = await this.userRepository.findByEmail(email);
-    if (!user) return Result.fail(new InvalidEmailException());
+
+    if (!user) {
+      await this.eventBus.dispatch([
+        new LoginFailedEvent(command.email, 'user_not_found'),
+      ]);
+
+      return Result.fail(new InvalidEmailException());
+    }
 
     const passwordMatch = await this.hasher.verify(
       user.passwordHash.content,
       plainPassword,
     );
 
-    if (!passwordMatch) return Result.fail(new InvalidPasswordException());
+    if (!passwordMatch) {
+      await this.eventBus.dispatch([
+        new LoginFailedEvent(command.email, 'invalid_password'),
+      ]);
+
+      return Result.fail(new InvalidPasswordException());
+    }
+
+    await this.sessionRepository.revokeAllForUser(user.id);
 
     const sessionIdResult = SessionId.create(this.idGenerator.generate());
     if (sessionIdResult.isFailure) return Result.fail(sessionIdResult.error);
@@ -59,9 +74,8 @@ class LoginUserHandler implements IHandler<
 
     await this.sessionRepository.save(session);
 
-    await this.eventBus.dispatch([
-      new UserLoggedInEvent(user.id.value, user.email.value),
-    ]);
+    const events = session.pullDomainEvents();
+    await this.eventBus.dispatch(events);
 
     return Result.ok(session);
   }

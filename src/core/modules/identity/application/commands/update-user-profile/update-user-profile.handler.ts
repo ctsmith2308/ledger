@@ -1,8 +1,8 @@
 import {
   IHandler,
+  IEventBus,
   Result,
   ValidationException,
-  UserNotFoundException,
 } from '@/core/shared/domain';
 import {
   IUserProfileRepository,
@@ -22,6 +22,7 @@ class UpdateUserProfileHandler
 {
   constructor(
     private readonly profileRepository: IUserProfileRepository,
+    private readonly eventBus: IEventBus,
   ) {}
 
   async execute(
@@ -43,12 +44,21 @@ class UpdateUserProfileHandler
 
     if (!existing) {
       const profile = UserProfile.save(userId, firstName, lastName);
+
       await this.profileRepository.save(profile);
+
+      const events = profile.pullDomainEvents();
+      await this.eventBus.dispatch(events);
+
       return Result.ok(profile);
     }
 
     existing.updateName(firstName, lastName);
+
     await this.profileRepository.save(existing);
+
+    const events = existing.pullDomainEvents();
+    await this.eventBus.dispatch(events);
 
     return Result.ok(existing);
   }
