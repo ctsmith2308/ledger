@@ -54,6 +54,10 @@ const domainTypeMap: Record<string, ErrorResponse> = {
     code: 'VALIDATION_ERROR',
     message: 'The request contains invalid data.',
   },
+  DEMO_RESTRICTED: {
+    code: 'DEMO_RESTRICTED',
+    message: 'This action is not available for demo accounts.',
+  },
   SERVER_ERROR: {
     code: 'SERVER_ERROR',
     message: 'Internal Server Error',

@@ -1,6 +1,7 @@
 type SessionDTO = {
   sessionId: string;
   userId: string;
+  tier: string;
 };
 
 type UserDTO =

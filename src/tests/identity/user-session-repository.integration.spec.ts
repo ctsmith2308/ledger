@@ -8,6 +8,7 @@ import {
   Email,
   Password,
   SessionId,
+  UserTier,
   UserSession,
 } from '@/core/modules/identity/domain';
 
@@ -28,6 +29,7 @@ const _makeSession = (userId: UserId, sessionId?: string) =>
   UserSession.create(
     SessionId.from(sessionId ?? 'b0000000-0000-0000-0000-000000000001'),
     userId,
+    UserTier.from('TRIAL'),
   );
 
 describe('UserSessionRepository', () => {

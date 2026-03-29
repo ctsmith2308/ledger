@@ -4,10 +4,15 @@ import { Building2 } from 'lucide-react';
 
 import { Button, Spinner } from '@/app/_components';
 
+import { useUserTier } from '@/app/_providers';
+
+import { DemoFootnote } from '@/app/_widgets';
+
 import { usePlaidLinkFlow } from '../hooks';
 
 function ConnectAccountCard() {
   const { connect, open, isPending, isReady } = usePlaidLinkFlow();
+  const { isDemo } = useUserTier();
 
   return (
     <div className="mb-8 rounded-xl border border-dashed border-border bg-muted px-5 py-8">
@@ -25,13 +30,15 @@ function ConnectAccountCard() {
 
         <Button
           onClick={isReady ? () => open() : connect}
-          disabled={isPending}
+          disabled={isPending || isDemo}
           className="mt-2"
         >
           {isPending && <Spinner />}
 
           {isReady ? 'Open Plaid Link' : 'Connect Account'}
         </Button>
+
+        <DemoFootnote action="Linking accounts" />
       </div>
     </div>
   );

@@ -26,6 +26,10 @@ import {
   Spinner,
 } from '@/app/_components';
 
+import { useUserTier } from '@/app/_providers';
+
+import { DemoFootnote } from '@/app/_widgets';
+
 import {
   useUpdateProfileForm,
   type UpdateProfileFormApi,
@@ -38,6 +42,7 @@ function UpdateProfileForm({
 }) {
   const { form, formId, isPending, onConfirm } = useUpdateProfileForm(initial);
   const [editOpen, setEditOpen] = useState(false);
+  const { isDemo } = useUserTier();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -60,7 +65,7 @@ function UpdateProfileForm({
 
           <CardAction>
             <Dialog open={editOpen} onOpenChange={(value) => setEditOpen(value)}>
-              <DialogTrigger render={<Button variant="outline" size="sm" />}>
+              <DialogTrigger render={<Button variant="outline" size="sm" disabled={isDemo} />}>
                 <Pencil className="size-3" />
                 Edit
               </DialogTrigger>
@@ -113,6 +118,8 @@ function UpdateProfileForm({
           </div>
         </CardContent>
       </Card>
+
+      <DemoFootnote action="Profile editing" />
 
       {/* Confirmation dialog */}
       <Dialog open={confirmOpen} onOpenChange={(value) => setConfirmOpen(value)}>

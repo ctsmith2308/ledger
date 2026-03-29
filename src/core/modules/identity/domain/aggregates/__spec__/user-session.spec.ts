@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { UserSession } from '../user-session.aggregate';
-import { SessionId, UserId } from '../../value-objects';
+import { SessionId, UserId, UserTier } from '../../value-objects';
 
 const _makeSession = () => {
   const sessionId = SessionId.from('session-123');
   const userId = UserId.from('user-12345');
-  return UserSession.create(sessionId, userId);
+  const tier = UserTier.from('TRIAL');
+  return UserSession.create(sessionId, userId, tier);
 };
 
 describe('UserSession', () => {
@@ -53,6 +54,7 @@ describe('UserSession', () => {
       const session = UserSession.reconstitute(
         sessionId,
         userId,
+        UserTier.from('TRIAL'),
         new Date(Date.now() - 1000),
         undefined,
         new Date(Date.now() - 100000),
@@ -73,6 +75,7 @@ describe('UserSession', () => {
       const session = UserSession.reconstitute(
         sessionId,
         userId,
+        UserTier.from('TRIAL'),
         expiresAt,
         undefined,
         createdAt,

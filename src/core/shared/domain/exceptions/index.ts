@@ -15,3 +15,5 @@ export * from './plaid-error.exception';
 export * from './account-not-found.exception';
 export * from './budget-not-found.exception';
 export * from './invalid-amount.exception';
+export * from './invalid-tier.exception';
+export * from './demo-restricted.exception';

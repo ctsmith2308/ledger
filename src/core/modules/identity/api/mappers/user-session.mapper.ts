@@ -6,6 +6,7 @@ const UserSessionMapper = {
     return {
       sessionId: session.id.value,
       userId: session.userId.value,
+      tier: session.tier.value,
     };
   },
 };

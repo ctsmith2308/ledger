@@ -98,19 +98,39 @@ const getProfileAction = createAction({ protected: true, handler: async (session
     sections: [
       {
         heading: 'What NestJS brought',
-        body: "NestJS provides a structured module system, a built-in DI container, and a decorator-driven model that maps cleanly onto familiar patterns from Angular and Spring. The opinions are well-considered and the ecosystem is mature. For teams onboarding developers at scale, the conventions are a genuine asset — everyone lands in the same place.",
+        body: 'NestJS provides a structured module system, a built-in DI container, and a decorator-driven model that maps cleanly onto familiar patterns from Angular and Spring. The opinions are well-considered and the ecosystem is mature. For teams onboarding developers at scale, the conventions are a genuine asset — everyone lands in the same place.',
       },
       {
         heading: 'Where the overhead accumulated',
-        body: "The DI container was the main cost. Every dependency had to be registered, decorated, and resolved through the framework machinery. Adding a new service meant touching the module definition, the provider list, and the injection tokens — three files for what should be a one-line constructor argument. The decorator surface area grew fast, and the mental model required to reason about instantiation order was non-trivial.",
+        body: 'The DI container was the main cost. Every dependency had to be registered, decorated, and resolved through the framework machinery. Adding a new service meant touching the module definition, the provider list, and the injection tokens — three files for what should be a one-line constructor argument. The decorator surface area grew fast, and the mental model required to reason about instantiation order was non-trivial.',
         table: {
           headers: ['Concern', 'NestJS', 'Static factories + closures'],
           rows: [
-            ['Dependency wiring', 'DI container, decorators, modules', 'Explicit constructor arguments'],
-            ['New service cost', 'Provider registration + module update', 'Add parameter, done'],
-            ['Testability', 'TestingModule setup per test', 'Pass mock directly'],
-            ['Framework coupling', 'Deep — decorators throughout', 'None in domain/application layers'],
-            ['Onboarding overhead', 'High — container mental model required', 'Low — plain TypeScript'],
+            [
+              'Dependency wiring',
+              'DI container, decorators, modules',
+              'Explicit constructor arguments',
+            ],
+            [
+              'New service cost',
+              'Provider registration + module update',
+              'Add parameter, done',
+            ],
+            [
+              'Testability',
+              'TestingModule setup per test',
+              'Pass mock directly',
+            ],
+            [
+              'Framework coupling',
+              'Deep — decorators throughout',
+              'None in domain/application layers',
+            ],
+            [
+              'Onboarding overhead',
+              'High — container mental model required',
+              'Low — plain TypeScript',
+            ],
           ],
         },
       },
@@ -177,8 +197,6 @@ const identityModule = {
       },
     ],
   },
-];
-
   {
     slug: 'domain-event-ownership',
     title: 'Domain event ownership — aggregate vs handler',
@@ -190,7 +208,7 @@ const identityModule = {
     sections: [
       {
         heading: 'The orthodox position',
-        body: 'In event-sourced systems, the aggregate is the sole source of events because the event stream is the state. Every fact about the system must originate from an aggregate method — the aggregate decided it happened, so the aggregate records it. Daniel Whittaker\'s CQRS walkthrough articulates this clearly: the command handler loads the aggregate, the aggregate executes the behavior and raises events, the handler persists them. No exceptions.',
+        body: "In event-sourced systems, the aggregate is the sole source of events because the event stream is the state. Every fact about the system must originate from an aggregate method — the aggregate decided it happened, so the aggregate records it. Daniel Whittaker's CQRS walkthrough articulates this clearly: the command handler loads the aggregate, the aggregate executes the behavior and raises events, the handler persists them. No exceptions.",
       },
       {
         heading: 'Where orthodoxy broke down',
@@ -215,16 +233,24 @@ const identityModule = {
       },
       {
         heading: 'The two-pattern model',
-        body: 'The resolution was to formalise two event ownership patterns based on a single question: does this event describe the aggregate\'s own state change? If yes, the aggregate raises it via `addDomainEvent()`. If no — the event spans aggregates, has no owning aggregate, or the aggregate is being destroyed — the handler dispatches it directly via `eventBus.dispatch()`. Both paths flow through the same DurableEventBus and land in the same `domain_events` table.',
+        body: "The resolution was to formalise two event ownership patterns based on a single question: does this event describe the aggregate's own state change? If yes, the aggregate raises it via `addDomainEvent()`. If no — the event spans aggregates, has no owning aggregate, or the aggregate is being destroyed — the handler dispatches it directly via `eventBus.dispatch()`. Both paths flow through the same DurableEventBus and land in the same `domain_events` table.",
         table: {
           headers: ['Event', 'Owner', 'Pattern'],
           rows: [
             ['UserRegisteredEvent', 'User.register()', 'Aggregate-raised'],
-            ['UserProfileUpdatedEvent', 'UserProfile.updateName()', 'Aggregate-raised'],
+            [
+              'UserProfileUpdatedEvent',
+              'UserProfile.updateName()',
+              'Aggregate-raised',
+            ],
             ['UserLoggedInEvent', 'LoginUserHandler', 'Handler-dispatched'],
             ['LoginFailedEvent', 'LoginUserHandler', 'Handler-dispatched'],
             ['UserLoggedOutEvent', 'LogoutUserHandler', 'Handler-dispatched'],
-            ['AccountDeletedEvent', 'DeleteAccountHandler', 'Handler-dispatched'],
+            [
+              'AccountDeletedEvent',
+              'DeleteAccountHandler',
+              'Handler-dispatched',
+            ],
           ],
         },
       },
@@ -238,6 +264,7 @@ const identityModule = {
       },
     ],
   },
+];
 
 const getCaseStudy = (slug: string): CaseStudy | undefined =>
   caseStudies.find((c) => c.slug === slug);

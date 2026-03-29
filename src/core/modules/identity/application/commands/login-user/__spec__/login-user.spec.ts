@@ -10,6 +10,7 @@ import {
   User,
   UserId,
   Password,
+  UserTier,
 } from '@/core/modules/identity/domain';
 import {
   type IEventBus,
@@ -17,11 +18,12 @@ import {
   InvalidPasswordException,
 } from '@/core/shared/domain';
 
-const _existingUser = () =>
+const _existingUser = (tier = 'TRIAL') =>
   User.reconstitute(
     UserId.from('user-12345'),
     Email.from('user@example.com'),
     Password.fromHash('stored-hash'),
+    UserTier.from(tier),
     false,
   );
 
@@ -37,6 +39,7 @@ const _makeHandler = (overrides: {
     findById: vi.fn(),
     findByEmail: vi.fn().mockResolvedValue(_existingUser()),
     deleteById: vi.fn(),
+    findExpiredTrialUsers: vi.fn().mockResolvedValue([]),
     ...overrides.userRepository,
   };
 
@@ -120,6 +123,19 @@ describe('LoginUserHandler', () => {
       const saveOrder = (sessionRepository.save as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
 
       expect(revokeOrder).toBeLessThan(saveOrder);
+    });
+
+    it('skips session revocation for demo users', async () => {
+      const { handler, sessionRepository } = _makeHandler({
+        userRepository: {
+          findByEmail: vi.fn().mockResolvedValue(_existingUser('DEMO')),
+        },
+      });
+
+      await handler.execute(validCommand);
+
+      expect(sessionRepository.revokeAllForUser).not.toHaveBeenCalled();
+      expect(sessionRepository.save).toHaveBeenCalledTimes(1);
     });
 
     it('dispatches a login event', async () => {

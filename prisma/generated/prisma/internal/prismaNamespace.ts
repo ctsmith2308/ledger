@@ -1121,6 +1121,7 @@ export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   passwordHash: 'passwordHash',
+  tier: 'tier',
   mfaEnabled: 'mfaEnabled',
   mfaSecret: 'mfaSecret',
   createdAt: 'createdAt'
@@ -1132,6 +1133,7 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const UserSessionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  tier: 'tier',
   expiresAt: 'expiresAt',
   revokedAt: 'revokedAt',
   createdAt: 'createdAt'

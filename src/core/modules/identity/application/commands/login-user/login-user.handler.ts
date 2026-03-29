@@ -64,13 +64,15 @@ class LoginUserHandler implements IHandler<
       return Result.fail(new InvalidPasswordException());
     }
 
-    await this.sessionRepository.revokeAllForUser(user.id);
+    if (!user.tier.isDemo) {
+      await this.sessionRepository.revokeAllForUser(user.id);
+    }
 
     const sessionIdResult = SessionId.create(this.idGenerator.generate());
     if (sessionIdResult.isFailure) return Result.fail(sessionIdResult.error);
     const sessionId = sessionIdResult.value;
 
-    const session = UserSession.create(sessionId, user.id);
+    const session = UserSession.create(sessionId, user.id, user.tier);
 
     await this.sessionRepository.save(session);
 

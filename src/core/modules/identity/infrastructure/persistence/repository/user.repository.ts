@@ -35,6 +35,14 @@ class UserRepository implements IUserRepository {
       where: { id: id.value },
     });
   }
+
+  async findExpiredTrialUsers(cutoff: Date): Promise<User[]> {
+    const records = await this.prisma.user.findMany({
+      where: { tier: 'TRIAL', createdAt: { lt: cutoff } },
+    });
+
+    return records.map(UserPrismaMapper.toDomain);
+  }
 }
 
 export { UserRepository };

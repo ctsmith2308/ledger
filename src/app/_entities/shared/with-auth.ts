@@ -14,7 +14,7 @@ const withAuth = createMiddleware().define(async ({ next }) => {
 
   const session = result.getValueOrThrow();
 
-  return next({ ctx: { userId: session.userId } });
+  return next({ ctx: { userId: session.userId, tier: session.tier } });
 });
 
 export { withAuth };

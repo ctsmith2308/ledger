@@ -18,10 +18,15 @@ import {
   Spinner,
 } from '@/app/_components';
 
+import { useUserTier } from '@/app/_providers';
+
+import { DemoFootnote } from '@/app/_widgets';
+
 import { useDeleteAccount } from '../hooks';
 
 function DeleteAccountCard() {
   const { deleteAccount, isDeleting } = useDeleteAccount();
+  const { isDemo } = useUserTier();
 
   return (
     <Card className="border-red-200 dark:border-red-900">
@@ -38,7 +43,10 @@ function DeleteAccountCard() {
         </p>
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="flex-col items-stretch gap-3">
+        {isDemo ? (
+          <DemoFootnote action="Account deletion" />
+        ) : (
         <Dialog>
           <DialogTrigger
             render={
@@ -74,6 +82,7 @@ function DeleteAccountCard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        )}
       </CardFooter>
     </Card>
   );

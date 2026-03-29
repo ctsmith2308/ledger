@@ -291,7 +291,7 @@ await this.eventBus.dispatch(events);`,
       {
         label: 'Handler-dispatched event — no aggregate owns the action',
         code: `// LoginUserHandler — login is a use-case fact, not a session lifecycle fact
-const session = UserSession.create(sessionId, user.id);
+const session = UserSession.create(sessionId, user.id, user.tier);
 await this.sessionRepository.save(session);
 await this.eventBus.dispatch([new UserLoggedInEvent(user.id.value)]);
 

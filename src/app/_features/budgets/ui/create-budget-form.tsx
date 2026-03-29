@@ -25,6 +25,10 @@ import {
 
 import { TRANSACTION_CATEGORIES } from '@/app/_entities/transactions';
 
+import { useUserTier } from '@/app/_providers';
+
+import { DemoFootnote } from '@/app/_widgets';
+
 import {
   useCreateBudgetForm,
   type CreateBudgetFormApi,
@@ -32,11 +36,16 @@ import {
 
 function CreateBudgetButton() {
   const { form, formId, isPending } = useCreateBudgetForm();
+  const { isDemo } = useUserTier();
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     form.handleSubmit();
   };
+
+  if (isDemo) {
+    return <DemoFootnote action="Budget creation" />;
+  }
 
   return (
     <Dialog>

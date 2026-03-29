@@ -8,6 +8,7 @@ import {
   Email,
   User,
   Password,
+  UserTier,
 } from '@/core/modules/identity/domain';
 import { type IEventBus } from '@/core/shared/domain';
 
@@ -21,6 +22,7 @@ const _makeHandler = (overrides: {
     findById: vi.fn().mockResolvedValue(_existingUser()),
     findByEmail: vi.fn(),
     deleteById: vi.fn(),
+    findExpiredTrialUsers: vi.fn().mockResolvedValue([]),
     ...overrides.userRepository,
   };
 
@@ -48,6 +50,7 @@ const _existingUser = () =>
     UserId.from('user-1'),
     Email.from('test@example.com'),
     Password.fromHash('hash'),
+    UserTier.from('TRIAL'),
     false,
   );
 

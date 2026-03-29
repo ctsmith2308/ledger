@@ -10,6 +10,7 @@ import {
   User,
   UserId,
   Password,
+  UserTier,
 } from '@/core/modules/identity/domain';
 import { type IEventBus } from '@/core/shared/domain';
 
@@ -25,6 +26,7 @@ const _makeHandler = (overrides: {
     findById: vi.fn(),
     findByEmail: vi.fn().mockResolvedValue(null),
     deleteById: vi.fn(),
+    findExpiredTrialUsers: vi.fn().mockResolvedValue([]),
     ...overrides.userRepository,
   };
 
@@ -127,6 +129,7 @@ describe('RegisterUserHandler', () => {
         UserId.from('existing-id'),
         Email.from('test@example.com'),
         Password.fromHash('hash'),
+        UserTier.from('TRIAL'),
         false,
       );
 
@@ -147,6 +150,7 @@ describe('RegisterUserHandler', () => {
         UserId.from('existing-id'),
         Email.from('test@example.com'),
         Password.fromHash('hash'),
+        UserTier.from('TRIAL'),
         false,
       );
 
@@ -166,6 +170,7 @@ describe('RegisterUserHandler', () => {
         UserId.from('existing-id'),
         Email.from('test@example.com'),
         Password.fromHash('hash'),
+        UserTier.from('TRIAL'),
         false,
       );
 

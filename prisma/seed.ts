@@ -21,6 +21,7 @@ async function main() {
         id: 'a0000000-0000-0000-0000-000000000001',
         email: 'demo@ledger.app',
         passwordHash,
+        tier: 'DEMO',
         profile: {
           create: {
             firstName: 'Demo',
@@ -36,6 +37,7 @@ async function main() {
         id: 'a0000000-0000-0000-0000-000000000002',
         email: 'alice@ledger.app',
         passwordHash,
+        tier: 'DEMO',
         profile: {
           create: {
             firstName: 'Alice',
@@ -51,6 +53,7 @@ async function main() {
         id: 'a0000000-0000-0000-0000-000000000003',
         email: 'ben@ledger.app',
         passwordHash,
+        tier: 'DEMO',
         profile: {
           create: {
             firstName: 'Ben',

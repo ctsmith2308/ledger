@@ -99,7 +99,7 @@ class IdentityModule {
       new GetUserProfileHandler(repos.userProfileRepository),
     );
 
-    return new IdentityController(commandBus, queryBus);
+    return new IdentityController(commandBus, queryBus, repos.userRepository);
   }
 }
 

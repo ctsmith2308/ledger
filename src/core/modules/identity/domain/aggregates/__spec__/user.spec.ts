@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { User } from '../user.aggregate';
-import { UserId, Email, Password } from '../../value-objects';
+import { UserId, Email, Password, UserTier, USER_TIERS } from '../../value-objects';
 import { UserRegisteredEvent } from '../../events';
 
 const _makeUser = () => {
@@ -20,6 +20,7 @@ describe('User', () => {
       expect(user.id).toBe(id);
       expect(user.email).toBe(email);
       expect(user.passwordHash).toBe(passwordHash);
+      expect(user.tier.value).toBe(USER_TIERS.TRIAL);
       expect(user.mfaEnabled).toBe(false);
       expect(user.mfaSecret).toBeUndefined();
     });
@@ -55,7 +56,7 @@ describe('User', () => {
     it('rebuilds a user without emitting events', () => {
       const { id, email, passwordHash } = _makeUser();
 
-      const user = User.reconstitute(id, email, passwordHash, true, 'secret');
+      const user = User.reconstitute(id, email, passwordHash, UserTier.from('FULL'), true, 'secret');
 
       expect(user.mfaEnabled).toBe(true);
       expect(user.mfaSecret).toBe('secret');

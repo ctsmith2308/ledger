@@ -6,6 +6,7 @@ import {
   UserId,
   Email,
   Password,
+  UserTier,
 } from '@/core/modules/identity/domain';
 
 const userRepository = new UserRepository(prisma);
@@ -40,6 +41,7 @@ describe('UserRepository', () => {
         user.id,
         user.email,
         user.passwordHash,
+        UserTier.from('TRIAL'),
         true,
         'mfa-secret',
       );

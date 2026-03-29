@@ -5,6 +5,7 @@ import {
   type IUserSessionRepository,
   SessionId,
   UserId,
+  UserTier,
   UserSession,
 } from '@/core/modules/identity/domain';
 import {
@@ -17,6 +18,7 @@ const _validSession = () =>
   UserSession.reconstitute(
     SessionId.from('session-abc'),
     UserId.from('user-12345'),
+    UserTier.from('TRIAL'),
     new Date(Date.now() + 3600_000),
     undefined,
     new Date(),
@@ -26,6 +28,7 @@ const _expiredSession = () =>
   UserSession.reconstitute(
     SessionId.from('session-abc'),
     UserId.from('user-12345'),
+    UserTier.from('TRIAL'),
     new Date(Date.now() - 1000),
     undefined,
     new Date(Date.now() - 100_000),
@@ -35,6 +38,7 @@ const _revokedSession = () =>
   UserSession.reconstitute(
     SessionId.from('session-abc'),
     UserId.from('user-12345'),
+    UserTier.from('TRIAL'),
     new Date(Date.now() + 3600_000),
     new Date(),
     new Date(Date.now() - 100_000),

@@ -1,5 +1,6 @@
 export * from './app-header';
 export * from './content-card';
+export * from './demo-footnote';
 export * from './dashboard-sidebar';
 export * from './error-view';
 export * from './not-found-view';

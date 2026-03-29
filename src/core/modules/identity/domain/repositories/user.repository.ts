@@ -6,6 +6,7 @@ interface IUserRepository {
   findById(id: UserId): Promise<User | null>;
   findByEmail(email: Email): Promise<User | null>;
   deleteById(id: UserId): Promise<void>;
+  findExpiredTrialUsers(cutoff: Date): Promise<User[]>;
 }
 
 export { type IUserRepository };

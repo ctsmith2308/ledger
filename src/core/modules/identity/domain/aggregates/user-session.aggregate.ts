@@ -1,13 +1,15 @@
 import { AggregateRoot } from '@/core/shared/domain';
-import { SessionId, UserId } from '../value-objects';
+import { SessionId, UserId, UserTier } from '../value-objects';
 import { UserLoggedInEvent } from '../events';
 
-const SESSION_DURATION_MS = Number(process.env.SESSION_DURATION_SECONDS ?? 604800) * 1000;
+const SESSION_DURATION_MS =
+  Number(process.env.SESSION_DURATION_SECONDS ?? 604800) * 1000;
 
 class UserSession extends AggregateRoot {
   private constructor(
     private readonly _id: SessionId,
     private readonly _userId: UserId,
+    private readonly _tier: UserTier,
     private readonly _expiresAt: Date,
     private _revokedAt: Date | undefined,
     private readonly _createdAt: Date,
@@ -15,12 +17,13 @@ class UserSession extends AggregateRoot {
     super();
   }
 
-  static create(id: SessionId, userId: UserId): UserSession {
+  static create(id: SessionId, userId: UserId, tier: UserTier): UserSession {
     const now = new Date();
 
     const session = new UserSession(
       id,
       userId,
+      tier,
       new Date(now.getTime() + SESSION_DURATION_MS),
       undefined,
       now,
@@ -34,11 +37,12 @@ class UserSession extends AggregateRoot {
   static reconstitute(
     id: SessionId,
     userId: UserId,
+    tier: UserTier,
     expiresAt: Date,
     revokedAt: Date | undefined,
     createdAt: Date,
   ): UserSession {
-    return new UserSession(id, userId, expiresAt, revokedAt, createdAt);
+    return new UserSession(id, userId, tier, expiresAt, revokedAt, createdAt);
   }
 
   revoke(): void {
@@ -60,15 +64,23 @@ class UserSession extends AggregateRoot {
   get id() {
     return this._id;
   }
+
   get userId() {
     return this._userId;
   }
+
+  get tier() {
+    return this._tier;
+  }
+
   get expiresAt() {
     return this._expiresAt;
   }
+
   get revokedAt() {
     return this._revokedAt;
   }
+
   get createdAt() {
     return this._createdAt;
   }

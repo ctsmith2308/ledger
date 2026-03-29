@@ -1,5 +1,5 @@
 import { AggregateRoot } from '@/core/shared/domain';
-import { UserId, Email, Password } from '../value-objects';
+import { UserId, Email, Password, UserTier, USER_TIERS } from '../value-objects';
 import { UserRegisteredEvent } from '../events';
 
 class User extends AggregateRoot {
@@ -7,6 +7,7 @@ class User extends AggregateRoot {
     private readonly _id: UserId,
     private readonly _email: Email,
     private _passwordHash: Password,
+    private readonly _tier: UserTier,
     private _mfaEnabled: boolean = false,
     private _mfaSecret?: string,
   ) {
@@ -14,7 +15,8 @@ class User extends AggregateRoot {
   }
 
   static register(id: UserId, email: Email, passwordHash: Password): User {
-    const user = new User(id, email, passwordHash);
+    const tier = UserTier.from(USER_TIERS.TRIAL);
+    const user = new User(id, email, passwordHash, tier);
 
     user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
 
@@ -30,10 +32,11 @@ class User extends AggregateRoot {
     id: UserId,
     email: Email,
     passwordHash: Password,
+    tier: UserTier,
     mfaEnabled: boolean,
     mfaSecret?: string,
   ): User {
-    return new User(id, email, passwordHash, mfaEnabled, mfaSecret);
+    return new User(id, email, passwordHash, tier, mfaEnabled, mfaSecret);
   }
 
   get id() {
@@ -46,6 +49,10 @@ class User extends AggregateRoot {
 
   get passwordHash() {
     return this._passwordHash;
+  }
+
+  get tier() {
+    return this._tier;
   }
 
   get mfaEnabled() {
