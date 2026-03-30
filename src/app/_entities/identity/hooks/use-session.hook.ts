@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { type JwtData } from '@/core/shared/domain';
 
-import { queryKeys } from '@/app/_entities/shared';
+import { queryKeys } from '@/app/_entities/shared/query-keys';
 
 const useSession = () => {
   return useQuery<JwtData>({

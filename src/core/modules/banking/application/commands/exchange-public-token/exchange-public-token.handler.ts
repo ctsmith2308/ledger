@@ -11,7 +11,6 @@ import {
   PlaidItem,
   BankAccount,
 } from '@/core/modules/banking/domain';
-import { IIdGenerator } from '@/core/modules/identity/domain';
 import {
   ExchangePublicTokenCommand,
   ExchangePublicTokenResponse,
@@ -26,7 +25,6 @@ class ExchangePublicTokenHandler
     private readonly plaidItemRepository: IPlaidItemRepository,
     private readonly bankAccountRepository: IBankAccountRepository,
     private readonly eventBus: IEventBus,
-    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(
@@ -36,12 +34,9 @@ class ExchangePublicTokenHandler
       const { accessToken, itemId } =
         await this.plaidClient.exchangePublicToken(command.publicToken);
 
-      const plaidItemId = this.idGenerator.generate();
-
       const plaidItem = PlaidItem.link(
-        plaidItemId,
-        command.userId,
         itemId,
+        command.userId,
         accessToken,
       );
 
@@ -52,9 +47,8 @@ class ExchangePublicTokenHandler
 
       const accounts = plaidAccounts.map((acct) =>
         BankAccount.create(
-          this.idGenerator.generate(),
-          plaidItem.id,
           acct.accountId,
+          plaidItem.id,
           acct.name,
           acct.officialName ?? undefined,
           acct.mask ?? undefined,

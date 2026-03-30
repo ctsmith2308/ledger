@@ -27,7 +27,6 @@ export type AggregatePlaidItem = {
 export type PlaidItemMinAggregateOutputType = {
   id: string | null
   userId: string | null
-  plaidItemId: string | null
   accessToken: string | null
   institutionId: string | null
   cursor: string | null
@@ -37,7 +36,6 @@ export type PlaidItemMinAggregateOutputType = {
 export type PlaidItemMaxAggregateOutputType = {
   id: string | null
   userId: string | null
-  plaidItemId: string | null
   accessToken: string | null
   institutionId: string | null
   cursor: string | null
@@ -47,7 +45,6 @@ export type PlaidItemMaxAggregateOutputType = {
 export type PlaidItemCountAggregateOutputType = {
   id: number
   userId: number
-  plaidItemId: number
   accessToken: number
   institutionId: number
   cursor: number
@@ -59,7 +56,6 @@ export type PlaidItemCountAggregateOutputType = {
 export type PlaidItemMinAggregateInputType = {
   id?: true
   userId?: true
-  plaidItemId?: true
   accessToken?: true
   institutionId?: true
   cursor?: true
@@ -69,7 +65,6 @@ export type PlaidItemMinAggregateInputType = {
 export type PlaidItemMaxAggregateInputType = {
   id?: true
   userId?: true
-  plaidItemId?: true
   accessToken?: true
   institutionId?: true
   cursor?: true
@@ -79,7 +74,6 @@ export type PlaidItemMaxAggregateInputType = {
 export type PlaidItemCountAggregateInputType = {
   id?: true
   userId?: true
-  plaidItemId?: true
   accessToken?: true
   institutionId?: true
   cursor?: true
@@ -162,7 +156,6 @@ export type PlaidItemGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
 export type PlaidItemGroupByOutputType = {
   id: string
   userId: string
-  plaidItemId: string
   accessToken: string
   institutionId: string | null
   cursor: string | null
@@ -193,7 +186,6 @@ export type PlaidItemWhereInput = {
   NOT?: Prisma.PlaidItemWhereInput | Prisma.PlaidItemWhereInput[]
   id?: Prisma.StringFilter<"PlaidItem"> | string
   userId?: Prisma.StringFilter<"PlaidItem"> | string
-  plaidItemId?: Prisma.StringFilter<"PlaidItem"> | string
   accessToken?: Prisma.StringFilter<"PlaidItem"> | string
   institutionId?: Prisma.StringNullableFilter<"PlaidItem"> | string | null
   cursor?: Prisma.StringNullableFilter<"PlaidItem"> | string | null
@@ -204,7 +196,6 @@ export type PlaidItemWhereInput = {
 export type PlaidItemOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidItemId?: Prisma.SortOrder
   accessToken?: Prisma.SortOrder
   institutionId?: Prisma.SortOrderInput | Prisma.SortOrder
   cursor?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -214,7 +205,6 @@ export type PlaidItemOrderByWithRelationInput = {
 
 export type PlaidItemWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  plaidItemId?: string
   AND?: Prisma.PlaidItemWhereInput | Prisma.PlaidItemWhereInput[]
   OR?: Prisma.PlaidItemWhereInput[]
   NOT?: Prisma.PlaidItemWhereInput | Prisma.PlaidItemWhereInput[]
@@ -224,12 +214,11 @@ export type PlaidItemWhereUniqueInput = Prisma.AtLeast<{
   cursor?: Prisma.StringNullableFilter<"PlaidItem"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PlaidItem"> | Date | string
   bankAccounts?: Prisma.BankAccountListRelationFilter
-}, "id" | "plaidItemId">
+}, "id">
 
 export type PlaidItemOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidItemId?: Prisma.SortOrder
   accessToken?: Prisma.SortOrder
   institutionId?: Prisma.SortOrderInput | Prisma.SortOrder
   cursor?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -245,7 +234,6 @@ export type PlaidItemScalarWhereWithAggregatesInput = {
   NOT?: Prisma.PlaidItemScalarWhereWithAggregatesInput | Prisma.PlaidItemScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"PlaidItem"> | string
   userId?: Prisma.StringWithAggregatesFilter<"PlaidItem"> | string
-  plaidItemId?: Prisma.StringWithAggregatesFilter<"PlaidItem"> | string
   accessToken?: Prisma.StringWithAggregatesFilter<"PlaidItem"> | string
   institutionId?: Prisma.StringNullableWithAggregatesFilter<"PlaidItem"> | string | null
   cursor?: Prisma.StringNullableWithAggregatesFilter<"PlaidItem"> | string | null
@@ -253,9 +241,8 @@ export type PlaidItemScalarWhereWithAggregatesInput = {
 }
 
 export type PlaidItemCreateInput = {
-  id?: string
+  id: string
   userId: string
-  plaidItemId: string
   accessToken: string
   institutionId?: string | null
   cursor?: string | null
@@ -264,9 +251,8 @@ export type PlaidItemCreateInput = {
 }
 
 export type PlaidItemUncheckedCreateInput = {
-  id?: string
+  id: string
   userId: string
-  plaidItemId: string
   accessToken: string
   institutionId?: string | null
   cursor?: string | null
@@ -277,7 +263,6 @@ export type PlaidItemUncheckedCreateInput = {
 export type PlaidItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
   accessToken?: Prisma.StringFieldUpdateOperationsInput | string
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -288,7 +273,6 @@ export type PlaidItemUpdateInput = {
 export type PlaidItemUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
   accessToken?: Prisma.StringFieldUpdateOperationsInput | string
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -297,9 +281,8 @@ export type PlaidItemUncheckedUpdateInput = {
 }
 
 export type PlaidItemCreateManyInput = {
-  id?: string
+  id: string
   userId: string
-  plaidItemId: string
   accessToken: string
   institutionId?: string | null
   cursor?: string | null
@@ -309,7 +292,6 @@ export type PlaidItemCreateManyInput = {
 export type PlaidItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
   accessToken?: Prisma.StringFieldUpdateOperationsInput | string
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -319,7 +301,6 @@ export type PlaidItemUpdateManyMutationInput = {
 export type PlaidItemUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
   accessToken?: Prisma.StringFieldUpdateOperationsInput | string
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -329,7 +310,6 @@ export type PlaidItemUncheckedUpdateManyInput = {
 export type PlaidItemCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidItemId?: Prisma.SortOrder
   accessToken?: Prisma.SortOrder
   institutionId?: Prisma.SortOrder
   cursor?: Prisma.SortOrder
@@ -339,7 +319,6 @@ export type PlaidItemCountOrderByAggregateInput = {
 export type PlaidItemMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidItemId?: Prisma.SortOrder
   accessToken?: Prisma.SortOrder
   institutionId?: Prisma.SortOrder
   cursor?: Prisma.SortOrder
@@ -349,7 +328,6 @@ export type PlaidItemMaxOrderByAggregateInput = {
 export type PlaidItemMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidItemId?: Prisma.SortOrder
   accessToken?: Prisma.SortOrder
   institutionId?: Prisma.SortOrder
   cursor?: Prisma.SortOrder
@@ -376,9 +354,8 @@ export type PlaidItemUpdateOneRequiredWithoutBankAccountsNestedInput = {
 }
 
 export type PlaidItemCreateWithoutBankAccountsInput = {
-  id?: string
+  id: string
   userId: string
-  plaidItemId: string
   accessToken: string
   institutionId?: string | null
   cursor?: string | null
@@ -386,9 +363,8 @@ export type PlaidItemCreateWithoutBankAccountsInput = {
 }
 
 export type PlaidItemUncheckedCreateWithoutBankAccountsInput = {
-  id?: string
+  id: string
   userId: string
-  plaidItemId: string
   accessToken: string
   institutionId?: string | null
   cursor?: string | null
@@ -414,7 +390,6 @@ export type PlaidItemUpdateToOneWithWhereWithoutBankAccountsInput = {
 export type PlaidItemUpdateWithoutBankAccountsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
   accessToken?: Prisma.StringFieldUpdateOperationsInput | string
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -424,7 +399,6 @@ export type PlaidItemUpdateWithoutBankAccountsInput = {
 export type PlaidItemUncheckedUpdateWithoutBankAccountsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
   accessToken?: Prisma.StringFieldUpdateOperationsInput | string
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -465,7 +439,6 @@ export type PlaidItemCountOutputTypeCountBankAccountsArgs<ExtArgs extends runtim
 export type PlaidItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  plaidItemId?: boolean
   accessToken?: boolean
   institutionId?: boolean
   cursor?: boolean
@@ -477,7 +450,6 @@ export type PlaidItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
 export type PlaidItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  plaidItemId?: boolean
   accessToken?: boolean
   institutionId?: boolean
   cursor?: boolean
@@ -487,7 +459,6 @@ export type PlaidItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
 export type PlaidItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  plaidItemId?: boolean
   accessToken?: boolean
   institutionId?: boolean
   cursor?: boolean
@@ -497,14 +468,13 @@ export type PlaidItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
 export type PlaidItemSelectScalar = {
   id?: boolean
   userId?: boolean
-  plaidItemId?: boolean
   accessToken?: boolean
   institutionId?: boolean
   cursor?: boolean
   createdAt?: boolean
 }
 
-export type PlaidItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "plaidItemId" | "accessToken" | "institutionId" | "cursor" | "createdAt", ExtArgs["result"]["plaidItem"]>
+export type PlaidItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "accessToken" | "institutionId" | "cursor" | "createdAt", ExtArgs["result"]["plaidItem"]>
 export type PlaidItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   bankAccounts?: boolean | Prisma.PlaidItem$bankAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.PlaidItemCountOutputTypeDefaultArgs<ExtArgs>
@@ -520,7 +490,6 @@ export type $PlaidItemPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
-    plaidItemId: string
     accessToken: string
     institutionId: string | null
     cursor: string | null
@@ -951,7 +920,6 @@ export interface Prisma__PlaidItemClient<T, Null = never, ExtArgs extends runtim
 export interface PlaidItemFieldRefs {
   readonly id: Prisma.FieldRef<"PlaidItem", 'String'>
   readonly userId: Prisma.FieldRef<"PlaidItem", 'String'>
-  readonly plaidItemId: Prisma.FieldRef<"PlaidItem", 'String'>
   readonly accessToken: Prisma.FieldRef<"PlaidItem", 'String'>
   readonly institutionId: Prisma.FieldRef<"PlaidItem", 'String'>
   readonly cursor: Prisma.FieldRef<"PlaidItem", 'String'>

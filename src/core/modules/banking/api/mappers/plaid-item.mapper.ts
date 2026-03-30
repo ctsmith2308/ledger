@@ -6,7 +6,6 @@ const PlaidItemMapper = {
     return {
       id: item.id,
       userId: item.userId,
-      plaidItemId: item.plaidItemId,
       institutionId: item.institutionId,
       createdAt: item.createdAt.toISOString(),
     };

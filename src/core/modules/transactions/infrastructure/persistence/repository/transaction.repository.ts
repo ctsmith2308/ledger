@@ -40,6 +40,14 @@ class TransactionRepository implements ITransactionRepository {
     return record ? TransactionPrismaMapper.toDomain(record) : null;
   }
 
+  async findByIds(ids: string[]): Promise<Transaction[]> {
+    const records = await this.prisma.transaction.findMany({
+      where: { id: { in: ids } },
+    });
+
+    return records.map(TransactionPrismaMapper.toDomain);
+  }
+
   async findByUserId(userId: string): Promise<Transaction[]> {
     const records = await this.prisma.transaction.findMany({
       where: { userId },
@@ -56,29 +64,9 @@ class TransactionRepository implements ITransactionRepository {
     return records.map(TransactionPrismaMapper.toDomain);
   }
 
-  async findByPlaidTransactionId(
-    plaidTransactionId: string,
-  ): Promise<Transaction | null> {
-    const record = await this.prisma.transaction.findUnique({
-      where: { plaidTransactionId },
-    });
-
-    return record ? TransactionPrismaMapper.toDomain(record) : null;
-  }
-
-  async findByPlaidTransactionIds(
-    plaidTransactionIds: string[],
-  ): Promise<Transaction[]> {
-    const records = await this.prisma.transaction.findMany({
-      where: { plaidTransactionId: { in: plaidTransactionIds } },
-    });
-
-    return records.map(TransactionPrismaMapper.toDomain);
-  }
-
-  async deleteByPlaidTransactionIds(ids: string[]): Promise<void> {
+  async deleteByIds(ids: string[]): Promise<void> {
     await this.prisma.transaction.deleteMany({
-      where: { plaidTransactionId: { in: ids } },
+      where: { id: { in: ids } },
     });
   }
 }

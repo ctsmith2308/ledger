@@ -6,7 +6,6 @@ const BankAccountPrismaMapper = {
     return BankAccount.reconstitute(
       raw.id,
       raw.plaidItemId,
-      raw.plaidAccountId,
       raw.name,
       raw.officialName ?? undefined,
       raw.mask ?? undefined,
@@ -24,7 +23,6 @@ const BankAccountPrismaMapper = {
     return {
       id: account.id,
       plaidItemId: account.plaidItemId,
-      plaidAccountId: account.plaidAccountId,
       name: account.name,
       officialName: account.officialName ?? null,
       mask: account.mask ?? null,

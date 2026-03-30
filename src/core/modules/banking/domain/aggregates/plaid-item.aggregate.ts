@@ -5,7 +5,6 @@ class PlaidItem extends AggregateRoot {
   private constructor(
     private readonly _id: string,
     private readonly _userId: string,
-    private readonly _plaidItemId: string,
     private readonly _accessToken: string,
     private readonly _institutionId: string | undefined,
     private _cursor: string | undefined,
@@ -17,14 +16,12 @@ class PlaidItem extends AggregateRoot {
   static link(
     id: string,
     userId: string,
-    plaidItemId: string,
     accessToken: string,
     institutionId?: string,
   ): PlaidItem {
     const item = new PlaidItem(
       id,
       userId,
-      plaidItemId,
       accessToken,
       institutionId,
       undefined,
@@ -41,7 +38,6 @@ class PlaidItem extends AggregateRoot {
   static reconstitute(
     id: string,
     userId: string,
-    plaidItemId: string,
     accessToken: string,
     institutionId: string | undefined,
     cursor: string | undefined,
@@ -50,7 +46,6 @@ class PlaidItem extends AggregateRoot {
     return new PlaidItem(
       id,
       userId,
-      plaidItemId,
       accessToken,
       institutionId,
       cursor,
@@ -68,10 +63,6 @@ class PlaidItem extends AggregateRoot {
 
   get userId() {
     return this._userId;
-  }
-
-  get plaidItemId() {
-    return this._plaidItemId;
   }
 
   get accessToken() {

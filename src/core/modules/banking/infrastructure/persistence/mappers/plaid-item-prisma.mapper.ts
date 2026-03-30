@@ -6,7 +6,6 @@ const PlaidItemPrismaMapper = {
     return PlaidItem.reconstitute(
       raw.id,
       raw.userId,
-      raw.plaidItemId,
       raw.accessToken,
       raw.institutionId ?? undefined,
       raw.cursor ?? undefined,
@@ -18,7 +17,6 @@ const PlaidItemPrismaMapper = {
     return {
       id: item.id,
       userId: item.userId,
-      plaidItemId: item.plaidItemId,
       accessToken: item.accessToken,
       institutionId: item.institutionId ?? null,
       cursor: item.cursor ?? null,

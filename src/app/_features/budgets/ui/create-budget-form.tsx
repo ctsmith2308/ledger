@@ -25,7 +25,7 @@ import {
 
 import { TRANSACTION_CATEGORIES } from '@/app/_entities/transactions';
 
-import { useUserTier } from '@/app/_entities/identity';
+import { useUserTier } from '@/app/_entities/identity/hooks';
 
 import { DemoFootnote } from '@/app/_widgets';
 

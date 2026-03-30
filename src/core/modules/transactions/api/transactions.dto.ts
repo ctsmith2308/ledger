@@ -1,7 +1,6 @@
 type TransactionDTO = {
   id: string;
   accountId: string;
-  plaidTransactionId: string;
   amount: number;
   date: string;
   name: string;

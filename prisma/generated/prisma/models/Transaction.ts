@@ -38,7 +38,6 @@ export type TransactionMinAggregateOutputType = {
   id: string | null
   accountId: string | null
   userId: string | null
-  plaidTransactionId: string | null
   amount: runtime.Decimal | null
   date: Date | null
   name: string | null
@@ -55,7 +54,6 @@ export type TransactionMaxAggregateOutputType = {
   id: string | null
   accountId: string | null
   userId: string | null
-  plaidTransactionId: string | null
   amount: runtime.Decimal | null
   date: Date | null
   name: string | null
@@ -72,7 +70,6 @@ export type TransactionCountAggregateOutputType = {
   id: number
   accountId: number
   userId: number
-  plaidTransactionId: number
   amount: number
   date: number
   name: number
@@ -99,7 +96,6 @@ export type TransactionMinAggregateInputType = {
   id?: true
   accountId?: true
   userId?: true
-  plaidTransactionId?: true
   amount?: true
   date?: true
   name?: true
@@ -116,7 +112,6 @@ export type TransactionMaxAggregateInputType = {
   id?: true
   accountId?: true
   userId?: true
-  plaidTransactionId?: true
   amount?: true
   date?: true
   name?: true
@@ -133,7 +128,6 @@ export type TransactionCountAggregateInputType = {
   id?: true
   accountId?: true
   userId?: true
-  plaidTransactionId?: true
   amount?: true
   date?: true
   name?: true
@@ -237,7 +231,6 @@ export type TransactionGroupByOutputType = {
   id: string
   accountId: string
   userId: string
-  plaidTransactionId: string
   amount: runtime.Decimal
   date: Date
   name: string
@@ -277,7 +270,6 @@ export type TransactionWhereInput = {
   id?: Prisma.StringFilter<"Transaction"> | string
   accountId?: Prisma.StringFilter<"Transaction"> | string
   userId?: Prisma.StringFilter<"Transaction"> | string
-  plaidTransactionId?: Prisma.StringFilter<"Transaction"> | string
   amount?: Prisma.DecimalFilter<"Transaction"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   date?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   name?: Prisma.StringFilter<"Transaction"> | string
@@ -294,7 +286,6 @@ export type TransactionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidTransactionId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   date?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -309,7 +300,6 @@ export type TransactionOrderByWithRelationInput = {
 
 export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  plaidTransactionId?: string
   AND?: Prisma.TransactionWhereInput | Prisma.TransactionWhereInput[]
   OR?: Prisma.TransactionWhereInput[]
   NOT?: Prisma.TransactionWhereInput | Prisma.TransactionWhereInput[]
@@ -325,13 +315,12 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   paymentChannel?: Prisma.StringNullableFilter<"Transaction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
-}, "id" | "plaidTransactionId">
+}, "id">
 
 export type TransactionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidTransactionId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   date?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -356,7 +345,6 @@ export type TransactionScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   accountId?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
-  plaidTransactionId?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   amount?: Prisma.DecimalWithAggregatesFilter<"Transaction"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   date?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
   name?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
@@ -370,10 +358,9 @@ export type TransactionScalarWhereWithAggregatesInput = {
 }
 
 export type TransactionCreateInput = {
-  id?: string
+  id: string
   accountId: string
   userId: string
-  plaidTransactionId: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   date: Date | string
   name: string
@@ -387,10 +374,9 @@ export type TransactionCreateInput = {
 }
 
 export type TransactionUncheckedCreateInput = {
-  id?: string
+  id: string
   accountId: string
   userId: string
-  plaidTransactionId: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   date: Date | string
   name: string
@@ -407,7 +393,6 @@ export type TransactionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidTransactionId?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -424,7 +409,6 @@ export type TransactionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidTransactionId?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -438,10 +422,9 @@ export type TransactionUncheckedUpdateInput = {
 }
 
 export type TransactionCreateManyInput = {
-  id?: string
+  id: string
   accountId: string
   userId: string
-  plaidTransactionId: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   date: Date | string
   name: string
@@ -458,7 +441,6 @@ export type TransactionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidTransactionId?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -475,7 +457,6 @@ export type TransactionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidTransactionId?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -492,7 +473,6 @@ export type TransactionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidTransactionId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   date?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -513,7 +493,6 @@ export type TransactionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidTransactionId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   date?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -530,7 +509,6 @@ export type TransactionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  plaidTransactionId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   date?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -561,7 +539,6 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   id?: boolean
   accountId?: boolean
   userId?: boolean
-  plaidTransactionId?: boolean
   amount?: boolean
   date?: boolean
   name?: boolean
@@ -578,7 +555,6 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   accountId?: boolean
   userId?: boolean
-  plaidTransactionId?: boolean
   amount?: boolean
   date?: boolean
   name?: boolean
@@ -595,7 +571,6 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   accountId?: boolean
   userId?: boolean
-  plaidTransactionId?: boolean
   amount?: boolean
   date?: boolean
   name?: boolean
@@ -612,7 +587,6 @@ export type TransactionSelectScalar = {
   id?: boolean
   accountId?: boolean
   userId?: boolean
-  plaidTransactionId?: boolean
   amount?: boolean
   date?: boolean
   name?: boolean
@@ -625,7 +599,7 @@ export type TransactionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "accountId" | "userId" | "plaidTransactionId" | "amount" | "date" | "name" | "merchantName" | "category" | "detailedCategory" | "pending" | "paymentChannel" | "createdAt" | "updatedAt", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "accountId" | "userId" | "amount" | "date" | "name" | "merchantName" | "category" | "detailedCategory" | "pending" | "paymentChannel" | "createdAt" | "updatedAt", ExtArgs["result"]["transaction"]>
 
 export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Transaction"
@@ -634,7 +608,6 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     id: string
     accountId: string
     userId: string
-    plaidTransactionId: string
     amount: runtime.Decimal
     date: Date
     name: string
@@ -1071,7 +1044,6 @@ export interface TransactionFieldRefs {
   readonly id: Prisma.FieldRef<"Transaction", 'String'>
   readonly accountId: Prisma.FieldRef<"Transaction", 'String'>
   readonly userId: Prisma.FieldRef<"Transaction", 'String'>
-  readonly plaidTransactionId: Prisma.FieldRef<"Transaction", 'String'>
   readonly amount: Prisma.FieldRef<"Transaction", 'Decimal'>
   readonly date: Prisma.FieldRef<"Transaction", 'DateTime'>
   readonly name: Prisma.FieldRef<"Transaction", 'String'>

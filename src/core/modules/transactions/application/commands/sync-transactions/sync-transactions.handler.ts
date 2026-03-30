@@ -1,7 +1,6 @@
 import { Transaction as PlaidSDKTransaction } from 'plaid';
 
 import {
-  IIdGenerator,
   IHandler,
   IEventBus,
   Result,
@@ -23,8 +22,6 @@ import {
   SyncTransactionsResponse,
 } from './sync-transactions.command';
 
-// TODO: Use Plaid's transaction_id as PK instead of generated UUID
-
 class SyncTransactionsHandler implements IHandler<
   SyncTransactionsCommand,
   SyncTransactionsResponse
@@ -34,7 +31,6 @@ class SyncTransactionsHandler implements IHandler<
     private readonly transactionRepository: ITransactionRepository,
     private readonly plaidClient: IPlaidClient,
     private readonly eventBus: IEventBus,
-    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(
@@ -95,7 +91,7 @@ class SyncTransactionsHandler implements IHandler<
   }
 
   private async _handleRemoved(removed: string[]): Promise<void> {
-    await this.transactionRepository.deleteByPlaidTransactionIds(removed);
+    await this.transactionRepository.deleteByIds(removed);
   }
 
   private async _handleAdded(
@@ -103,7 +99,7 @@ class SyncTransactionsHandler implements IHandler<
     userId: string,
     batchEvents: DomainEvent[],
   ): Promise<void> {
-    const transactions = _mapToTransactions(added, userId, this.idGenerator);
+    const transactions = _mapToTransactions(added, userId);
 
     await this.transactionRepository.saveMany(transactions);
 
@@ -117,15 +113,12 @@ class SyncTransactionsHandler implements IHandler<
   ): Promise<void> {
     const plaidIds = modified.map((t) => t.transaction_id);
 
-    const existing =
-      await this.transactionRepository.findByPlaidTransactionIds(plaidIds);
+    const existing = await this.transactionRepository.findByIds(plaidIds);
 
     const updated: Transaction[] = [];
 
     for (const data of modified) {
-      const match = existing.find(
-        (t) => t.plaidTransactionId === data.transaction_id,
-      );
+      const match = existing.find((t) => t.id === data.transaction_id);
 
       // TODO: Dispatch a sync mismatch event if Plaid reports a modification
       // for a transaction we don't have — indicates data fell out of sync.
@@ -154,14 +147,12 @@ class SyncTransactionsHandler implements IHandler<
 const _mapToTransactions = (
   added: PlaidSDKTransaction[],
   userId: string,
-  idGenerator: IIdGenerator,
 ): Transaction[] => {
   return added.map((data) =>
     Transaction.create(
-      idGenerator.generate(),
+      data.transaction_id,
       data.account_id,
       userId,
-      data.transaction_id,
       data.amount,
       new Date(data.date),
       data.name,

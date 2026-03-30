@@ -4,15 +4,10 @@ interface ITransactionRepository {
   save(transaction: Transaction): Promise<void>;
   saveMany(transactions: Transaction[]): Promise<void>;
   findById(id: string): Promise<Transaction | null>;
+  findByIds(ids: string[]): Promise<Transaction[]>;
   findByUserId(userId: string): Promise<Transaction[]>;
   findByAccountId(accountId: string): Promise<Transaction[]>;
-  findByPlaidTransactionId(
-    plaidTransactionId: string,
-  ): Promise<Transaction | null>;
-  findByPlaidTransactionIds(
-    plaidTransactionIds: string[],
-  ): Promise<Transaction[]>;
-  deleteByPlaidTransactionIds(ids: string[]): Promise<void>;
+  deleteByIds(ids: string[]): Promise<void>;
 }
 
 export { type ITransactionRepository };

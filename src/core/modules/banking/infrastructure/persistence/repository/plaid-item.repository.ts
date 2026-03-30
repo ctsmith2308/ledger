@@ -31,14 +31,6 @@ class PlaidItemRepository implements IPlaidItemRepository {
     return records.map(PlaidItemPrismaMapper.toDomain);
   }
 
-  async findByPlaidItemId(plaidItemId: string): Promise<PlaidItem | null> {
-    const record = await this.prisma.plaidItem.findUnique({
-      where: { plaidItemId },
-    });
-
-    return record ? PlaidItemPrismaMapper.toDomain(record) : null;
-  }
-
   async updateCursor(id: string, cursor: string): Promise<void> {
     await this.prisma.plaidItem.update({
       where: { id },

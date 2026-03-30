@@ -1158,7 +1158,6 @@ export type UserProfileScalarFieldEnum = (typeof UserProfileScalarFieldEnum)[key
 export const PlaidItemScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  plaidItemId: 'plaidItemId',
   accessToken: 'accessToken',
   institutionId: 'institutionId',
   cursor: 'cursor',
@@ -1171,7 +1170,6 @@ export type PlaidItemScalarFieldEnum = (typeof PlaidItemScalarFieldEnum)[keyof t
 export const BankAccountScalarFieldEnum = {
   id: 'id',
   plaidItemId: 'plaidItemId',
-  plaidAccountId: 'plaidAccountId',
   name: 'name',
   officialName: 'officialName',
   mask: 'mask',
@@ -1191,7 +1189,6 @@ export const TransactionScalarFieldEnum = {
   id: 'id',
   accountId: 'accountId',
   userId: 'userId',
-  plaidTransactionId: 'plaidTransactionId',
   amount: 'amount',
   date: 'date',
   name: 'name',

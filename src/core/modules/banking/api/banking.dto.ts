@@ -1,14 +1,12 @@
 type PlaidItemDTO = {
   id: string;
   userId: string;
-  plaidItemId: string;
   institutionId: string | undefined;
   createdAt: string;
 };
 
 type BankAccountDTO = {
   id: string;
-  plaidAccountId: string;
   name: string;
   officialName: string | undefined;
   mask: string | undefined;

@@ -4,7 +4,6 @@ import {
   queryBus,
   eventBus,
   prisma,
-  IdGenerator,
 } from '@/core/shared/infrastructure';
 
 import {
@@ -41,7 +40,6 @@ class TransactionsModule {
 
     const services = {
       plaidClient: PlaidClientService.create(),
-      idGenerator: IdGenerator,
     };
 
     eventBus.register(
@@ -56,7 +54,6 @@ class TransactionsModule {
         repos.transactionRepository,
         services.plaidClient,
         eventBus,
-        services.idGenerator,
       ),
     );
 

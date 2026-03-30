@@ -5,7 +5,6 @@ const BankAccountMapper = {
   toDTO(account: BankAccount): BankAccountDTO {
     return {
       id: account.id,
-      plaidAccountId: account.plaidAccountId,
       name: account.name,
       officialName: account.officialName,
       mask: account.mask,

@@ -20,7 +20,6 @@ import {
   PlaidClientService,
 } from './infrastructure';
 
-import { IdGenerator } from '@/core/shared/infrastructure';
 
 import { BankingController } from './api';
 
@@ -36,7 +35,6 @@ class BankingModule {
     };
 
     const services = {
-      idGenerator: IdGenerator,
       eventBus,
     };
 
@@ -52,7 +50,6 @@ class BankingModule {
         repos.plaidItemRepository,
         repos.bankAccountRepository,
         services.eventBus,
-        services.idGenerator,
       ),
     );
 

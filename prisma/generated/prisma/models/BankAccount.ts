@@ -39,7 +39,6 @@ export type BankAccountSumAggregateOutputType = {
 export type BankAccountMinAggregateOutputType = {
   id: string | null
   plaidItemId: string | null
-  plaidAccountId: string | null
   name: string | null
   officialName: string | null
   mask: string | null
@@ -55,7 +54,6 @@ export type BankAccountMinAggregateOutputType = {
 export type BankAccountMaxAggregateOutputType = {
   id: string | null
   plaidItemId: string | null
-  plaidAccountId: string | null
   name: string | null
   officialName: string | null
   mask: string | null
@@ -71,7 +69,6 @@ export type BankAccountMaxAggregateOutputType = {
 export type BankAccountCountAggregateOutputType = {
   id: number
   plaidItemId: number
-  plaidAccountId: number
   name: number
   officialName: number
   mask: number
@@ -99,7 +96,6 @@ export type BankAccountSumAggregateInputType = {
 export type BankAccountMinAggregateInputType = {
   id?: true
   plaidItemId?: true
-  plaidAccountId?: true
   name?: true
   officialName?: true
   mask?: true
@@ -115,7 +111,6 @@ export type BankAccountMinAggregateInputType = {
 export type BankAccountMaxAggregateInputType = {
   id?: true
   plaidItemId?: true
-  plaidAccountId?: true
   name?: true
   officialName?: true
   mask?: true
@@ -131,7 +126,6 @@ export type BankAccountMaxAggregateInputType = {
 export type BankAccountCountAggregateInputType = {
   id?: true
   plaidItemId?: true
-  plaidAccountId?: true
   name?: true
   officialName?: true
   mask?: true
@@ -234,7 +228,6 @@ export type BankAccountGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type BankAccountGroupByOutputType = {
   id: string
   plaidItemId: string
-  plaidAccountId: string
   name: string
   officialName: string | null
   mask: string | null
@@ -273,7 +266,6 @@ export type BankAccountWhereInput = {
   NOT?: Prisma.BankAccountWhereInput | Prisma.BankAccountWhereInput[]
   id?: Prisma.StringFilter<"BankAccount"> | string
   plaidItemId?: Prisma.StringFilter<"BankAccount"> | string
-  plaidAccountId?: Prisma.StringFilter<"BankAccount"> | string
   name?: Prisma.StringFilter<"BankAccount"> | string
   officialName?: Prisma.StringNullableFilter<"BankAccount"> | string | null
   mask?: Prisma.StringNullableFilter<"BankAccount"> | string | null
@@ -290,7 +282,6 @@ export type BankAccountWhereInput = {
 export type BankAccountOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   plaidItemId?: Prisma.SortOrder
-  plaidAccountId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   officialName?: Prisma.SortOrderInput | Prisma.SortOrder
   mask?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -306,7 +297,6 @@ export type BankAccountOrderByWithRelationInput = {
 
 export type BankAccountWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  plaidAccountId?: string
   AND?: Prisma.BankAccountWhereInput | Prisma.BankAccountWhereInput[]
   OR?: Prisma.BankAccountWhereInput[]
   NOT?: Prisma.BankAccountWhereInput | Prisma.BankAccountWhereInput[]
@@ -322,12 +312,11 @@ export type BankAccountWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"BankAccount"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"BankAccount"> | Date | string
   plaidItem?: Prisma.XOR<Prisma.PlaidItemScalarRelationFilter, Prisma.PlaidItemWhereInput>
-}, "id" | "plaidAccountId">
+}, "id">
 
 export type BankAccountOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   plaidItemId?: Prisma.SortOrder
-  plaidAccountId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   officialName?: Prisma.SortOrderInput | Prisma.SortOrder
   mask?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -351,7 +340,6 @@ export type BankAccountScalarWhereWithAggregatesInput = {
   NOT?: Prisma.BankAccountScalarWhereWithAggregatesInput | Prisma.BankAccountScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"BankAccount"> | string
   plaidItemId?: Prisma.StringWithAggregatesFilter<"BankAccount"> | string
-  plaidAccountId?: Prisma.StringWithAggregatesFilter<"BankAccount"> | string
   name?: Prisma.StringWithAggregatesFilter<"BankAccount"> | string
   officialName?: Prisma.StringNullableWithAggregatesFilter<"BankAccount"> | string | null
   mask?: Prisma.StringNullableWithAggregatesFilter<"BankAccount"> | string | null
@@ -365,8 +353,7 @@ export type BankAccountScalarWhereWithAggregatesInput = {
 }
 
 export type BankAccountCreateInput = {
-  id?: string
-  plaidAccountId: string
+  id: string
   name: string
   officialName?: string | null
   mask?: string | null
@@ -381,9 +368,8 @@ export type BankAccountCreateInput = {
 }
 
 export type BankAccountUncheckedCreateInput = {
-  id?: string
+  id: string
   plaidItemId: string
-  plaidAccountId: string
   name: string
   officialName?: string | null
   mask?: string | null
@@ -398,7 +384,6 @@ export type BankAccountUncheckedCreateInput = {
 
 export type BankAccountUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -415,7 +400,6 @@ export type BankAccountUpdateInput = {
 export type BankAccountUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -429,9 +413,8 @@ export type BankAccountUncheckedUpdateInput = {
 }
 
 export type BankAccountCreateManyInput = {
-  id?: string
+  id: string
   plaidItemId: string
-  plaidAccountId: string
   name: string
   officialName?: string | null
   mask?: string | null
@@ -446,7 +429,6 @@ export type BankAccountCreateManyInput = {
 
 export type BankAccountUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -462,7 +444,6 @@ export type BankAccountUpdateManyMutationInput = {
 export type BankAccountUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   plaidItemId?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -488,7 +469,6 @@ export type BankAccountOrderByRelationAggregateInput = {
 export type BankAccountCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   plaidItemId?: Prisma.SortOrder
-  plaidAccountId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   officialName?: Prisma.SortOrder
   mask?: Prisma.SortOrder
@@ -509,7 +489,6 @@ export type BankAccountAvgOrderByAggregateInput = {
 export type BankAccountMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   plaidItemId?: Prisma.SortOrder
-  plaidAccountId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   officialName?: Prisma.SortOrder
   mask?: Prisma.SortOrder
@@ -525,7 +504,6 @@ export type BankAccountMaxOrderByAggregateInput = {
 export type BankAccountMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   plaidItemId?: Prisma.SortOrder
-  plaidAccountId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   officialName?: Prisma.SortOrder
   mask?: Prisma.SortOrder
@@ -594,8 +572,7 @@ export type NullableDecimalFieldUpdateOperationsInput = {
 }
 
 export type BankAccountCreateWithoutPlaidItemInput = {
-  id?: string
-  plaidAccountId: string
+  id: string
   name: string
   officialName?: string | null
   mask?: string | null
@@ -609,8 +586,7 @@ export type BankAccountCreateWithoutPlaidItemInput = {
 }
 
 export type BankAccountUncheckedCreateWithoutPlaidItemInput = {
-  id?: string
-  plaidAccountId: string
+  id: string
   name: string
   officialName?: string | null
   mask?: string | null
@@ -655,7 +631,6 @@ export type BankAccountScalarWhereInput = {
   NOT?: Prisma.BankAccountScalarWhereInput | Prisma.BankAccountScalarWhereInput[]
   id?: Prisma.StringFilter<"BankAccount"> | string
   plaidItemId?: Prisma.StringFilter<"BankAccount"> | string
-  plaidAccountId?: Prisma.StringFilter<"BankAccount"> | string
   name?: Prisma.StringFilter<"BankAccount"> | string
   officialName?: Prisma.StringNullableFilter<"BankAccount"> | string | null
   mask?: Prisma.StringNullableFilter<"BankAccount"> | string | null
@@ -669,8 +644,7 @@ export type BankAccountScalarWhereInput = {
 }
 
 export type BankAccountCreateManyPlaidItemInput = {
-  id?: string
-  plaidAccountId: string
+  id: string
   name: string
   officialName?: string | null
   mask?: string | null
@@ -685,7 +659,6 @@ export type BankAccountCreateManyPlaidItemInput = {
 
 export type BankAccountUpdateWithoutPlaidItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -700,7 +673,6 @@ export type BankAccountUpdateWithoutPlaidItemInput = {
 
 export type BankAccountUncheckedUpdateWithoutPlaidItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -715,7 +687,6 @@ export type BankAccountUncheckedUpdateWithoutPlaidItemInput = {
 
 export type BankAccountUncheckedUpdateManyWithoutPlaidItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  plaidAccountId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   officialName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mask?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -733,7 +704,6 @@ export type BankAccountUncheckedUpdateManyWithoutPlaidItemInput = {
 export type BankAccountSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   plaidItemId?: boolean
-  plaidAccountId?: boolean
   name?: boolean
   officialName?: boolean
   mask?: boolean
@@ -750,7 +720,6 @@ export type BankAccountSelect<ExtArgs extends runtime.Types.Extensions.InternalA
 export type BankAccountSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   plaidItemId?: boolean
-  plaidAccountId?: boolean
   name?: boolean
   officialName?: boolean
   mask?: boolean
@@ -767,7 +736,6 @@ export type BankAccountSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
 export type BankAccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   plaidItemId?: boolean
-  plaidAccountId?: boolean
   name?: boolean
   officialName?: boolean
   mask?: boolean
@@ -784,7 +752,6 @@ export type BankAccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type BankAccountSelectScalar = {
   id?: boolean
   plaidItemId?: boolean
-  plaidAccountId?: boolean
   name?: boolean
   officialName?: boolean
   mask?: boolean
@@ -797,7 +764,7 @@ export type BankAccountSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BankAccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "plaidItemId" | "plaidAccountId" | "name" | "officialName" | "mask" | "type" | "subtype" | "availableBalance" | "currentBalance" | "currencyCode" | "createdAt" | "updatedAt", ExtArgs["result"]["bankAccount"]>
+export type BankAccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "plaidItemId" | "name" | "officialName" | "mask" | "type" | "subtype" | "availableBalance" | "currentBalance" | "currencyCode" | "createdAt" | "updatedAt", ExtArgs["result"]["bankAccount"]>
 export type BankAccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   plaidItem?: boolean | Prisma.PlaidItemDefaultArgs<ExtArgs>
 }
@@ -816,7 +783,6 @@ export type $BankAccountPayload<ExtArgs extends runtime.Types.Extensions.Interna
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     plaidItemId: string
-    plaidAccountId: string
     name: string
     officialName: string | null
     mask: string | null
@@ -1253,7 +1219,6 @@ export interface Prisma__BankAccountClient<T, Null = never, ExtArgs extends runt
 export interface BankAccountFieldRefs {
   readonly id: Prisma.FieldRef<"BankAccount", 'String'>
   readonly plaidItemId: Prisma.FieldRef<"BankAccount", 'String'>
-  readonly plaidAccountId: Prisma.FieldRef<"BankAccount", 'String'>
   readonly name: Prisma.FieldRef<"BankAccount", 'String'>
   readonly officialName: Prisma.FieldRef<"BankAccount", 'String'>
   readonly mask: Prisma.FieldRef<"BankAccount", 'String'>

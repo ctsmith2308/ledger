@@ -6,7 +6,6 @@ const TransactionMapper = {
     return {
       id: transaction.id,
       accountId: transaction.accountId,
-      plaidTransactionId: transaction.plaidTransactionId,
       amount: transaction.amount,
       date: transaction.date.toISOString(),
       name: transaction.name,

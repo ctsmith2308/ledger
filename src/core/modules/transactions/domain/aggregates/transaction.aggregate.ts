@@ -17,7 +17,6 @@ class Transaction extends AggregateRoot {
     private readonly _id: string,
     private readonly _accountId: string,
     private readonly _userId: string,
-    private readonly _plaidTransactionId: string,
     private _amount: number,
     private _date: Date,
     private _name: string,
@@ -36,7 +35,6 @@ class Transaction extends AggregateRoot {
     id: string,
     accountId: string,
     userId: string,
-    plaidTransactionId: string,
     amount: number,
     date: Date,
     name: string,
@@ -51,7 +49,6 @@ class Transaction extends AggregateRoot {
       id,
       accountId,
       userId,
-      plaidTransactionId,
       amount,
       date,
       name,
@@ -75,7 +72,6 @@ class Transaction extends AggregateRoot {
     id: string,
     accountId: string,
     userId: string,
-    plaidTransactionId: string,
     amount: number,
     date: Date,
     name: string,
@@ -91,7 +87,6 @@ class Transaction extends AggregateRoot {
       id,
       accountId,
       userId,
-      plaidTransactionId,
       amount,
       date,
       name,
@@ -108,7 +103,6 @@ class Transaction extends AggregateRoot {
   update(fields: TransactionUpdateFields): void {
     if (fields.amount !== undefined) this._amount = fields.amount;
     if (fields.date !== undefined) this._date = fields.date;
-    // if (fields.name !== undefined) this._name = fields.name;
     if ('merchantName' in fields) this._merchantName = fields.merchantName;
     if ('category' in fields) this._category = fields.category;
     if ('detailedCategory' in fields)
@@ -129,10 +123,6 @@ class Transaction extends AggregateRoot {
 
   get userId() {
     return this._userId;
-  }
-
-  get plaidTransactionId() {
-    return this._plaidTransactionId;
   }
 
   get amount() {

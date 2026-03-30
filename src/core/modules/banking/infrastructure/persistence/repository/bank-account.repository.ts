@@ -14,7 +14,7 @@ class BankAccountRepository implements IBankAccountRepository {
         const data = BankAccountPrismaMapper.toPersistence(account);
 
         return this.prisma.bankAccount.upsert({
-          where: { plaidAccountId: account.plaidAccountId },
+          where: { id: account.id },
           update: data,
           create: data,
         });

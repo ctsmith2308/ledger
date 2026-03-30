@@ -4,7 +4,6 @@ class BankAccount extends AggregateRoot {
   private constructor(
     private readonly _id: string,
     private readonly _plaidItemId: string,
-    private readonly _plaidAccountId: string,
     private readonly _name: string,
     private readonly _officialName: string | undefined,
     private readonly _mask: string | undefined,
@@ -22,7 +21,6 @@ class BankAccount extends AggregateRoot {
   static create(
     id: string,
     plaidItemId: string,
-    plaidAccountId: string,
     name: string,
     officialName: string | undefined,
     mask: string | undefined,
@@ -37,7 +35,6 @@ class BankAccount extends AggregateRoot {
     return new BankAccount(
       id,
       plaidItemId,
-      plaidAccountId,
       name,
       officialName,
       mask,
@@ -54,7 +51,6 @@ class BankAccount extends AggregateRoot {
   static reconstitute(
     id: string,
     plaidItemId: string,
-    plaidAccountId: string,
     name: string,
     officialName: string | undefined,
     mask: string | undefined,
@@ -69,7 +65,6 @@ class BankAccount extends AggregateRoot {
     return new BankAccount(
       id,
       plaidItemId,
-      plaidAccountId,
       name,
       officialName,
       mask,
@@ -98,10 +93,6 @@ class BankAccount extends AggregateRoot {
 
   get plaidItemId() {
     return this._plaidItemId;
-  }
-
-  get plaidAccountId() {
-    return this._plaidAccountId;
   }
 
   get name() {
