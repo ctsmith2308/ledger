@@ -4,10 +4,8 @@ import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
-import {
-  createBudgetAction,
-  type CreateBudgetInput,
-} from '@/app/_entities/budgets';
+import { createBudgetAction } from '@/app/_entities/budgets/actions';
+import { type CreateBudgetInput } from '@/app/_entities/budgets/schema';
 
 import { createBudgetFormSchema } from '../schema/create-budget-form.schema';
 

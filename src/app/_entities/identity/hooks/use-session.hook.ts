@@ -1,16 +1,15 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { type JwtData } from '@/core/shared/domain';
 
 import { queryKeys } from '@/app/_entities/shared/query-keys';
 
 const useSession = () => {
-  return useQuery<JwtData>({
-    queryKey: queryKeys.session,
-    staleTime: Infinity,
-  });
+  const queryClient = useQueryClient();
+
+  return queryClient.getQueryData<JwtData>(queryKeys.session) ?? null;
 };
 
 export { useSession };

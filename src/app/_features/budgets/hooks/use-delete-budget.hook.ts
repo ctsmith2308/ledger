@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
-import { deleteBudgetAction } from '@/app/_entities/budgets';
+import { deleteBudgetAction } from '@/app/_entities/budgets/actions';
 
 const useDeleteBudget = () => {
   const router = useRouter();

@@ -1,22 +1,15 @@
-import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
 import { budgetsController } from '@/core/modules/budgets';
 
-import { getQueryClient } from '@/app/_lib/query';
-
-import { queryKeys } from '@/app/_entities/shared';
+import { loadSession } from '@/app/_entities/identity/loaders';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
 const loadBudgetsData = async () => {
-  const queryClient = getQueryClient();
-  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
-  if (!session) throw new UnauthorizedException();
+  const session = await loadSession();
 
   const budgets = await budgetsController.getBudgets(session.userId);
-
-  queryClient.setQueryData(queryKeys.budgets, budgets);
 
   return budgets;
 };

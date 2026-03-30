@@ -4,7 +4,8 @@ import { identityController } from '@/core/modules/identity';
 
 import { actionClient } from '@/app/_lib/safe-action/action-client';
 
-import { withRateLimit, setCookie } from '@/app/_entities/shared';
+import { withRateLimit } from '@/app/_entities/shared/with-rate-limit';
+import { setCookie } from '@/app/_entities/shared/session.service';
 
 import { loginUserSchema } from '../schema/login.schema';
 

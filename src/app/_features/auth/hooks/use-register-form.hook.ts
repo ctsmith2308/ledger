@@ -5,11 +5,11 @@ import { useMutation } from '@tanstack/react-query';
 import { execute } from '@/app/_lib/safe-action';
 import { ROUTES } from '@/app/_lib/config';
 
+import { registerAction } from '@/app/_entities/identity/actions';
 import {
-  registerAction,
   registerUserSchema,
   type RegisterUserInput,
-} from '@/app/_entities/identity';
+} from '@/app/_entities/identity/schema';
 
 const useRegisterForm = () => {
   const router = useRouter();

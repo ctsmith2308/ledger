@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
+
 import { useMutation } from '@tanstack/react-query';
+
 import { useRouter } from 'next/navigation';
+
 import { usePlaidLink } from 'react-plaid-link';
 
 import { execute } from '@/app/_lib/safe-action';
@@ -8,9 +11,11 @@ import { execute } from '@/app/_lib/safe-action';
 import {
   createLinkTokenAction,
   exchangePublicTokenAction,
-  type ExchangePublicTokenInput,
-} from '@/app/_entities/banking';
-import { syncTransactionsAction } from '@/app/_entities/transactions';
+} from '@/app/_entities/banking/actions';
+
+import { type ExchangePublicTokenInput } from '@/app/_entities/banking/schema';
+
+import { syncTransactionsAction } from '@/app/_entities/transactions/actions';
 
 const usePlaidLinkFlow = () => {
   const router = useRouter();

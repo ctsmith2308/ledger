@@ -1,6 +1,6 @@
 import { type BankAccountDTO } from '@/core/modules/banking';
 
-import { type AccountTypeTotal } from '@/app/_entities/banking';
+import { type AccountTypeTotal } from '@/app/_entities/banking/lib';
 
 import {
   List,

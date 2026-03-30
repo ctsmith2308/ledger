@@ -1,18 +1,13 @@
 'use server';
 
-import { identityController } from '@/core/modules/identity';
-
 import { actionClient } from '@/app/_lib/safe-action/action-client';
 
-import { getCookie, deleteCookie } from '@/app/_entities/shared';
+import { deleteCookie } from '@/app/_entities/shared/session.service';
 
+// TODO: When refresh token is stored client-side (second cookie),
+// revoke the session in the DB here before deleting cookies.
+// For now, JWT expires naturally (15min TTL).
 const logoutAction = actionClient.action(async () => {
-  const token = await getCookie();
-
-  if (token) {
-    await identityController.logoutUser(token);
-  }
-
   await deleteCookie();
 });
 

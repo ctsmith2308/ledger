@@ -4,7 +4,8 @@ import { bankingController } from '@/core/modules/banking';
 
 import { actionClient } from '@/app/_lib/safe-action/action-client';
 
-import { withAuth, withFeatureFlag } from '@/app/_entities/shared';
+import { withAuth } from '@/app/_entities/shared/with-auth';
+import { withFeatureFlag } from '@/app/_entities/shared/with-feature-flag';
 
 import { exchangePublicTokenSchema } from '../schema/exchange-public-token.schema';
 

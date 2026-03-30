@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { execute } from '@/app/_lib/safe-action';
 import { ROUTES } from '@/app/_lib/config';
 
-import { logoutAction } from '@/app/_entities/identity';
+import { logoutAction } from '@/app/_entities/identity/actions';
 
 const useLogout = () => {
   const router = useRouter();

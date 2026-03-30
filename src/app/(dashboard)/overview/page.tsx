@@ -1,41 +1,40 @@
 import Link from 'next/link';
+
 import { ArrowRight } from 'lucide-react';
 
 import { identityController } from '@/core/modules/identity';
-import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
+
 import { bankingController } from '@/core/modules/banking';
+
 import { transactionsController } from '@/core/modules/transactions';
 
 import { ROUTES } from '@/app/_lib/config';
-import { getQueryClient } from '@/app/_lib/query';
 
-import { queryKeys } from '@/app/_entities/shared';
-import { calcTotalsByType } from '@/app/_entities/banking';
+import { loadSession } from '@/app/_entities/identity/loaders';
+
+import { calcTotalsByType } from '@/app/_entities/banking/lib';
+
 import {
   calcMonthlySpending,
   calcWeeklySpending,
-} from '@/app/_entities/transactions';
+} from '@/app/_entities/transactions/lib';
 
 import { TransactionList } from '@/app/_features/transactions';
+
 import { ConnectAccountCard } from '@/app/_features/plaid';
+
 import { AccountTotalsTable } from '@/app/_features/accounts';
 
 import { PageContainer, PageHeader, SummaryCard } from '@/app/_widgets';
 
 const loadOverviewData = async () => {
-  const queryClient = getQueryClient();
-  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
-  if (!session) throw new UnauthorizedException();
+  const session = await loadSession();
 
   const [profile, accounts, transactions] = await Promise.all([
     identityController.getUserProfile(session.userId),
     bankingController.getAccounts(session.userId),
     transactionsController.getTransactions(session.userId),
   ]);
-
-  queryClient.setQueryData(queryKeys.profile, profile);
-  queryClient.setQueryData(queryKeys.accounts, accounts);
-  queryClient.setQueryData(queryKeys.transactions, transactions);
 
   return { profile, accounts, transactions };
 };

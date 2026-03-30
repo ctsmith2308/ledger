@@ -1,4 +1,4 @@
-import { type AccountTypeTotal } from '@/app/_entities/banking';
+import { type AccountTypeTotal } from '@/app/_entities/banking/lib';
 
 import {
   Table,

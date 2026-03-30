@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { UnauthorizedException } from '@/core/shared/domain';
 import { JwtService } from '@/core/shared/infrastructure';
 
-import { getCookie } from '@/app/_entities/shared';
+import { getCookie } from '@/app/_entities/shared/session.service';
 
 const loadSession = cache(async () => {
   const token = await getCookie();

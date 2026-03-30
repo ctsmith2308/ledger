@@ -8,11 +8,12 @@ import { useMutation } from '@tanstack/react-query';
 import { execute } from '@/app/_lib/safe-action';
 import { ROUTES } from '@/app/_lib/config';
 
+import { loginAction } from '@/app/_entities/identity/actions';
+
 import {
-  loginAction,
   loginUserSchema,
   type LoginUserInput,
-} from '@/app/_entities/identity';
+} from '@/app/_entities/identity/schema';
 
 type DemoUser = {
   name: string;
@@ -22,7 +23,11 @@ type DemoUser = {
 
 const DEMO_USERS: DemoUser[] = [
   { name: 'Demo User', email: 'demo@ledger.app', password: 'Password@123!' },
-  { name: 'Alice Rivera', email: 'alice@ledger.app', password: 'Password@123!' },
+  {
+    name: 'Alice Rivera',
+    email: 'alice@ledger.app',
+    password: 'Password@123!',
+  },
   { name: 'Ben Carter', email: 'ben@ledger.app', password: 'Password@123!' },
 ];
 
@@ -31,8 +36,7 @@ const useDemoLoginForm = () => {
   const [selectedUser, setSelectedUser] = useState<DemoUser | null>(null);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (input: LoginUserInput) =>
-      execute(loginAction(input)),
+    mutationFn: (input: LoginUserInput) => execute(loginAction(input)),
     onSuccess: () => {
       router.push(ROUTES.overview);
     },
@@ -50,7 +54,14 @@ const useDemoLoginForm = () => {
     form.setFieldValue('password', user.password);
   };
 
-  return { form, formId: 'demo-login-form', isPending, selectedUser, selectUser, demoUsers: DEMO_USERS };
+  return {
+    form,
+    formId: 'demo-login-form',
+    isPending,
+    selectedUser,
+    selectUser,
+    demoUsers: DEMO_USERS,
+  };
 };
 
 type DemoLoginFormApi = ReturnType<typeof useDemoLoginForm>['form'];

@@ -7,11 +7,11 @@ import { useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
+import { updateUserProfileAction } from '@/app/_entities/identity/actions';
 import {
-  updateUserProfileAction,
   updateProfileSchema,
   type UpdateProfileInput,
-} from '@/app/_entities/identity';
+} from '@/app/_entities/identity/schema';
 
 const useUpdateProfileForm = (initial: {
   firstName: string;

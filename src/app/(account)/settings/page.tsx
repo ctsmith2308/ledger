@@ -1,28 +1,24 @@
 import Link from 'next/link';
+
 import { ArrowLeft } from 'lucide-react';
 
 import { identityController } from '@/core/modules/identity';
-import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
 
 import { ROUTES } from '@/app/_lib/config';
-import { getQueryClient } from '@/app/_lib/query';
 
-import { queryKeys } from '@/app/_entities/shared';
+import { loadSession } from '@/app/_entities/identity/loaders';
 
 import {
   UpdateProfileForm,
   DeleteAccountCard,
 } from '@/app/_features/user-account';
+
 import { LogoutButton } from '@/app/_features/auth';
 
 const loadSettingsData = async () => {
-  const queryClient = getQueryClient();
-  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
-  if (!session) throw new UnauthorizedException();
+  const session = await loadSession();
 
   const profile = await identityController.getUserProfile(session.userId);
-
-  queryClient.setQueryData(queryKeys.profile, profile);
 
   return profile;
 };
