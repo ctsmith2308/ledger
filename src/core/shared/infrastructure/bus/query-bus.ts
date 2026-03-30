@@ -1,10 +1,14 @@
-import { Query } from '@/core/shared/domain';
+import { Query, type IObservabilityService } from '@/core/shared/domain';
 import { IHandler } from '@/core/shared/domain';
 
 type AnyQuery = Query<unknown>;
 
 class QueryBus {
   private readonly _handlers = new Map<string, IHandler<AnyQuery, unknown>>();
+
+  constructor(
+    private readonly observability: IObservabilityService,
+  ) {}
 
   register<T extends AnyQuery>(
     QueryClass: { name: string; prototype: T },
@@ -28,12 +32,10 @@ class QueryBus {
     try {
       return await handler.execute(query) as Promise<T['_response']>;
     } catch (error) {
-      // TODO: dispatch HandlerFailedEvent to event bus
+      this.observability.recordHandlerFailure(key, error);
       throw error;
     }
   }
 }
 
-const queryBus = new QueryBus();
-
-export { QueryBus, queryBus };
+export { QueryBus };

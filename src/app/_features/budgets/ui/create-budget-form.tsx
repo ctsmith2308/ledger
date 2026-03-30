@@ -27,8 +27,6 @@ import { TRANSACTION_CATEGORIES } from '@/app/_entities/transactions/lib';
 
 import { useUserTier } from '@/app/_entities/identity/hooks';
 
-import { DemoFootnote } from '@/app/_widgets';
-
 import {
   useCreateBudgetForm,
   type CreateBudgetFormApi,
@@ -43,13 +41,9 @@ function CreateBudgetButton() {
     form.handleSubmit();
   };
 
-  if (isDemo) {
-    return <DemoFootnote action="Budget creation" />;
-  }
-
   return (
     <Dialog>
-      <DialogTrigger render={<Button size="sm" />}>
+      <DialogTrigger render={<Button size="sm" disabled={isDemo} />}>
         <Plus className="size-4" />
         New budget
       </DialogTrigger>

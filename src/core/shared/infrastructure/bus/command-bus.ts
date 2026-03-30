@@ -1,10 +1,14 @@
-import { Command } from '@/core/shared/domain';
+import { Command, type IObservabilityService } from '@/core/shared/domain';
 import { IHandler } from '@/core/shared/domain';
 
 type AnyCommand = Command<unknown>;
 
 class CommandBus {
   private readonly _handlers = new Map<string, IHandler<AnyCommand, unknown>>();
+
+  constructor(
+    private readonly observability: IObservabilityService,
+  ) {}
 
   register<T extends AnyCommand>(
     CommandClass: { name: string; prototype: T },
@@ -28,12 +32,10 @@ class CommandBus {
     try {
       return await handler.execute(command) as Promise<T['_response']>;
     } catch (error) {
-      // TODO: dispatch HandlerFailedEvent to event bus
+      this.observability.recordHandlerFailure(key, error);
       throw error;
     }
   }
 }
 
-const commandBus = new CommandBus();
-
-export { CommandBus, commandBus };
+export { CommandBus };

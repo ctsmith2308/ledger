@@ -38,7 +38,7 @@ function ConnectAccountCard() {
           {isReady ? 'Open Plaid Link' : 'Connect Account'}
         </Button>
 
-        <DemoFootnote action="Linking accounts" />
+        <DemoFootnote action="Linking additional accounts" />
       </div>
     </div>
   );

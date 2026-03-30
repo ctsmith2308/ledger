@@ -5,3 +5,4 @@ export * from './event-bus.singleton';
 export * from './telemetry.service';
 export * from './id-generator.service';
 export * from './feature-flag.service';
+export * from './observability.service';

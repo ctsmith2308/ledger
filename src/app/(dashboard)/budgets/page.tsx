@@ -4,7 +4,7 @@ import { loadSession } from '@/app/_entities/identity/loaders';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 
-import { PageContainer, PageHeader } from '@/app/_widgets';
+import { PageContainer, PageHeader, DemoFootnote } from '@/app/_widgets';
 
 const loadBudgetsData = async () => {
   const session = await loadSession();
@@ -38,6 +38,8 @@ async function BudgetsPage() {
             <p className="text-xs text-muted-foreground/70">
               Create your first budget to start tracking.
             </p>
+
+            <DemoFootnote action="New Budget creation" />
           </div>
         </div>
       )}
