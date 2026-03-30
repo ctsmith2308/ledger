@@ -17,9 +17,9 @@ const loginAction = actionClient
       parsedInput.password,
     );
 
-    const { sessionId } = result.getValueOrThrow();
+    const { accessToken } = result.getValueOrThrow();
 
-    await setCookie(sessionId);
+    await setCookie(accessToken);
   });
 
 export { loginAction };

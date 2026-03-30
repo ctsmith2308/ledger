@@ -9,25 +9,15 @@ import {
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { ActionError } from '@/app/_lib/safe-action';
-import { Toast } from '@/app/_components/toast';
+import { queryDefaults } from '@/app/_lib/query/query-defaults';
 
-const NON_RETRYABLE_CODES = ['UNAUTHORIZED', 'RATE_LIMIT_EXCEEDED'];
+import { Toast } from '@/app/_components/toast';
 
 function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: (_, error) => {
-              if (error instanceof ActionError) {
-                return !NON_RETRYABLE_CODES.includes(error.code);
-              }
-              return false;
-            },
-          },
-        },
+        defaultOptions: queryDefaults,
 
         queryCache: new QueryCache({
           onError: (error, query) => {
@@ -48,6 +38,7 @@ function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+
       <Toast position="bottom-right" />
     </QueryClientProvider>
   );

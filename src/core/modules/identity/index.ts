@@ -3,6 +3,7 @@ import {
   queryBus,
   eventBus,
   prisma,
+  JwtService,
 } from '@/core/shared/infrastructure';
 
 import {
@@ -16,6 +17,8 @@ import {
   UpdateUserProfileHandler,
   DeleteAccountCommand,
   DeleteAccountHandler,
+  CleanupExpiredTrialsCommand,
+  CleanupExpiredTrialsHandler,
   GetUserSessionQuery,
   GetUserSessionHandler,
   GetUserProfileQuery,
@@ -67,6 +70,7 @@ class IdentityModule {
         services.eventBus,
         services.passwordHasher,
         services.idGenerator,
+        JwtService,
       ),
     );
 
@@ -89,6 +93,15 @@ class IdentityModule {
       ),
     );
 
+    commandBus.register(
+      CleanupExpiredTrialsCommand,
+      new CleanupExpiredTrialsHandler(
+        repos.userRepository,
+        repos.userSessionRepository,
+        services.eventBus,
+      ),
+    );
+
     queryBus.register(
       GetUserSessionQuery,
       new GetUserSessionHandler(repos.userSessionRepository),
@@ -99,7 +112,7 @@ class IdentityModule {
       new GetUserProfileHandler(repos.userProfileRepository),
     );
 
-    return new IdentityController(commandBus, queryBus, repos.userRepository);
+    return new IdentityController(commandBus, queryBus);
   }
 }
 

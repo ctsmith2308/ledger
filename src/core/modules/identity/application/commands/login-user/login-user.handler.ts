@@ -1,6 +1,7 @@
 import {
   IHandler,
   IEventBus,
+  IJwtService,
   InvalidEmailException,
   InvalidPasswordException,
   Result,
@@ -30,6 +31,7 @@ class LoginUserHandler implements IHandler<
     private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
     private readonly idGenerator: IIdGenerator,
+    private readonly jwtService: IJwtService,
   ) {}
 
   async execute(command: LoginUserCommand): Promise<LoginUserResponse> {
@@ -79,7 +81,18 @@ class LoginUserHandler implements IHandler<
     const events = session.pullDomainEvents();
     await this.eventBus.dispatch(events);
 
-    return Result.ok(session);
+    const tokenResult = await this.jwtService.sign({
+      userId: user.id.value,
+      email: user.email.value,
+      tier: user.tier.value,
+    });
+
+    if (tokenResult.isFailure) return Result.fail(tokenResult.error);
+
+    return Result.ok({
+      accessToken: tokenResult.value,
+      refreshToken: session.id.value,
+    });
   }
 }
 

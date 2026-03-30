@@ -1,12 +1,31 @@
-import { loadAccounts, calcTotalsByType } from '@/app/_entities/banking';
+import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
+import { bankingController } from '@/core/modules/banking';
+
+import { getQueryClient } from '@/app/_lib/query';
+
+import { queryKeys } from '@/app/_entities/shared';
+import { calcTotalsByType } from '@/app/_entities/banking';
 
 import { ConnectAccountCard } from '@/app/_features/plaid';
 import { AccountGroupList } from '@/app/_features/accounts';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
+const loadAccountsData = async () => {
+  const queryClient = getQueryClient();
+  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
+  if (!session) throw new UnauthorizedException();
+
+  const result = await bankingController.getAccounts(session.userId);
+  const accounts = result.getValueOrThrow();
+
+  queryClient.setQueryData(queryKeys.accounts, accounts);
+
+  return accounts;
+};
+
 async function AccountsPage() {
-  const accounts = await loadAccounts();
+  const accounts = await loadAccountsData();
   const totals = calcTotalsByType(accounts);
 
   return (

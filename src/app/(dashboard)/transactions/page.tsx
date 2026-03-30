@@ -1,16 +1,37 @@
-import { loadAccounts } from '@/app/_entities/banking';
-import { loadTransactions } from '@/app/_entities/transactions';
+import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
+import { bankingController } from '@/core/modules/banking';
+import { transactionsController } from '@/core/modules/transactions';
+
+import { getQueryClient } from '@/app/_lib/query';
+
+import { queryKeys } from '@/app/_entities/shared';
 
 import { TransactionList } from '@/app/_features/transactions';
 import { ConnectAccountCard } from '@/app/_features/plaid';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
-async function TransactionsPage() {
-  const [accounts, transactions] = await Promise.all([
-    loadAccounts(),
-    loadTransactions(),
+const loadTransactionsData = async () => {
+  const queryClient = getQueryClient();
+  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
+  if (!session) throw new UnauthorizedException();
+
+  const [accountsResult, transactionsResult] = await Promise.all([
+    bankingController.getAccounts(session.userId),
+    transactionsController.getTransactions(session.userId),
   ]);
+
+  const accounts = accountsResult.getValueOrThrow();
+  const transactions = transactionsResult.getValueOrThrow();
+
+  queryClient.setQueryData(queryKeys.accounts, accounts);
+  queryClient.setQueryData(queryKeys.transactions, transactions);
+
+  return { accounts, transactions };
+};
+
+async function TransactionsPage() {
+  const { accounts, transactions } = await loadTransactionsData();
 
   const hasAccounts = accounts.length > 0;
 

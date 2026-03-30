@@ -2,8 +2,8 @@ import {
   IHandler,
   Result,
   UnauthorizedException,
-  SessionExpiredException,
   SessionRevokedException,
+  UserNotFoundException,
 } from '@/core/shared/domain';
 
 import {
@@ -15,6 +15,14 @@ import {
   GetUserSessionQuery,
   GetUserSessionResponse,
 } from './get-user-session.query';
+
+// TODO: Refresh flow implementation
+// - Add IUserRepository and IJwtService as constructor deps
+// - Fetch user for JWT payload (email, tier)
+// - Sign fresh access token via jwtService.sign()
+// - Return LoginTokens { accessToken, refreshToken }
+// - Update GetUserSessionResponse type to match
+// - Wire new deps in identity.module.ts
 
 class GetUserSessionHandler implements IHandler<
   GetUserSessionQuery,
@@ -34,10 +42,9 @@ class GetUserSessionHandler implements IHandler<
 
     if (!session) return Result.fail(new UnauthorizedException());
 
-    if (session.isExpired) return Result.fail(new SessionExpiredException());
-
     if (session.isRevoked) return Result.fail(new SessionRevokedException());
 
+    // TODO: Fetch user, sign JWT, return { accessToken, refreshToken }
     return Result.ok(session);
   }
 }

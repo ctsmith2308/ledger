@@ -1,9 +1,5 @@
-import { redirect } from 'next/navigation';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
-import { DomainException } from '@/core/shared/domain';
-
-import { ROUTES } from '@/app/_lib/config';
 import { getQueryClient } from '@/app/_lib/query';
 
 import { loadSession } from '@/app/_entities/identity';
@@ -17,17 +13,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const queryClient = getQueryClient();
+  const session = await loadSession();
 
-  try {
-    const session = await loadSession();
-    queryClient.setQueryData(queryKeys.session, session);
-  } catch (error) {
-    if (error instanceof DomainException) {
-      redirect(ROUTES.login);
-    }
-
-    throw error;
-  }
+  queryClient.setQueryData(queryKeys.session, session);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

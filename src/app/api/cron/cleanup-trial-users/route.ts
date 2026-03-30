@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { identityController } from '@/core/modules/identity';
-import { logger } from '@/core/shared/infrastructure';
-
-const TRIAL_TTL_HOURS = Number(process.env.TRIAL_TTL_HOURS ?? 48);
+import { toErrorResponse, logger } from '@/core/shared/infrastructure';
 
 async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -13,15 +11,23 @@ async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { deleted, total } = await identityController.cleanupExpiredTrials(
-    TRIAL_TTL_HOURS,
-  );
+  try {
+    const result = await identityController.cleanupExpiredTrials();
 
-  logger.info(
-    `Trial cleanup: ${deleted}/${total} expired users deleted`,
-  );
+    const { deleted, total } = result.getValueOrThrow();
 
-  return NextResponse.json({ deleted, total });
+    logger.info(
+      `Trial cleanup: ${deleted}/${total} expired users deleted`,
+    );
+
+    return NextResponse.json({ deleted, total });
+  } catch (error: unknown) {
+    logger.error(error);
+
+    const { code, message } = toErrorResponse(error);
+
+    return NextResponse.json({ code, message }, { status: 500 });
+  }
 }
 
 export { GET };

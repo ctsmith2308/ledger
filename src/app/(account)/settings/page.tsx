@@ -1,9 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-import { ROUTES } from '@/app/_lib/config';
+import { identityController } from '@/core/modules/identity';
+import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
 
-import { loadProfile } from '@/app/_entities/identity';
+import { ROUTES } from '@/app/_lib/config';
+import { getQueryClient } from '@/app/_lib/query';
+
+import { queryKeys } from '@/app/_entities/shared';
 
 import {
   UpdateProfileForm,
@@ -11,8 +15,21 @@ import {
 } from '@/app/_features/user-account';
 import { LogoutButton } from '@/app/_features/auth';
 
+const loadSettingsData = async () => {
+  const queryClient = getQueryClient();
+  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
+  if (!session) throw new UnauthorizedException();
+
+  const result = await identityController.getUserProfile(session.userId);
+  const profile = result.getValueOrThrow();
+
+  queryClient.setQueryData(queryKeys.profile, profile);
+
+  return profile;
+};
+
 export default async function SettingsPage() {
-  const profile = await loadProfile();
+  const profile = await loadSettingsData();
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">

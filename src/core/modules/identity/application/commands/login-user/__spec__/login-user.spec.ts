@@ -14,8 +14,10 @@ import {
 } from '@/core/modules/identity/domain';
 import {
   type IEventBus,
+  type IJwtService,
   InvalidEmailException,
   InvalidPasswordException,
+  Result,
 } from '@/core/shared/domain';
 
 const _existingUser = (tier = 'TRIAL') =>
@@ -33,6 +35,7 @@ const _makeHandler = (overrides: {
   eventBus?: Partial<IEventBus>;
   hasher?: Partial<IPasswordHasher>;
   idGenerator?: Partial<IIdGenerator>;
+  jwtService?: Partial<IJwtService>;
 } = {}) => {
   const userRepository: IUserRepository = {
     save: vi.fn(),
@@ -68,15 +71,22 @@ const _makeHandler = (overrides: {
     ...overrides.idGenerator,
   };
 
+  const jwtService: IJwtService = {
+    sign: vi.fn().mockResolvedValue(Result.ok('signed-access-token')),
+    verify: vi.fn(),
+    ...overrides.jwtService,
+  };
+
   const handler = new LoginUserHandler(
     userRepository,
     sessionRepository,
     eventBus,
     hasher,
     idGenerator,
+    jwtService,
   );
 
-  return { handler, userRepository, sessionRepository, eventBus, hasher };
+  return { handler, userRepository, sessionRepository, eventBus, hasher, jwtService };
 };
 
 describe('LoginUserHandler', () => {
@@ -86,14 +96,14 @@ describe('LoginUserHandler', () => {
   );
 
   describe('success path', () => {
-    it('returns a session on valid credentials', async () => {
+    it('returns access and refresh tokens on valid credentials', async () => {
       const { handler } = _makeHandler();
 
       const result = await handler.execute(validCommand);
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.id.value).toBe('generated-session-id');
-      expect(result.value.userId.value).toBe('user-12345');
+      expect(result.value.accessToken).toBe('signed-access-token');
+      expect(result.value.refreshToken).toBe('generated-session-id');
     });
 
     it('persists the session', async () => {

@@ -2,8 +2,9 @@ import { DomainException } from '../exceptions';
 import { Result } from '../result';
 
 type JwtData = {
-  sub: string;
+  userId: string;
   email: string;
+  tier: string;
 };
 
 interface IJwtService {

@@ -1,8 +1,11 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
 
-import { UserSession } from '@/core/modules/identity/domain';
+type LoginTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
 
-type LoginUserResponse = Result<UserSession, DomainException>;
+type LoginUserResponse = Result<LoginTokens, DomainException>;
 
 class LoginUserCommand extends Command<LoginUserResponse> {
   constructor(
@@ -13,4 +16,4 @@ class LoginUserCommand extends Command<LoginUserResponse> {
   }
 }
 
-export { LoginUserCommand, type LoginUserResponse };
+export { LoginUserCommand, type LoginUserResponse, type LoginTokens };

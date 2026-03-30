@@ -2,12 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { type SessionDTO } from '@/core/modules/identity';
+import { type JwtData } from '@/core/shared/domain';
 
 import { queryKeys } from '@/app/_entities/shared';
 
 const useSession = () => {
-  return useQuery<SessionDTO>({
+  return useQuery<JwtData>({
     queryKey: queryKeys.session,
     staleTime: Infinity,
   });

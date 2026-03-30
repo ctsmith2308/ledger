@@ -1,7 +1,6 @@
-type SessionDTO = {
-  sessionId: string;
-  userId: string;
-  tier: string;
+type JwtDTO = {
+  accessToken: string;
+  refreshToken: string;
 };
 
 type UserDTO =
@@ -14,4 +13,9 @@ type UserProfileDTO = {
   lastName: string;
 };
 
-export type { SessionDTO, UserDTO, UserProfileDTO };
+type CleanupDTO = {
+  deleted: number;
+  total: number;
+};
+
+export type { JwtDTO, UserDTO, UserProfileDTO, CleanupDTO };

@@ -1,7 +1,7 @@
 import { createMiddleware } from 'next-safe-action';
 
 import { UnauthorizedException } from '@/core/shared/domain';
-import { identityController } from '@/core/modules/identity';
+import { JwtService } from '@/core/shared/infrastructure';
 
 import { getCookie } from './session.service';
 
@@ -10,11 +10,11 @@ const withAuth = createMiddleware().define(async ({ next }) => {
 
   if (!token) throw new UnauthorizedException();
 
-  const result = await identityController.getUserSession(token);
+  const result = await JwtService.verify(token);
 
-  const session = result.getValueOrThrow();
+  const jwt = result.getValueOrThrow();
 
-  return next({ ctx: { userId: session.userId, tier: session.tier } });
+  return next({ ctx: { userId: jwt.userId, tier: jwt.tier } });
 });
 
 export { withAuth };

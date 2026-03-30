@@ -1,11 +1,29 @@
-import { loadBudgets } from '@/app/_entities/budgets';
+import { type JwtData, UnauthorizedException } from '@/core/shared/domain';
+import { budgetsController } from '@/core/modules/budgets';
+
+import { getQueryClient } from '@/app/_lib/query';
+
+import { queryKeys } from '@/app/_entities/shared';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
+const loadBudgetsData = async () => {
+  const queryClient = getQueryClient();
+  const session = queryClient.getQueryData<JwtData>(queryKeys.session);
+  if (!session) throw new UnauthorizedException();
+
+  const result = await budgetsController.getBudgets(session.userId);
+  const budgets = result.getValueOrThrow();
+
+  queryClient.setQueryData(queryKeys.budgets, budgets);
+
+  return budgets;
+};
+
 async function BudgetsPage() {
-  const budgets = await loadBudgets();
+  const budgets = await loadBudgetsData();
 
   return (
     <PageContainer>

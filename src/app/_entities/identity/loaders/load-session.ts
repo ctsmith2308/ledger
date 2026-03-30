@@ -1,7 +1,7 @@
 import { cache } from 'react';
 
 import { UnauthorizedException } from '@/core/shared/domain';
-import { identityController } from '@/core/modules/identity';
+import { JwtService } from '@/core/shared/infrastructure';
 
 import { getCookie } from '@/app/_entities/shared';
 
@@ -10,9 +10,11 @@ const loadSession = cache(async () => {
 
   if (!token) throw new UnauthorizedException();
 
-  const result = await identityController.getUserSession(token);
+  const result = await JwtService.verify(token);
 
-  return result.getValueOrThrow();
+  const jwt = result.getValueOrThrow();
+
+  return jwt;
 });
 
 export { loadSession };

@@ -2,25 +2,28 @@ import { Result } from '@/core/shared/domain';
 
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
-import { type IUserRepository } from '../domain';
-
 import {
   RegisterUserCommand,
   LoginUserCommand,
   LogoutUserCommand,
   UpdateUserProfileCommand,
   DeleteAccountCommand,
+  CleanupExpiredTrialsCommand,
   GetUserSessionQuery,
   GetUserProfileQuery,
 } from '../application';
 
-import { UserMapper, UserSessionMapper, UserProfileMapper } from './mappers';
+import {
+  CleanupMapper,
+  LoginMapper,
+  UserMapper,
+  UserProfileMapper,
+} from './mappers';
 
 class IdentityController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly userRepository: IUserRepository,
   ) {}
 
   async registerUser(
@@ -45,7 +48,7 @@ class IdentityController {
 
     return result.isFailure
       ? Result.fail(result.error)
-      : Result.ok(UserSessionMapper.toDTO(result.value));
+      : Result.ok(LoginMapper.toDTO(result.value));
   }
 
   async logoutUser(sessionToken: string) {
@@ -54,12 +57,17 @@ class IdentityController {
     );
   }
 
+  // TODO: Refresh flow — GetUserSessionHandler needs IJwtService dep to sign
+  // a new access token. Handler should return LoginTokens, controller maps
+  // through LoginMapper.toDTO() — same output as loginUser.
   async getUserSession(token: string) {
-    const result = await this.queryBus.dispatch(new GetUserSessionQuery(token));
+    const result = await this.queryBus.dispatch(
+      new GetUserSessionQuery(token),
+    );
 
     return result.isFailure
       ? Result.fail(result.error)
-      : Result.ok(UserSessionMapper.toDTO(result.value));
+      : Result.ok(result.value);
   }
 
   async updateUserProfile(
@@ -77,24 +85,23 @@ class IdentityController {
   }
 
   async deleteAccount(userId: string) {
-    return this.commandBus.dispatch(new DeleteAccountCommand(userId));
+    const result = await this.commandBus.dispatch(
+      new DeleteAccountCommand(userId),
+    );
+
+    return result.isFailure
+      ? Result.fail(result.error)
+      : Result.ok(undefined);
   }
 
-  async cleanupExpiredTrials(cutoffHours: number) {
-    const cutoff = new Date(Date.now() - cutoffHours * 60 * 60 * 1000);
-    const expired = await this.userRepository.findExpiredTrialUsers(cutoff);
+  async cleanupExpiredTrials() {
+    const result = await this.commandBus.dispatch(
+      new CleanupExpiredTrialsCommand(),
+    );
 
-    let deleted = 0;
-
-    for (const user of expired) {
-      const result = await this.commandBus.dispatch(
-        new DeleteAccountCommand(user.id.value),
-      );
-
-      if (result.isSuccess) deleted++;
-    }
-
-    return { deleted, total: expired.length };
+    return result.isFailure
+      ? Result.fail(result.error)
+      : Result.ok(CleanupMapper.toDTO(result.value));
   }
 
   async getUserProfile(userId: string) {
