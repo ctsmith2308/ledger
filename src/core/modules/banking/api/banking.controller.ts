@@ -21,6 +21,8 @@ class BankingController {
 
     const { linkToken } = result.getValueOrThrow();
 
+    console.log({ linkToken });
+
     return { linkToken };
   }
 
@@ -33,9 +35,7 @@ class BankingController {
   }
 
   async getAccounts(userId: string) {
-    const result = await this.queryBus.dispatch(
-      new GetAccountsQuery(userId),
-    );
+    const result = await this.queryBus.dispatch(new GetAccountsQuery(userId));
 
     return BankAccountMapper.toDTOList(result.getValueOrThrow());
   }

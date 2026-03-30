@@ -23,7 +23,6 @@ class CreateLinkTokenHandler implements IHandler<
 
       return Result.ok({ linkToken });
     } catch (error) {
-      console.log({ error });
       return Result.fail(new PlaidErrorException());
     }
   }

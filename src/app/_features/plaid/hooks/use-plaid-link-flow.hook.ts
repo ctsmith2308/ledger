@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 
@@ -49,14 +49,15 @@ const usePlaidLinkFlow = () => {
     onSuccess: onPlaidSuccess,
   });
 
-  const connect = useCallback(() => {
+  useEffect(() => {
     if (linkToken && ready) {
       open();
-      return;
     }
+  }, [linkToken, ready, open]);
 
+  const connect = useCallback(() => {
     createToken.mutate();
-  }, [linkToken, ready, open, createToken]);
+  }, [createToken]);
 
   const isPending = createToken.isPending || exchangeToken.isPending;
   const isReady = linkToken !== null && ready;
