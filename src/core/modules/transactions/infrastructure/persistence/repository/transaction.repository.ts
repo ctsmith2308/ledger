@@ -66,6 +66,16 @@ class TransactionRepository implements ITransactionRepository {
     return record ? TransactionPrismaMapper.toDomain(record) : null;
   }
 
+  async findByPlaidTransactionIds(
+    plaidTransactionIds: string[],
+  ): Promise<Transaction[]> {
+    const records = await this.prisma.transaction.findMany({
+      where: { plaidTransactionId: { in: plaidTransactionIds } },
+    });
+
+    return records.map(TransactionPrismaMapper.toDomain);
+  }
+
   async deleteByPlaidTransactionIds(ids: string[]): Promise<void> {
     await this.prisma.transaction.deleteMany({
       where: { plaidTransactionId: { in: ids } },

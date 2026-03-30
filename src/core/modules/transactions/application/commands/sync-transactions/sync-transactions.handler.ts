@@ -1,3 +1,5 @@
+import { Transaction as PlaidSDKTransaction } from 'plaid';
+
 import {
   IIdGenerator,
   IHandler,
@@ -14,13 +16,14 @@ import {
 import {
   IPlaidItemRepository,
   IPlaidClient,
-  type PlaidTransactionData,
 } from '@/core/modules/banking/domain';
 
 import {
   SyncTransactionsCommand,
   SyncTransactionsResponse,
 } from './sync-transactions.command';
+
+// TODO: Use Plaid's transaction_id as PK instead of generated UUID
 
 class SyncTransactionsHandler implements IHandler<
   SyncTransactionsCommand,
@@ -39,157 +42,136 @@ class SyncTransactionsHandler implements IHandler<
   ): Promise<SyncTransactionsResponse> {
     const items = await this.plaidItemRepository.findByUserId(command.userId);
 
-    let addedCount = 0;
-    let modifiedCount = 0;
-    let removedCount = 0;
-    const allEvents: DomainEvent[] = [];
+    let added = 0;
+    let modified = 0;
+    let removed = 0;
 
     for (const item of items) {
-      const counts = await this._syncItem(
-        item.id,
-        item.accessToken,
-        item.cursor,
-        command.userId,
-        allEvents,
-      );
+      let currentCursor = item.cursor;
+      let hasMore = true;
 
-      addedCount += counts.added;
-      modifiedCount += counts.modified;
-      removedCount += counts.removed;
-    }
-
-    await this.eventBus.dispatch(allEvents);
-
-    return Result.ok({
-      added: addedCount,
-      modified: modifiedCount,
-      removed: removedCount,
-    });
-  }
-
-  private async _syncItem(
-    itemId: string,
-    accessToken: string,
-    cursor: string | undefined,
-    userId: string,
-    allEvents: DomainEvent[],
-  ): Promise<{ added: number; modified: number; removed: number }> {
-    let currentCursor = cursor;
-    let hasMore = true;
-    let addedCount = 0;
-    let modifiedCount = 0;
-    let removedCount = 0;
-
-    while (hasMore) {
-      const syncResult = await this.plaidClient.syncTransactions(
-        accessToken,
-        currentCursor,
-      );
-
-      const newTransactions = await this._processAdded(
-        syncResult.added,
-        userId,
-      );
-      addedCount += newTransactions.length;
-
-      for (const transaction of newTransactions) {
-        const events = transaction.pullDomainEvents();
-        allEvents.push(...events);
-      }
-
-      const modifiedTransactions = await this._processModified(
-        syncResult.modified,
-      );
-      modifiedCount += modifiedTransactions.length;
-
-      if (syncResult.removed.length > 0) {
-        await this.transactionRepository.deleteByPlaidTransactionIds(
-          syncResult.removed,
+      while (hasMore) {
+        const syncResult = await this.plaidClient.syncTransactions(
+          item.accessToken,
+          currentCursor,
         );
-        removedCount += syncResult.removed.length;
-      }
 
-      if (newTransactions.length > 0) {
-        await this.transactionRepository.saveMany(newTransactions);
-      }
+        const batchEvents: DomainEvent[] = [];
+        const promises: Promise<void>[] = [];
 
-      if (modifiedTransactions.length > 0) {
-        await this.transactionRepository.saveMany(modifiedTransactions);
-      }
+        if (syncResult.removed.length > 0) {
+          promises.push(this._handleRemoved(syncResult.removed));
+        }
 
-      currentCursor = syncResult.nextCursor;
-      hasMore = syncResult.hasMore;
+        if (syncResult.added.length > 0) {
+          promises.push(
+            this._handleAdded(syncResult.added, item.userId, batchEvents),
+          );
+        }
+
+        if (syncResult.modified.length > 0) {
+          promises.push(this._handleModified(syncResult.modified));
+        }
+
+        await Promise.all(promises);
+
+        added += syncResult.added.length;
+        modified += syncResult.modified.length;
+        removed += syncResult.removed.length;
+
+        currentCursor = syncResult.nextCursor;
+
+        await this.plaidItemRepository.updateCursor(item.id, currentCursor);
+
+        if (batchEvents.length > 0) {
+          await this.eventBus.dispatch(batchEvents);
+        }
+
+        hasMore = syncResult.hasMore;
+      }
     }
 
-    await this.plaidItemRepository.updateCursor(
-      itemId,
-      currentCursor as string,
-    );
-
-    return {
-      added: addedCount,
-      modified: modifiedCount,
-      removed: removedCount,
-    };
+    return Result.ok({ added, modified, removed });
   }
 
-  private async _processAdded(
-    added: PlaidTransactionData[],
+  private async _handleRemoved(removed: string[]): Promise<void> {
+    await this.transactionRepository.deleteByPlaidTransactionIds(removed);
+  }
+
+  private async _handleAdded(
+    added: PlaidSDKTransaction[],
     userId: string,
-  ): Promise<Transaction[]> {
-    const transactions: Transaction[] = [];
+    batchEvents: DomainEvent[],
+  ): Promise<void> {
+    const transactions = _mapToTransactions(added, userId, this.idGenerator);
 
-    for (const data of added) {
-      const transaction = Transaction.create(
-        this.idGenerator.generate(),
-        data.accountId,
-        userId,
-        data.transactionId,
-        data.amount,
-        new Date(data.date),
-        data.name,
-        data.merchantName ?? undefined,
-        data.category ?? undefined,
-        data.detailedCategory ?? undefined,
-        data.pending,
-        data.paymentChannel ?? undefined,
-      );
+    await this.transactionRepository.saveMany(transactions);
 
-      transactions.push(transaction);
+    for (const transaction of transactions) {
+      batchEvents.push(...transaction.pullDomainEvents());
     }
-
-    return transactions;
   }
 
-  private async _processModified(
-    modified: PlaidTransactionData[],
-  ): Promise<Transaction[]> {
-    const transactions: Transaction[] = [];
+  private async _handleModified(
+    modified: PlaidSDKTransaction[],
+  ): Promise<void> {
+    const plaidIds = modified.map((t) => t.transaction_id);
+
+    const existing =
+      await this.transactionRepository.findByPlaidTransactionIds(plaidIds);
+
+    const updated: Transaction[] = [];
 
     for (const data of modified) {
-      const existing =
-        await this.transactionRepository.findByPlaidTransactionId(
-          data.transactionId,
-        );
+      const match = existing.find(
+        (t) => t.plaidTransactionId === data.transaction_id,
+      );
 
-      if (!existing) continue;
+      // TODO: Dispatch a sync mismatch event if Plaid reports a modification
+      // for a transaction we don't have — indicates data fell out of sync.
+      if (!match) continue;
 
-      existing.update({
+      match.update({
         amount: data.amount,
         date: new Date(data.date),
         name: data.name,
-        merchantName: data.merchantName ?? undefined,
-        category: data.category ?? undefined,
-        detailedCategory: data.detailedCategory ?? undefined,
+        merchantName: data.merchant_name ?? undefined,
+        category: data.personal_finance_category?.primary ?? undefined,
+        detailedCategory: data.personal_finance_category?.detailed ?? undefined,
         pending: data.pending,
-        paymentChannel: data.paymentChannel ?? undefined,
+        paymentChannel: data.payment_channel ?? undefined,
       });
 
-      transactions.push(existing);
+      updated.push(match);
     }
 
-    return transactions;
+    if (updated.length > 0) {
+      await this.transactionRepository.saveMany(updated);
+    }
   }
 }
+
+const _mapToTransactions = (
+  added: PlaidSDKTransaction[],
+  userId: string,
+  idGenerator: IIdGenerator,
+): Transaction[] => {
+  return added.map((data) =>
+    Transaction.create(
+      idGenerator.generate(),
+      data.account_id,
+      userId,
+      data.transaction_id,
+      data.amount,
+      new Date(data.date),
+      data.name,
+      data.merchant_name ?? undefined,
+      data.personal_finance_category?.primary ?? undefined,
+      data.personal_finance_category?.detailed ?? undefined,
+      data.pending,
+      data.payment_channel ?? undefined,
+    ),
+  );
+};
 
 export { SyncTransactionsHandler };

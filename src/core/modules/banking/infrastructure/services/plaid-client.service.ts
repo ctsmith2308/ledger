@@ -4,13 +4,11 @@ import {
   PlaidEnvironments,
   Products,
   CountryCode,
-  Transaction,
 } from 'plaid';
 
 import {
   IPlaidClient,
   PlaidAccountData,
-  PlaidTransactionData,
   PlaidSyncResult,
 } from '@/core/modules/banking/domain';
 
@@ -83,50 +81,26 @@ class PlaidClientService implements IPlaidClient {
     accessToken: string,
     cursor?: string,
   ): Promise<PlaidSyncResult> {
-    const added: PlaidTransactionData[] = [];
-    const modified: PlaidTransactionData[] = [];
-    const removed: string[] = [];
-    let nextCursor = cursor ?? '';
-    let hasMore = true;
+    const response = await this.plaidApi.transactionsSync({
+      access_token: accessToken,
+      cursor: cursor || undefined,
+      options: {
+        include_personal_finance_category: true,
+      },
+    });
 
-    while (hasMore) {
-      const response = await this.plaidApi.transactionsSync({
-        access_token: accessToken,
-        cursor: nextCursor || undefined,
-        options: {
-          include_personal_finance_category: true,
-        },
-      });
+    const data = response.data;
 
-      const data = response.data;
-
-      added.push(...data.added.map(_toTransactionData));
-      modified.push(...data.modified.map(_toTransactionData));
-      removed.push(
-        ...data.removed
-          .map((t) => t.transaction_id)
-          .filter((id): id is string => id !== undefined),
-      );
-
-      nextCursor = data.next_cursor;
-      hasMore = data.has_more;
-    }
-
-    return { added, modified, removed, nextCursor, hasMore: false };
+    return {
+      added: data.added,
+      modified: data.modified,
+      removed: data.removed
+        .map((t) => t.transaction_id)
+        .filter((id): id is string => id !== undefined),
+      nextCursor: data.next_cursor,
+      hasMore: data.has_more,
+    };
   }
 }
-
-const _toTransactionData = (t: Transaction): PlaidTransactionData => ({
-  transactionId: t.transaction_id,
-  accountId: t.account_id,
-  amount: t.amount,
-  date: t.date,
-  name: t.name,
-  merchantName: t.merchant_name ?? null,
-  category: t.personal_finance_category?.primary ?? null,
-  detailedCategory: t.personal_finance_category?.detailed ?? null,
-  pending: t.pending,
-  paymentChannel: t.payment_channel ?? null,
-});
 
 export { PlaidClientService };

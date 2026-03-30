@@ -1,3 +1,5 @@
+import { Transaction as PlaidSDKTransaction } from 'plaid';
+
 type PlaidAccountData = {
   accountId: string;
   name: string;
@@ -10,22 +12,9 @@ type PlaidAccountData = {
   currencyCode: string | null;
 };
 
-type PlaidTransactionData = {
-  transactionId: string;
-  accountId: string;
-  amount: number;
-  date: string;
-  name: string;
-  merchantName: string | null;
-  category: string | null;
-  detailedCategory: string | null;
-  pending: boolean;
-  paymentChannel: string | null;
-};
-
 type PlaidSyncResult = {
-  added: PlaidTransactionData[];
-  modified: PlaidTransactionData[];
+  added: PlaidSDKTransaction[];
+  modified: PlaidSDKTransaction[];
   removed: string[];
   nextCursor: string;
   hasMore: boolean;
@@ -45,7 +34,6 @@ interface IPlaidClient {
 
 export {
   type PlaidAccountData,
-  type PlaidTransactionData,
   type PlaidSyncResult,
   type IPlaidClient,
 };

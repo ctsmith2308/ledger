@@ -108,7 +108,7 @@ class Transaction extends AggregateRoot {
   update(fields: TransactionUpdateFields): void {
     if (fields.amount !== undefined) this._amount = fields.amount;
     if (fields.date !== undefined) this._date = fields.date;
-    if (fields.name !== undefined) this._name = fields.name;
+    // if (fields.name !== undefined) this._name = fields.name;
     if ('merchantName' in fields) this._merchantName = fields.merchantName;
     if ('category' in fields) this._category = fields.category;
     if ('detailedCategory' in fields)

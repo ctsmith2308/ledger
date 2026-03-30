@@ -9,6 +9,9 @@ interface ITransactionRepository {
   findByPlaidTransactionId(
     plaidTransactionId: string,
   ): Promise<Transaction | null>;
+  findByPlaidTransactionIds(
+    plaidTransactionIds: string[],
+  ): Promise<Transaction[]>;
   deleteByPlaidTransactionIds(ids: string[]): Promise<void>;
 }
 
