@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-import { execute } from '@/app/_lib/safe-action';
 import { ROUTES } from '@/app/_lib/config';
 
-import { getUserProfileAction } from '@/app/_entities/identity';
+import { loadProfile } from '@/app/_entities/identity';
 
 import {
   UpdateProfileForm,
@@ -13,7 +12,7 @@ import {
 import { LogoutButton } from '@/app/_features/auth';
 
 export default async function SettingsPage() {
-  const profile = await execute(getUserProfileAction());
+  const profile = await loadProfile();
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">

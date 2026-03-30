@@ -4,7 +4,7 @@ import { Building2 } from 'lucide-react';
 
 import { Button, Spinner } from '@/app/_components';
 
-import { useUserTier } from '@/app/_providers';
+import { useUserTier } from '@/app/_entities/identity';
 
 import { DemoFootnote } from '@/app/_widgets';
 

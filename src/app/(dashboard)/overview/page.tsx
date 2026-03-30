@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-import { execute } from '@/app/_lib/safe-action';
 import { ROUTES } from '@/app/_lib/config';
 
-import { getUserProfileAction } from '@/app/_entities/identity';
-import { getAccountsAction, calcTotalsByType } from '@/app/_entities/banking';
+import { calcTotalsByType } from '@/app/_entities/banking';
 import {
-  getTransactionsAction,
   calcMonthlySpending,
   calcWeeklySpending,
 } from '@/app/_entities/transactions';
+import { loadOverview } from '@/app/_entities/shared';
 
 import { TransactionList } from '@/app/_features/transactions';
 import { ConnectAccountCard } from '@/app/_features/plaid';
@@ -19,11 +17,7 @@ import { AccountTotalsTable } from '@/app/_features/accounts';
 import { PageContainer, PageHeader, SummaryCard } from '@/app/_widgets';
 
 async function OverviewPage() {
-  const [profile, accounts, transactions] = await Promise.all([
-    execute(getUserProfileAction()),
-    execute(getAccountsAction()),
-    execute(getTransactionsAction()),
-  ]);
+  const { profile, accounts, transactions } = await loadOverview();
 
   const hasAccounts = accounts.length > 0;
   const monthlySpending = calcMonthlySpending(transactions);

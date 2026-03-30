@@ -2,7 +2,7 @@
 
 import { Info } from 'lucide-react';
 
-import { useUserTier } from '@/app/_providers';
+import { useUserTier } from '@/app/_entities/identity';
 
 function DemoFootnote({ action }: { action: string }) {
   const { isDemo } = useUserTier();

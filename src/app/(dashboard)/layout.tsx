@@ -1,9 +1,13 @@
 import { redirect } from 'next/navigation';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
-import { execute, ActionError } from '@/app/_lib/safe-action';
+import { DomainException } from '@/core/shared/domain';
+
 import { ROUTES } from '@/app/_lib/config';
+import { getQueryClient } from '@/app/_lib/query';
 
-import { getUserSessionAction } from '@/app/_entities/identity';
+import { loadSession } from '@/app/_entities/identity';
+import { queryKeys } from '@/app/_entities/shared';
 
 import { DashboardSidebar } from '@/app/_widgets';
 
@@ -12,13 +16,13 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const queryClient = getQueryClient();
+
   try {
-    await execute(getUserSessionAction());
+    const session = await loadSession();
+    queryClient.setQueryData(queryKeys.session, session);
   } catch (error) {
-    if (
-      error instanceof ActionError &&
-      error.code === 'UNAUTHORIZED'
-    ) {
+    if (error instanceof DomainException) {
       redirect(ROUTES.login);
     }
 
@@ -26,10 +30,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-background">
-      <DashboardSidebar>
-        {children}
-      </DashboardSidebar>
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <div className="h-screen overflow-hidden bg-background">
+        <DashboardSidebar>
+          {children}
+        </DashboardSidebar>
+      </div>
+    </HydrationBoundary>
   );
 }

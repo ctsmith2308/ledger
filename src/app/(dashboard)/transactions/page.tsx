@@ -1,7 +1,5 @@
-import { execute } from '@/app/_lib/safe-action';
-
-import { getAccountsAction } from '@/app/_entities/banking';
-import { getTransactionsAction } from '@/app/_entities/transactions';
+import { loadAccounts } from '@/app/_entities/banking';
+import { loadTransactions } from '@/app/_entities/transactions';
 
 import { TransactionList } from '@/app/_features/transactions';
 import { ConnectAccountCard } from '@/app/_features/plaid';
@@ -10,8 +8,8 @@ import { PageContainer, PageHeader } from '@/app/_widgets';
 
 async function TransactionsPage() {
   const [accounts, transactions] = await Promise.all([
-    execute(getAccountsAction()),
-    execute(getTransactionsAction()),
+    loadAccounts(),
+    loadTransactions(),
   ]);
 
   const hasAccounts = accounts.length > 0;

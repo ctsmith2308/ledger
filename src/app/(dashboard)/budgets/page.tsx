@@ -1,13 +1,11 @@
-import { execute } from '@/app/_lib/safe-action';
-
-import { getBudgetsAction } from '@/app/_entities/budgets';
+import { loadBudgets } from '@/app/_entities/budgets';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
 async function BudgetsPage() {
-  const budgets = await execute(getBudgetsAction());
+  const budgets = await loadBudgets();
 
   return (
     <PageContainer>
