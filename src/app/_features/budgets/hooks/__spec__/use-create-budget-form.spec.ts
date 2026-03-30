@@ -1,0 +1,73 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mockRefresh = vi.fn();
+const mockMutate = vi.fn();
+let mockIsPending = false;
+let onSuccessCallback: (() => void) | null = null;
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: mockRefresh }),
+}));
+
+vi.mock('@tanstack/react-query', () => ({
+  useMutation: (opts: { onSuccess?: () => void }) => {
+    onSuccessCallback = opts.onSuccess ?? null;
+    return { mutate: mockMutate, isPending: mockIsPending };
+  },
+}));
+
+vi.mock('@tanstack/react-form', () => ({
+  useForm: (opts: { defaultValues: unknown; onSubmit: unknown }) => ({
+    ...opts,
+    handleSubmit: vi.fn(),
+    setFieldValue: vi.fn(),
+  }),
+}));
+
+vi.mock('@/app/_lib/safe-action', () => ({
+  execute: vi.fn(),
+}));
+
+vi.mock('@/app/_entities/budgets/actions', () => ({
+  createBudgetAction: vi.fn(),
+}));
+
+vi.mock('@/app/_entities/budgets/schema', () => ({}));
+
+vi.mock('../schema/create-budget-form.schema', () => ({
+  createBudgetFormSchema: {},
+}));
+
+import { useCreateBudgetForm } from '../use-create-budget-form.hook';
+
+describe('useCreateBudgetForm', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockIsPending = false;
+    onSuccessCallback = null;
+  });
+
+  it('returns form, formId, and isPending', () => {
+    const result = useCreateBudgetForm();
+
+    expect(result.formId).toBe('create-budget-form');
+    expect(result.isPending).toBe(false);
+    expect(result.form).toBeDefined();
+  });
+
+  it('refreshes router on success', () => {
+    useCreateBudgetForm();
+
+    if (onSuccessCallback) onSuccessCallback();
+
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it('reflects pending state', () => {
+    mockIsPending = true;
+
+    const { isPending } = useCreateBudgetForm();
+
+    expect(isPending).toBe(true);
+  });
+});
