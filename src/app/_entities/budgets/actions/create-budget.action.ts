@@ -13,13 +13,11 @@ const createBudgetAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(createBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    const result = await budgetsController.createBudget(
+    return budgetsController.createBudget(
       ctx.userId,
       parsedInput.category,
       parsedInput.monthlyLimit,
     );
-
-    return result.getValueOrThrow();
   });
 
 export { createBudgetAction };

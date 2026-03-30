@@ -1,5 +1,3 @@
-import { Result } from '@/core/shared/domain';
-
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
 import {
@@ -25,15 +23,15 @@ class BudgetsController {
       new CreateBudgetCommand(userId, category, monthlyLimit),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(BudgetMapper.toDTO(result.value));
+    return BudgetMapper.toDTO(result.getValueOrThrow());
   }
 
   async deleteBudget(userId: string, budgetId: string) {
-    return this.commandBus.dispatch(
+    const result = await this.commandBus.dispatch(
       new DeleteBudgetCommand(userId, budgetId),
     );
+
+    result.getValueOrThrow();
   }
 
   async getBudgets(userId: string) {
@@ -41,9 +39,7 @@ class BudgetsController {
       new GetBudgetsQuery(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(BudgetMapper.toDTOList(result.value));
+    return BudgetMapper.toDTOList(result.getValueOrThrow());
   }
 }
 

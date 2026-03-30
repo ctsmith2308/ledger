@@ -20,8 +20,7 @@ const loadSettingsData = async () => {
   const session = queryClient.getQueryData<JwtData>(queryKeys.session);
   if (!session) throw new UnauthorizedException();
 
-  const result = await identityController.getUserProfile(session.userId);
-  const profile = result.getValueOrThrow();
+  const profile = await identityController.getUserProfile(session.userId);
 
   queryClient.setQueryData(queryKeys.profile, profile);
 

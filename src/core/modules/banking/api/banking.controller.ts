@@ -1,5 +1,3 @@
-import { Result } from '@/core/shared/domain';
-
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
 import {
@@ -21,9 +19,9 @@ class BankingController {
       new CreateLinkTokenCommand(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok({ linkToken: result.value.linkToken });
+    const { linkToken } = result.getValueOrThrow();
+
+    return { linkToken };
   }
 
   async exchangePublicToken(userId: string, publicToken: string) {
@@ -31,9 +29,7 @@ class BankingController {
       new ExchangePublicTokenCommand(userId, publicToken),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(PlaidItemMapper.toDTO(result.value));
+    return PlaidItemMapper.toDTO(result.getValueOrThrow());
   }
 
   async getAccounts(userId: string) {
@@ -41,9 +37,7 @@ class BankingController {
       new GetAccountsQuery(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(BankAccountMapper.toDTOList(result.value));
+    return BankAccountMapper.toDTOList(result.getValueOrThrow());
   }
 }
 

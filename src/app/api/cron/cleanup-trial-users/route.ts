@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { identityController } from '@/core/modules/identity';
-import { toErrorResponse, logger } from '@/core/shared/infrastructure';
+import { toErrorResponse } from '@/core/shared/infrastructure';
 
 async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -12,18 +12,10 @@ async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await identityController.cleanupExpiredTrials();
-
-    const { deleted, total } = result.getValueOrThrow();
-
-    logger.info(
-      `Trial cleanup: ${deleted}/${total} expired users deleted`,
-    );
+    const { deleted, total } = await identityController.cleanupExpiredTrials();
 
     return NextResponse.json({ deleted, total });
   } catch (error: unknown) {
-    logger.error(error);
-
     const { code, message } = toErrorResponse(error);
 
     return NextResponse.json({ code, message }, { status: 500 });

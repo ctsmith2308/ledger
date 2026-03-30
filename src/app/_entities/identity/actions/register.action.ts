@@ -12,14 +12,12 @@ const registerAction = actionClient
   .use(withRateLimit)
   .inputSchema(registerUserSchema)
   .action(async ({ parsedInput }) => {
-    const result = await identityController.registerUser(
+    return identityController.registerUser(
       parsedInput.firstName,
       parsedInput.lastName,
       parsedInput.email,
       parsedInput.password,
     );
-
-    return result.getValueOrThrow();
   });
 
 export { registerAction };

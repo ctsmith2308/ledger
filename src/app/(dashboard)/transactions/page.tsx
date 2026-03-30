@@ -16,13 +16,10 @@ const loadTransactionsData = async () => {
   const session = queryClient.getQueryData<JwtData>(queryKeys.session);
   if (!session) throw new UnauthorizedException();
 
-  const [accountsResult, transactionsResult] = await Promise.all([
+  const [accounts, transactions] = await Promise.all([
     bankingController.getAccounts(session.userId),
     transactionsController.getTransactions(session.userId),
   ]);
-
-  const accounts = accountsResult.getValueOrThrow();
-  const transactions = transactionsResult.getValueOrThrow();
 
   queryClient.setQueryData(queryKeys.accounts, accounts);
   queryClient.setQueryData(queryKeys.transactions, transactions);

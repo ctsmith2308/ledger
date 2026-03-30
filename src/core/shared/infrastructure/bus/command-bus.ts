@@ -25,7 +25,12 @@ class CommandBus {
       throw new Error(`No handler registered for command: ${key}`);
     }
 
-    return handler.execute(command) as Promise<T['_response']>;
+    try {
+      return await handler.execute(command) as Promise<T['_response']>;
+    } catch (error) {
+      // TODO: dispatch HandlerFailedEvent to event bus
+      throw error;
+    }
   }
 }
 

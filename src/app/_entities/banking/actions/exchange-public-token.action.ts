@@ -13,12 +13,10 @@ const exchangePublicTokenAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(exchangePublicTokenSchema)
   .action(async ({ ctx, parsedInput }) => {
-    const result = await bankingController.exchangePublicToken(
+    return bankingController.exchangePublicToken(
       ctx.userId,
       parsedInput.publicToken,
     );
-
-    return result.getValueOrThrow();
   });
 
 export { exchangePublicTokenAction };

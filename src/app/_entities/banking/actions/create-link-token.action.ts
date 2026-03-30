@@ -10,9 +10,7 @@ const createLinkTokenAction = actionClient
   .use(withAuth)
   .use(withFeatureFlag)
   .action(async ({ ctx }) => {
-    const result = await bankingController.createLinkToken(ctx.userId);
-
-    return result.getValueOrThrow();
+    return bankingController.createLinkToken(ctx.userId);
   });
 
 export { createLinkTokenAction };

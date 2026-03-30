@@ -14,8 +14,7 @@ const loadBudgetsData = async () => {
   const session = queryClient.getQueryData<JwtData>(queryKeys.session);
   if (!session) throw new UnauthorizedException();
 
-  const result = await budgetsController.getBudgets(session.userId);
-  const budgets = result.getValueOrThrow();
+  const budgets = await budgetsController.getBudgets(session.userId);
 
   queryClient.setQueryData(queryKeys.budgets, budgets);
 

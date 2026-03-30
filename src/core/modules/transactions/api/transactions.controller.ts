@@ -1,5 +1,3 @@
-import { Result } from '@/core/shared/domain';
-
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
 import {
@@ -21,13 +19,9 @@ class TransactionsController {
       new SyncTransactionsCommand(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok({
-          added: result.value.added,
-          modified: result.value.modified,
-          removed: result.value.removed,
-        });
+    const { added, modified, removed } = result.getValueOrThrow();
+
+    return { added, modified, removed };
   }
 
   async getTransactions(userId: string) {
@@ -35,9 +29,7 @@ class TransactionsController {
       new GetTransactionsQuery(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(TransactionMapper.toDTOList(result.value));
+    return TransactionMapper.toDTOList(result.getValueOrThrow());
   }
 
   async getSpendingByCategory(userId: string, month: Date) {
@@ -45,9 +37,7 @@ class TransactionsController {
       new GetSpendingByCategoryQuery(userId, month),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(result.value);
+    return result.getValueOrThrow();
   }
 }
 

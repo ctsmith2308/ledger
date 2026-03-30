@@ -13,13 +13,11 @@ const updateUserProfileAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(updateProfileSchema)
   .action(async ({ ctx, parsedInput }) => {
-    const result = await identityController.updateUserProfile(
+    return identityController.updateUserProfile(
       ctx.userId,
       parsedInput.firstName,
       parsedInput.lastName,
     );
-
-    return result.getValueOrThrow();
   });
 
 export { updateUserProfileAction };

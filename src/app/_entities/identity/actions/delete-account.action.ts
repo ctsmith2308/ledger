@@ -10,9 +10,7 @@ const deleteAccountAction = actionClient
   .use(withAuth)
   .use(withFeatureFlag)
   .action(async ({ ctx }) => {
-    const result = await identityController.deleteAccount(ctx.userId);
-
-    result.getValueOrThrow();
+    await identityController.deleteAccount(ctx.userId);
 
     await deleteCookie();
   });

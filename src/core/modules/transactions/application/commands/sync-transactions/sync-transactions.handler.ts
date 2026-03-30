@@ -1,23 +1,31 @@
-import { IHandler, IEventBus, Result, DomainEvent } from '@/core/shared/domain';
+import {
+  IIdGenerator,
+  IHandler,
+  IEventBus,
+  Result,
+  DomainEvent,
+} from '@/core/shared/domain';
+
 import {
   ITransactionRepository,
   Transaction,
 } from '@/core/modules/transactions/domain';
+
 import {
   IPlaidItemRepository,
   IPlaidClient,
   type PlaidTransactionData,
 } from '@/core/modules/banking/domain';
-import { IIdGenerator } from '@/core/shared/domain';
 
 import {
   SyncTransactionsCommand,
   SyncTransactionsResponse,
 } from './sync-transactions.command';
 
-class SyncTransactionsHandler
-  implements IHandler<SyncTransactionsCommand, SyncTransactionsResponse>
-{
+class SyncTransactionsHandler implements IHandler<
+  SyncTransactionsCommand,
+  SyncTransactionsResponse
+> {
   constructor(
     private readonly plaidItemRepository: IPlaidItemRepository,
     private readonly transactionRepository: ITransactionRepository,
@@ -118,7 +126,11 @@ class SyncTransactionsHandler
       currentCursor as string,
     );
 
-    return { added: addedCount, modified: modifiedCount, removed: removedCount };
+    return {
+      added: addedCount,
+      modified: modifiedCount,
+      removed: removedCount,
+    };
   }
 
   private async _processAdded(

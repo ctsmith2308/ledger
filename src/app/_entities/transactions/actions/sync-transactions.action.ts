@@ -10,9 +10,7 @@ const syncTransactionsAction = actionClient
   .use(withAuth)
   .use(withFeatureFlag)
   .action(async ({ ctx }) => {
-    const result = await transactionsController.syncTransactions(ctx.userId);
-
-    return result.getValueOrThrow();
+    return transactionsController.syncTransactions(ctx.userId);
   });
 
 export { syncTransactionsAction };

@@ -17,12 +17,10 @@ const deleteBudgetAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(deleteBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    const result = await budgetsController.deleteBudget(
+    return budgetsController.deleteBudget(
       ctx.userId,
       parsedInput.budgetId,
     );
-
-    return result.getValueOrThrow();
   });
 
 export { deleteBudgetAction };

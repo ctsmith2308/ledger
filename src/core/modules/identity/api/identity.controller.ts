@@ -1,5 +1,3 @@
-import { Result } from '@/core/shared/domain';
-
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
 import {
@@ -36,9 +34,7 @@ class IdentityController {
       new RegisterUserCommand(firstName, lastName, email, password),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(UserMapper.toDTO(result.value));
+    return UserMapper.toDTO(result.getValueOrThrow());
   }
 
   async loginUser(email: string, password: string) {
@@ -46,15 +42,15 @@ class IdentityController {
       new LoginUserCommand(email, password),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(LoginMapper.toDTO(result.value));
+    return LoginMapper.toDTO(result.getValueOrThrow());
   }
 
   async logoutUser(sessionToken: string) {
-    return this.commandBus.dispatch(
+    const result = await this.commandBus.dispatch(
       new LogoutUserCommand(sessionToken),
     );
+
+    result.getValueOrThrow();
   }
 
   // TODO: Refresh flow — GetUserSessionHandler needs IJwtService dep to sign
@@ -65,9 +61,7 @@ class IdentityController {
       new GetUserSessionQuery(token),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(result.value);
+    return result.getValueOrThrow();
   }
 
   async updateUserProfile(
@@ -79,9 +73,7 @@ class IdentityController {
       new UpdateUserProfileCommand(userId, firstName, lastName),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(UserProfileMapper.toDTO(result.value));
+    return UserProfileMapper.toDTO(result.getValueOrThrow());
   }
 
   async deleteAccount(userId: string) {
@@ -89,9 +81,7 @@ class IdentityController {
       new DeleteAccountCommand(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(undefined);
+    result.getValueOrThrow();
   }
 
   async cleanupExpiredTrials() {
@@ -99,9 +89,7 @@ class IdentityController {
       new CleanupExpiredTrialsCommand(),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(CleanupMapper.toDTO(result.value));
+    return CleanupMapper.toDTO(result.getValueOrThrow());
   }
 
   async getUserProfile(userId: string) {
@@ -109,9 +97,7 @@ class IdentityController {
       new GetUserProfileQuery(userId),
     );
 
-    return result.isFailure
-      ? Result.fail(result.error)
-      : Result.ok(UserProfileMapper.toDTO(result.value));
+    return UserProfileMapper.toDTO(result.getValueOrThrow());
   }
 }
 

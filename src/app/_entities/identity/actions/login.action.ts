@@ -12,12 +12,10 @@ const loginAction = actionClient
   .use(withRateLimit)
   .inputSchema(loginUserSchema)
   .action(async ({ parsedInput }) => {
-    const result = await identityController.loginUser(
+    const { accessToken } = await identityController.loginUser(
       parsedInput.email,
       parsedInput.password,
     );
-
-    const { accessToken } = result.getValueOrThrow();
 
     await setCookie(accessToken);
   });

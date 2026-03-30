@@ -16,8 +16,7 @@ const loadAccountsData = async () => {
   const session = queryClient.getQueryData<JwtData>(queryKeys.session);
   if (!session) throw new UnauthorizedException();
 
-  const result = await bankingController.getAccounts(session.userId);
-  const accounts = result.getValueOrThrow();
+  const accounts = await bankingController.getAccounts(session.userId);
 
   queryClient.setQueryData(queryKeys.accounts, accounts);
 

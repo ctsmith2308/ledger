@@ -10,8 +10,7 @@ const logoutAction = actionClient.action(async () => {
   const token = await getCookie();
 
   if (token) {
-    const result = await identityController.logoutUser(token);
-    result.getValueOrThrow();
+    await identityController.logoutUser(token);
   }
 
   await deleteCookie();
