@@ -10,7 +10,7 @@ import {
 
 import { BudgetMapper } from './mappers';
 
-class BudgetsController {
+class BudgetsService {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -66,4 +66,4 @@ class BudgetsController {
   }
 }
 
-export { BudgetsController };
+export { BudgetsService };

@@ -63,7 +63,7 @@ const createBudgetAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(createBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return budgetsController.createBudget(ctx.userId, parsedInput.category, parsedInput.monthlyLimit);
+    return budgetsService.createBudget(ctx.userId, parsedInput.category, parsedInput.monthlyLimit);
   });`,
       },
     },

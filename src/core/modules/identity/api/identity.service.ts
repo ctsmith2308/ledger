@@ -17,7 +17,7 @@ import {
   UserProfileMapper,
 } from './mappers';
 
-class IdentityController {
+class IdentityService {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -89,4 +89,4 @@ class IdentityController {
   }
 }
 
-export { IdentityController };
+export { IdentityService };

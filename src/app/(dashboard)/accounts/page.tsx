@@ -1,4 +1,4 @@
-import { bankingController } from '@/core/modules/banking';
+import { bankingService } from '@/core/modules/banking';
 
 import { loadSession } from '@/app/_shared/lib/session/session.service';
 
@@ -13,7 +13,7 @@ import { PageContainer, PageHeader } from '@/app/_widgets';
 const loadAccountsData = async () => {
   const session = await loadSession();
 
-  const accounts = await bankingController.getAccounts(session.userId);
+  const accounts = await bankingService.getAccounts(session.userId);
 
   return accounts;
 };

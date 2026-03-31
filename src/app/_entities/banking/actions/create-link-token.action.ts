@@ -1,6 +1,6 @@
 'use server';
 
-import { bankingController } from '@/core/modules/banking';
+import { bankingService } from '@/core/modules/banking';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -11,7 +11,7 @@ const createLinkTokenAction = actionClient
   .use(withAuth)
   .use(withFeatureFlag)
   .action(async ({ ctx }) => {
-    return bankingController.createLinkToken(ctx.userId);
+    return bankingService.createLinkToken(ctx.userId);
   });
 
 export { createLinkTokenAction };

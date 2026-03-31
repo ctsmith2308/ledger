@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { budgetsController } from '@/core/modules/budgets';
+import { budgetsService } from '@/core/modules/budgets';
 
 import { JwtService } from '@/core/shared/infrastructure/services/jwt.service';
 
@@ -22,7 +22,7 @@ async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await budgetsController.getBudgetOverview(
+    const data = await budgetsService.getBudgetOverview(
       jwtResult.value.userId,
       new Date(),
     );

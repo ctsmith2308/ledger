@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { budgetsController } from '@/core/modules/budgets';
+import { budgetsService } from '@/core/modules/budgets';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -18,7 +18,7 @@ const deleteBudgetAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(deleteBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return budgetsController.deleteBudget(
+    return budgetsService.deleteBudget(
       ctx.userId,
       parsedInput.budgetId,
     );

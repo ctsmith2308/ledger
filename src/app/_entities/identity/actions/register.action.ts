@@ -1,6 +1,6 @@
 'use server';
 
-import { identityController } from '@/core/modules/identity';
+import { identityService } from '@/core/modules/identity';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -12,7 +12,7 @@ const registerAction = actionClient
   .use(withRateLimit)
   .inputSchema(registerUserSchema)
   .action(async ({ parsedInput }) => {
-    return identityController.registerUser(
+    return identityService.registerUser(
       parsedInput.firstName,
       parsedInput.lastName,
       parsedInput.email,

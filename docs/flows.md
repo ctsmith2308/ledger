@@ -59,19 +59,19 @@ flowchart TB
     end
 
     subgraph Identity Module
-        IC[IdentityController]
+        IC[IdentityService]
         IR[RegisterUser / LoginUser]
         IR -->|UserRegistered · UserLoggedIn| EB
     end
 
     subgraph Banking Module
-        BC[BankingController]
+        BC[BankingService]
         BR[ExchangePublicToken]
         BR -->|BankAccountLinked| EB
     end
 
     subgraph Transactions Module
-        TC[TransactionsController]
+        TC[TransactionsService]
         TS[SyncTransactionsHandler]
         TS -->|TransactionCreated| EB
         UR[updateCategoryRollup]
@@ -82,7 +82,7 @@ flowchart TB
     end
 
     subgraph Budgets Module
-        BUC[BudgetsController]
+        BUC[BudgetsService]
         RSH[recordSpend]
         EB -->|TRANSACTION_CREATED| RSH
         RSH -->|reads| RDB
@@ -107,7 +107,7 @@ flowchart LR
     end
 
     subgraph API
-        CTRL[Controller<br/>dispatches via bus · maps to DTO]
+        SVC[Service<br/>dispatches via bus · maps to DTO]
     end
 
     subgraph Application
@@ -128,7 +128,7 @@ flowchart LR
         BUS[EventBus · CommandBus · QueryBus]
     end
 
-    SA --> CTRL --> CMD --> AGG & VO & DE & RI
+    SA --> SVC --> CMD --> AGG & VO & DE & RI
     CMD --> BUS
     EH --> BUS
     RI -.->|implemented by| REPO

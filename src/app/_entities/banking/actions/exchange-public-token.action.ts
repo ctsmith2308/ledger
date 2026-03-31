@@ -1,6 +1,6 @@
 'use server';
 
-import { bankingController } from '@/core/modules/banking';
+import { bankingService } from '@/core/modules/banking';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -14,7 +14,7 @@ const exchangePublicTokenAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(exchangePublicTokenSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return bankingController.exchangePublicToken(
+    return bankingService.exchangePublicToken(
       ctx.userId,
       parsedInput.publicToken,
     );

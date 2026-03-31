@@ -1,6 +1,6 @@
 'use server';
 
-import { identityController } from '@/core/modules/identity';
+import { identityService } from '@/core/modules/identity';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -14,7 +14,7 @@ const updateUserProfileAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(updateProfileSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return identityController.updateUserProfile(
+    return identityService.updateUserProfile(
       ctx.userId,
       parsedInput.firstName,
       parsedInput.lastName,

@@ -9,7 +9,7 @@ const serverActions: ArchitectureDecision = {
   context:
     'Server actions are the transport layer — the equivalent of controllers in an MVC stack. Without a shared factory, each action needs its own try/catch, its own session check, and its own response shape. Three actions in and the duplication is obvious. Ten actions in and the divergence is a bug waiting to happen.',
   decision:
-    'All server actions are wired via `next-safe-action`. An `actionClient` is configured once with `handleServerError` as the single catch boundary. Each action chains `.use()` middleware for auth, rate limiting, and feature flags, then declares its input schema via `.inputSchema()`. Controllers return DTOs directly — actions do not call `getValueOrThrow()`. Server actions are POST-only; reads use server-side loaders.',
+    'All server actions are wired via `next-safe-action`. An `actionClient` is configured once with `handleServerError` as the single catch boundary. Each action chains `.use()` middleware for auth, rate limiting, and feature flags, then declares its input schema via `.inputSchema()`. Module services return DTOs directly — actions do not call `getValueOrThrow()`. Server actions are POST-only; reads use server-side loaders.',
   rationale: [
     '`.use(withAuth)` resolves the session before the handler runs and injects it into `ctx`. A missing or invalid session rejects before the handler is ever called.',
     '`handleServerError` is the single catch boundary. It maps thrown errors via `toErrorResponse` and returns `{ code, message }` as `result.serverError` — no per-action error handling needed.',
@@ -35,7 +35,7 @@ const loginAction = actionClient
   .use(withRateLimit)
   .inputSchema(loginUserSchema)
   .action(async ({ parsedInput }) => {
-    return identityController.loginUser(
+    return identityService.loginUser(
       parsedInput.email,
       parsedInput.password,
     );
@@ -50,7 +50,7 @@ const createBudgetAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(createBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return budgetsController.createBudget(
+    return budgetsService.createBudget(
       ctx.userId,
       parsedInput.category,
       parsedInput.monthlyLimit,

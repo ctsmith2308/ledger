@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { ArrowLeft } from 'lucide-react';
 
-import { identityController } from '@/core/modules/identity';
+import { identityService } from '@/core/modules/identity';
 
 import { ROUTES } from '@/app/_shared/routes';
 
@@ -18,7 +18,7 @@ import { LogoutButton } from '@/app/_features/auth';
 const loadSettingsData = async () => {
   const session = await loadSession();
 
-  const profile = await identityController.getUserProfile(session.userId);
+  const profile = await identityService.getUserProfile(session.userId);
 
   return profile;
 };

@@ -57,7 +57,7 @@ const tanstackQuerySafeAction: CaseStudy = {
     },
     {
       heading: 'The hydration pattern',
-      body: 'Server components call controllers directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key — the data is already there, no fetch needed. This pattern applies to the session (useUserTier reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
+      body: 'Server components call module services directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key — the data is already there, no fetch needed. This pattern applies to the session (useUserTier reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
     },
     {
       heading: 'When Nanostores would enter',

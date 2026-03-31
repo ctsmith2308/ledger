@@ -55,7 +55,7 @@ const nestjsOverhead: CaseStudy = {
       heading: 'What replaced it',
       body: 'Static factory functions and manual constructor injection. Each module exposes a factory that wires its own dependencies explicitly. The result is plain TypeScript: no decorators, no container, no registration step. Dependencies are visible at the call site, testable by passing a mock directly, and trivially traceable through a standard IDE.',
       code: {
-        label: 'NestJS provider vs static factory — equivalent wiring',
+        label: 'NestJS provider vs Module class with bus registration',
         code: `// NestJS — container registration
 @Module({
   providers: [UserRepository, PasswordHasher, RegisterUserHandler],
@@ -63,14 +63,18 @@ const nestjsOverhead: CaseStudy = {
 })
 export class IdentityModule {}
 
-// Static factory — explicit wiring
-const identityModule = {
-  registerUser: RegisterUserHandler.create({
-    userRepository: UserRepository.create(prisma),
-    hasher: BcryptHasher.create(),
-    idGenerator: CuidGenerator,
-  }),
-};`,
+// Current — api/index.ts is the composition root
+class IdentityModule {
+  private constructor() {}
+
+  static init(): IdentityService {
+    const repos = { userRepository: new UserRepository(prisma) };
+    commandBus.register(RegisterUserCommand, new RegisterUserHandler(repos.userRepository, ...));
+    return new IdentityService(commandBus, queryBus);
+  }
+}
+
+const identityService = IdentityModule.init();`,
       },
     },
     {

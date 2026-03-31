@@ -37,10 +37,15 @@ const modularMonolith: ArchitectureDecision = {
   domain/          # pure business rules, no infra dependencies
   application/     # commands, queries, handlers
     commands/
-      login-user/  # self-contained: command + handler + registration
+      login-user/  # command + handler
       register-user/
   infrastructure/  # adapters — repository, services
-  identity.module.ts  # side-effect imports trigger registration`,
+  api/             # composition root + public surface
+    identity.service.ts  # dispatches via bus, maps to DTOs
+    identity.dto.ts
+    mappers/
+    index.ts       # wires deps, registers handlers, exports service
+  index.ts         # thin re-export from ./api`,
     },
     {
       label: 'Cross-module communication via IEventBus',

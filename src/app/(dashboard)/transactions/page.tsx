@@ -1,6 +1,6 @@
-import { bankingController } from '@/core/modules/banking';
+import { bankingService } from '@/core/modules/banking';
 
-import { transactionsController } from '@/core/modules/transactions';
+import { transactionsService } from '@/core/modules/transactions';
 
 import { loadSession } from '@/app/_shared/lib/session/session.service';
 
@@ -14,8 +14,8 @@ const loadTransactionsData = async () => {
   const session = await loadSession();
 
   const [accounts, transactions] = await Promise.all([
-    bankingController.getAccounts(session.userId),
-    transactionsController.getTransactions(session.userId),
+    bankingService.getAccounts(session.userId),
+    transactionsService.getTransactions(session.userId),
   ]);
 
   return { accounts, transactions };

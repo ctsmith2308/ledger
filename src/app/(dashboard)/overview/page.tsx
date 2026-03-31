@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 import { ArrowRight } from 'lucide-react';
 
-import { identityController } from '@/core/modules/identity';
+import { identityService } from '@/core/modules/identity';
 
-import { bankingController } from '@/core/modules/banking';
+import { bankingService } from '@/core/modules/banking';
 
-import { transactionsController } from '@/core/modules/transactions';
+import { transactionsService } from '@/core/modules/transactions';
 
 import { ROUTES } from '@/app/_shared/routes';
 
@@ -33,9 +33,9 @@ const loadOverviewData = async () => {
   const session = await loadSession();
 
   const [profile, accounts, transactions] = await Promise.all([
-    identityController.getUserProfile(session.userId),
-    bankingController.getAccounts(session.userId),
-    transactionsController.getTransactions(session.userId),
+    identityService.getUserProfile(session.userId),
+    bankingService.getAccounts(session.userId),
+    transactionsService.getTransactions(session.userId),
   ]);
 
   return { profile, accounts, transactions };

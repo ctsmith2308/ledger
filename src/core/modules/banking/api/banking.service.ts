@@ -8,7 +8,7 @@ import {
 
 import { PlaidItemMapper, BankAccountMapper } from './mappers';
 
-class BankingController {
+class BankingService {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -20,8 +20,6 @@ class BankingController {
     );
 
     const { linkToken } = result.getValueOrThrow();
-
-    console.log({ linkToken });
 
     return { linkToken };
   }
@@ -41,4 +39,4 @@ class BankingController {
   }
 }
 
-export { BankingController };
+export { BankingService };

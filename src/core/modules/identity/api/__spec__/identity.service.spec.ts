@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { IdentityController } from '../identity.controller';
+import { IdentityService } from '../identity.service';
 import {
   Result,
   DomainException,
@@ -21,22 +21,22 @@ const _mockBus = () => ({
   dispatch: vi.fn(),
 });
 
-const _makeController = () => {
+const _makeService = () => {
   const commandBus = _mockBus();
   const queryBus = _mockBus();
 
-  const controller = new IdentityController(
+  const service = new IdentityService(
     commandBus as never,
     queryBus as never,
   );
 
-  return { controller, commandBus, queryBus };
+  return { service, commandBus, queryBus };
 };
 
-describe('IdentityController', () => {
+describe('IdentityService', () => {
   describe('registerUser', () => {
     it('returns UserDTO on success', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       const user = User.register(
         UserId.from('user-1'),
@@ -48,7 +48,7 @@ describe('IdentityController', () => {
         Result.ok({ type: 'SUCCESS', user }),
       );
 
-      const dto = await controller.registerUser(
+      const dto = await service.registerUser(
         'Test',
         'User',
         'test@example.com',
@@ -63,21 +63,21 @@ describe('IdentityController', () => {
     });
 
     it('throws on handler failure', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
         Result.fail(new InvalidEmailException()),
       );
 
       await expect(
-        controller.registerUser('Test', 'User', 'bad', 'Secure!1'),
+        service.registerUser('Test', 'User', 'bad', 'Secure!1'),
       ).rejects.toBeInstanceOf(InvalidEmailException);
     });
   });
 
   describe('loginUser', () => {
     it('returns JwtDTO on success', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
         Result.ok({
@@ -86,7 +86,7 @@ describe('IdentityController', () => {
         }),
       );
 
-      const dto = await controller.loginUser(
+      const dto = await service.loginUser(
         'test@example.com',
         'Secure!1',
       );
@@ -98,33 +98,33 @@ describe('IdentityController', () => {
     });
 
     it('throws on handler failure', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
         Result.fail(new InvalidEmailException()),
       );
 
       await expect(
-        controller.loginUser('bad', 'Secure!1'),
+        service.loginUser('bad', 'Secure!1'),
       ).rejects.toBeInstanceOf(InvalidEmailException);
     });
   });
 
   describe('logoutUser', () => {
     it('does not throw on success', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(Result.ok(undefined));
 
       await expect(
-        controller.logoutUser('session-token'),
+        service.logoutUser('session-token'),
       ).resolves.not.toThrow();
     });
   });
 
   describe('updateUserProfile', () => {
     it('returns UserProfileDTO on success', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       const profile = UserProfile.save(
         UserId.from('user-1'),
@@ -134,7 +134,7 @@ describe('IdentityController', () => {
 
       commandBus.dispatch.mockResolvedValue(Result.ok(profile));
 
-      const dto = await controller.updateUserProfile(
+      const dto = await service.updateUserProfile(
         'user-1',
         'Updated',
         'Name',
@@ -150,25 +150,25 @@ describe('IdentityController', () => {
 
   describe('deleteAccount', () => {
     it('does not throw on success', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(Result.ok(undefined));
 
       await expect(
-        controller.deleteAccount('user-1'),
+        service.deleteAccount('user-1'),
       ).resolves.not.toThrow();
     });
   });
 
   describe('cleanupExpiredTrials', () => {
     it('returns CleanupDTO on success', async () => {
-      const { controller, commandBus } = _makeController();
+      const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
         Result.ok({ deleted: 3, total: 5 }),
       );
 
-      const dto = await controller.cleanupExpiredTrials();
+      const dto = await service.cleanupExpiredTrials();
 
       expect(dto).toEqual({ deleted: 3, total: 5 });
     });
@@ -176,7 +176,7 @@ describe('IdentityController', () => {
 
   describe('getUserProfile', () => {
     it('returns UserProfileDTO on success', async () => {
-      const { controller, queryBus } = _makeController();
+      const { service, queryBus } = _makeService();
 
       const profile = UserProfile.save(
         UserId.from('user-1'),
@@ -186,7 +186,7 @@ describe('IdentityController', () => {
 
       queryBus.dispatch.mockResolvedValue(Result.ok(profile));
 
-      const dto = await controller.getUserProfile('user-1');
+      const dto = await service.getUserProfile('user-1');
 
       expect(dto).toEqual({
         userId: 'user-1',

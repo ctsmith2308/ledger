@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { identityController } from '@/core/modules/identity';
+import { identityService } from '@/core/modules/identity';
 import { toErrorResponse } from '@/core/shared/infrastructure';
 
 async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ async function GET(request: NextRequest) {
   }
 
   try {
-    const { deleted, total } = await identityController.cleanupExpiredTrials();
+    const { deleted, total } = await identityService.cleanupExpiredTrials();
 
     return NextResponse.json({ deleted, total });
   } catch (error: unknown) {

@@ -1,6 +1,6 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
-import { budgetsController } from '@/core/modules/budgets';
+import { budgetsService } from '@/core/modules/budgets';
 
 import { getQueryClient } from '@/app/_shared/lib/query';
 
@@ -15,7 +15,7 @@ import { PageContainer, PageHeader, DemoFootnote } from '@/app/_widgets';
 const loadBudgetOverview = async () => {
   const session = await loadSession();
 
-  return budgetsController.getBudgetOverview(session.userId, new Date());
+  return budgetsService.getBudgetOverview(session.userId, new Date());
 };
 
 async function BudgetsPage() {

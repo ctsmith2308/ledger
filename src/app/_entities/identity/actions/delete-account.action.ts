@@ -1,6 +1,6 @@
 'use server';
 
-import { identityController } from '@/core/modules/identity';
+import { identityService } from '@/core/modules/identity';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -12,7 +12,7 @@ const deleteAccountAction = actionClient
   .use(withAuth)
   .use(withFeatureFlag)
   .action(async ({ ctx }) => {
-    await identityController.deleteAccount(ctx.userId);
+    await identityService.deleteAccount(ctx.userId);
 
     await deleteCookie();
   });

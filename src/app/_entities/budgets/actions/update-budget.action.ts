@@ -1,6 +1,6 @@
 'use server';
 
-import { budgetsController } from '@/core/modules/budgets';
+import { budgetsService } from '@/core/modules/budgets';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -15,7 +15,7 @@ const updateBudgetAction = actionClient
   .use(withFeatureFlag)
   .inputSchema(updateBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return budgetsController.updateBudget(
+    return budgetsService.updateBudget(
       ctx.userId,
       parsedInput.budgetId,
       parsedInput.monthlyLimit,

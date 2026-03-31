@@ -8,7 +8,7 @@ import {
 
 import { TransactionMapper } from './mappers';
 
-class TransactionsController {
+class TransactionsService {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -41,4 +41,4 @@ class TransactionsController {
   }
 }
 
-export { TransactionsController };
+export { TransactionsService };

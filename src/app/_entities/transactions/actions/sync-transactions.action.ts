@@ -1,6 +1,6 @@
 'use server';
 
-import { transactionsController } from '@/core/modules/transactions';
+import { transactionsService } from '@/core/modules/transactions';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -11,7 +11,7 @@ const syncTransactionsAction = actionClient
   .use(withAuth)
   .use(withFeatureFlag)
   .action(async ({ ctx }) => {
-    return transactionsController.syncTransactions(ctx.userId);
+    return transactionsService.syncTransactions(ctx.userId);
   });
 
 export { syncTransactionsAction };
