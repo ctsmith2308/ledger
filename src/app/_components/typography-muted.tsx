@@ -1,4 +1,4 @@
-import { cn } from '@/app/_lib/tailwind';
+import { cn } from '@/app/_shared/lib/tailwind';
 import { TypographyMutedProps } from './types';
 
 function TypographyMuted({ children, className }: TypographyMutedProps) {

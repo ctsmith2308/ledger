@@ -5,7 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 import { Input } from './input';
 import { Button } from './button';
-import { cn } from '@/app/_lib/tailwind';
+import { cn } from '@/app/_shared/lib/tailwind';
 
 function PasswordInput({
   className,

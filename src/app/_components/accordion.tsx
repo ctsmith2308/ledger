@@ -4,7 +4,7 @@ import * as React from "react"
 import { ChevronDownIcon } from "lucide-react"
 import { Accordion as AccordionPrimitive } from "radix-ui"
 
-import { cn } from "@/app/_lib/tailwind/index"
+import { cn } from "@/app/_shared/lib/tailwind/index"
 
 function Accordion({
   ...props

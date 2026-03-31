@@ -24,8 +24,8 @@ vi.mock('@tanstack/react-form', () => ({
   }),
 }));
 
-vi.mock('@/app/_lib/safe-action', () => ({
-  execute: vi.fn(),
+vi.mock('@/app/_shared/lib/next-safe-action', () => ({
+  handleActionResponse: vi.fn(),
 }));
 
 vi.mock('@/app/_entities/budgets/actions', () => ({

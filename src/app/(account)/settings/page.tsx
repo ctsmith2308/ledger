@@ -4,9 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 
 import { identityController } from '@/core/modules/identity';
 
-import { ROUTES } from '@/app/_lib/config';
+import { ROUTES } from '@/app/_shared/routes';
 
-import { loadSession } from '@/app/_entities/identity/loaders';
+import { loadSession } from '@/app/_shared/lib/session/session.service';
 
 import {
   UpdateProfileForm,

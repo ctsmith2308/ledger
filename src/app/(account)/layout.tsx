@@ -1,9 +1,9 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
-import { getQueryClient } from '@/app/_lib/query';
+import { getQueryClient } from '@/app/_shared/lib/query';
 
-import { loadSession } from '@/app/_entities/identity/loaders';
-import { queryKeys } from '@/app/_entities/shared/query-keys';
+import { loadSession } from '@/app/_shared/lib/session/session.service';
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import { AppHeader } from '@/app/_widgets';
 

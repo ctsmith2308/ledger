@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
-import { execute } from '@/app/_lib/safe-action';
+import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
 
 import { updateUserProfileAction } from '@/app/_entities/identity/actions';
 import {
@@ -22,7 +22,7 @@ const useUpdateProfileForm = (initial: {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: UpdateProfileInput) =>
-      execute(updateUserProfileAction(input)),
+      handleActionResponse(updateUserProfileAction(input)),
     onSuccess: () => {
       router.refresh();
     },

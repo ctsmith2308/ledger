@@ -26,7 +26,7 @@ import {
   TableCell,
 } from '@/app/_components';
 
-import { formatCategory } from '@/app/_entities/budgets/lib/format-category';
+import { formatCategory } from '@/app/_shared/lib/formatters/format-category';
 
 const PAGE_SIZE = 25;
 

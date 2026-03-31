@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { ROUTES } from '@/app/_lib/config';
+import { ROUTES } from '@/app/_shared/routes';
 
 import { RegisterForm } from '@/app/_features/auth';
 

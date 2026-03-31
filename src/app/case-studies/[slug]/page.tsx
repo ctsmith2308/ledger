@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getCaseStudy, getCaseSlugs, caseStudies } from '@/app/_lib/content/case-studies';
-import { decisions } from '@/app/_lib/content/architecture';
+import { getCaseStudy, getCaseSlugs, caseStudies } from '@/app/_shared/content/case-studies';
+import { decisions } from '@/app/_shared/content/architecture';
 
 export function generateStaticParams() {
   return getCaseSlugs().map((slug) => ({ slug }));

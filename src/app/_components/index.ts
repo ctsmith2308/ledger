@@ -15,6 +15,7 @@ export * from './paragraph';
 export * from './password-input';
 export * from './select';
 export * from './separator';
+export * from './site-header';
 export * from './skeleton';
 export * from './spinner';
 export * from './table';

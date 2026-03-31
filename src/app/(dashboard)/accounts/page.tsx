@@ -1,6 +1,6 @@
 import { bankingController } from '@/core/modules/banking';
 
-import { loadSession } from '@/app/_entities/identity/loaders';
+import { loadSession } from '@/app/_shared/lib/session/session.service';
 
 import { calcTotalsByType } from '@/app/_entities/banking/lib';
 

@@ -23,7 +23,7 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { TRANSACTION_CATEGORIES } from '@/app/_entities/transactions/lib';
+import { TRANSACTION_CATEGORIES } from '@/app/_shared/config/categories';
 
 import { useUserTier } from '@/app/_entities/identity/hooks';
 

@@ -1,4 +1,4 @@
-import { cn } from '@/app/_lib/tailwind';
+import { cn } from '@/app/_shared/lib/tailwind';
 import { TypographyLargeProps } from './types';
 
 function TypographyLarge({ children, className }: TypographyLargeProps) {

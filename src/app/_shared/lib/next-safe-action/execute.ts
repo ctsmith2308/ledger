@@ -8,7 +8,7 @@ type SafeActionResponse<T> = {
   validationErrors?: Record<string, unknown>;
 };
 
-const execute = async <T>(
+const handleActionResponse = async <T>(
   response: Promise<SafeActionResponse<T>>,
 ): Promise<T> => {
   const result = await response;
@@ -24,4 +24,4 @@ const execute = async <T>(
   return result.data as T;
 };
 
-export { execute };
+export { handleActionResponse };

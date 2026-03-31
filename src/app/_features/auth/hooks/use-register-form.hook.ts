@@ -2,8 +2,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
-import { execute } from '@/app/_lib/safe-action';
-import { ROUTES } from '@/app/_lib/config';
+import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
+import { ROUTES } from '@/app/_shared/routes';
 
 import { registerAction } from '@/app/_entities/identity/actions';
 import {
@@ -16,7 +16,7 @@ const useRegisterForm = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: RegisterUserInput) =>
-      execute(registerAction(input)),
+      handleActionResponse(registerAction(input)),
     onSuccess: () => {
       router.push(ROUTES.login);
     },

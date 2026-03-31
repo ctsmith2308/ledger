@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
-import { cn } from "@/app/_lib/tailwind"
+import { cn } from "@/app/_shared/lib/tailwind"
 import { Button } from "@/app/_components/button"
 import { XIcon } from "lucide-react"
 

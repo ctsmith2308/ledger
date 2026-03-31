@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { FileQuestion } from 'lucide-react';
 
 import { Button } from '@/app/_components';
-import { ROUTES } from '@/app/_lib/config';
+import { ROUTES } from '@/app/_shared/routes';
 
 function NotFoundView() {
   return (
@@ -15,7 +15,7 @@ function NotFoundView() {
         </h2>
 
         <p className="leading-7 text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
 
         <Button asChild>

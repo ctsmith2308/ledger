@@ -2,11 +2,11 @@
 
 import { identityController } from '@/core/modules/identity';
 
-import { actionClient } from '@/app/_lib/safe-action/action-client';
+import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
-import { withAuth } from '@/app/_entities/shared/with-auth';
-import { withFeatureFlag } from '@/app/_entities/shared/with-feature-flag';
-import { deleteCookie } from '@/app/_entities/shared/session.service';
+import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-auth';
+import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/with-feature-flag';
+import { deleteCookie } from '@/app/_shared/lib/session/session.service';
 
 const deleteAccountAction = actionClient
   .use(withAuth)

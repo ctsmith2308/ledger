@@ -1,4 +1,10 @@
+import { cache } from 'react';
+
 import { cookies } from 'next/headers';
+
+import { UnauthorizedException } from '@/core/shared/domain';
+
+import { JwtService } from '@/core/shared/infrastructure';
 
 type ResolveCookies = typeof cookies;
 
@@ -35,10 +41,21 @@ const setCookie = setCookieCurry(cookies);
 
 const deleteCookie = deleteCookieCurry(cookies);
 
+const loadSession = cache(async () => {
+  const token = await getCookie();
+
+  if (!token) throw new UnauthorizedException();
+
+  const result = await JwtService.verify(token);
+
+  return result.getValueOrThrow();
+});
+
 export {
   getCookie,
   setCookie,
   deleteCookie,
+  loadSession,
   getCookieCurry,
   setCookieCurry,
   deleteCookieCurry,

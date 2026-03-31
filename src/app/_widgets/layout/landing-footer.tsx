@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Github, Linkedin } from 'lucide-react';
 
-import { decisions } from '@/app/_lib/content/architecture';
-import { caseStudies } from '@/app/_lib/content/case-studies';
+import { decisions } from '@/app/_shared/content/architecture';
+import { caseStudies } from '@/app/_shared/content/case-studies';
 
 const _projectLinks = [
   { label: 'GitHub', href: 'https://github.com/ctsmith2308/ledger', external: true },

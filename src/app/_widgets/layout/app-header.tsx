@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { Menu, User } from 'lucide-react';
 
 import { Button } from '@/app/_components';
-import { ROUTES } from '@/app/_lib/config';
+import { ROUTES } from '@/app/_shared/routes';
 
-import { SiteHeader } from './site-header';
-import { ThemeToggle } from './theme-toggle';
+import { SiteHeader } from '@/app/_components';
+import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
 
 function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
   return (

@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 
-import { execute } from '@/app/_lib/safe-action';
-import { ROUTES } from '@/app/_lib/config';
+import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
+import { ROUTES } from '@/app/_shared/routes';
 
 import { loginAction } from '@/app/_entities/identity/actions';
 
@@ -36,7 +36,7 @@ const useDemoLoginForm = () => {
   const [selectedUser, setSelectedUser] = useState<DemoUser | null>(null);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (input: LoginUserInput) => execute(loginAction(input)),
+    mutationFn: (input: LoginUserInput) => handleActionResponse(loginAction(input)),
     onSuccess: () => {
       router.push(ROUTES.overview);
     },

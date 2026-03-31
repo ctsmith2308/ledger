@@ -19,6 +19,4 @@ const TRANSACTION_CATEGORIES = [
   'INCOME',
 ] as const;
 
-type TransactionCategory = (typeof TRANSACTION_CATEGORIES)[number];
-
-export { TRANSACTION_CATEGORIES, type TransactionCategory };
+export { TRANSACTION_CATEGORIES };

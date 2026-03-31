@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { ArrowRight, Pencil, Trash2 } from 'lucide-react';
 
-import { ROUTES } from '@/app/_lib/config';
+import { ROUTES } from '@/app/_shared/routes';
 
 import {
   Accordion,
@@ -32,7 +32,7 @@ import { useUserTier } from '@/app/_entities/identity/hooks';
 
 import { useBudgetOverview } from '@/app/_entities/budgets/hooks/use-budget-overview.hook';
 
-import { formatCategory } from '@/app/_entities/budgets/lib/format-category';
+import { formatCategory } from '@/app/_shared/lib/formatters/format-category';
 
 import { TransactionList } from '@/app/_features/transactions';
 

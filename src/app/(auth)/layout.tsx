@@ -1,4 +1,6 @@
-import { SiteHeader, ThemeToggle } from '@/app/_widgets';
+import { SiteHeader } from '@/app/_components';
+
+import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
 
 export default function AuthLayout({
   children,

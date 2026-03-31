@@ -4,7 +4,7 @@ import * as React from "react"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
 
-import { cn } from "@/app/_lib/tailwind/index"
+import { cn } from "@/app/_shared/lib/tailwind/index"
 
 function Select({
   ...props

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { usePlaidLink } from 'react-plaid-link';
 
-import { execute } from '@/app/_lib/safe-action';
+import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
 
 import {
   createLinkTokenAction,
@@ -22,7 +22,7 @@ const usePlaidLinkFlow = () => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
 
   const createToken = useMutation({
-    mutationFn: () => execute(createLinkTokenAction()),
+    mutationFn: () => handleActionResponse(createLinkTokenAction()),
     onSuccess: (data) => {
       setLinkToken(data.linkToken);
     },
@@ -30,9 +30,9 @@ const usePlaidLinkFlow = () => {
 
   const exchangeToken = useMutation({
     mutationFn: (input: ExchangePublicTokenInput) =>
-      execute(exchangePublicTokenAction(input)),
+      handleActionResponse(exchangePublicTokenAction(input)),
     onSuccess: async () => {
-      await execute(syncTransactionsAction());
+      await handleActionResponse(syncTransactionsAction());
       router.refresh();
     },
   });

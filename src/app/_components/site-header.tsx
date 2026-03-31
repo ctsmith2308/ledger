@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-import { cn } from '@/app/_lib/tailwind';
-
 function SiteHeader({
   logoHref = '/',
   left,

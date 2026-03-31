@@ -3,7 +3,7 @@ import { createMiddleware } from 'next-safe-action';
 import { UnauthorizedException } from '@/core/shared/domain';
 import { JwtService } from '@/core/shared/infrastructure';
 
-import { getCookie } from './session.service';
+import { getCookie } from '@/app/_shared/lib/session/session.service';
 
 const withAuth = createMiddleware().define(async ({ next }) => {
   const token = await getCookie();

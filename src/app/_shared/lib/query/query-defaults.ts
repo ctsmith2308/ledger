@@ -1,4 +1,4 @@
-import { ActionError } from '@/app/_lib/safe-action';
+import { ActionError } from '@/app/_shared/lib/next-safe-action';
 
 const NON_RETRYABLE_CODES = ['UNAUTHORIZED', 'RATE_LIMIT_EXCEEDED'];
 

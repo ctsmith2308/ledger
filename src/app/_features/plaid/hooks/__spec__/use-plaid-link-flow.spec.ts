@@ -32,8 +32,8 @@ vi.mock('react-plaid-link', () => ({
   }),
 }));
 
-vi.mock('@/app/_lib/safe-action', () => ({
-  execute: vi.fn((action: unknown) => action),
+vi.mock('@/app/_shared/lib/next-safe-action', () => ({
+  handleActionResponse: vi.fn((action: unknown) => action),
 }));
 
 vi.mock('@/app/_entities/banking/actions', () => ({

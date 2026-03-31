@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ROUTES } from '@/app/_lib/config';
-import { getDecision, getSlugs, decisions } from '@/app/_lib/content/architecture';
-import { caseStudies } from '@/app/_lib/content/case-studies';
+import { ROUTES } from '@/app/_shared/routes';
+import { getDecision, getSlugs, decisions } from '@/app/_shared/content/architecture';
+import { caseStudies } from '@/app/_shared/content/case-studies';
 
 export function generateStaticParams() {
   return getSlugs().map((slug) => ({ slug }));

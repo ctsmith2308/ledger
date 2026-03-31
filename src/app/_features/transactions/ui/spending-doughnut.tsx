@@ -6,7 +6,7 @@ import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
 
 import { type CategorySpending } from '@/app/_entities/transactions/lib';
 
-import { formatCategory } from '@/app/_entities/budgets/lib/format-category';
+import { formatCategory } from '@/app/_shared/lib/formatters/format-category';
 
 ChartJS.register(ArcElement, Tooltip);
 

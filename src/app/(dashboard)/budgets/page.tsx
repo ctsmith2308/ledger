@@ -2,11 +2,11 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 import { budgetsController } from '@/core/modules/budgets';
 
-import { getQueryClient } from '@/app/_lib/query';
+import { getQueryClient } from '@/app/_shared/lib/query';
 
-import { loadSession } from '@/app/_entities/identity/loaders';
+import { loadSession } from '@/app/_shared/lib/session/session.service';
 
-import { queryKeys } from '@/app/_entities/shared/query-keys';
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 

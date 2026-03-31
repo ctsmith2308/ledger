@@ -2,13 +2,13 @@ import { useForm } from '@tanstack/react-form';
 
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
-import { execute } from '@/app/_lib/safe-action';
+import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
 
 import { createBudgetAction } from '@/app/_entities/budgets/actions';
 
 import { type CreateBudgetInput } from '@/app/_entities/budgets/schema';
 
-import { queryKeys } from '@/app/_entities/shared/query-keys';
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import { createBudgetFormSchema } from '../schema/create-budget-form.schema';
 
@@ -17,7 +17,7 @@ const useCreateBudgetForm = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: CreateBudgetInput) =>
-      execute(createBudgetAction(input)),
+      handleActionResponse(createBudgetAction(input)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.budgetOverview });
     },

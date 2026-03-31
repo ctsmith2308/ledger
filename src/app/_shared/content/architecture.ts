@@ -337,8 +337,7 @@ if (session) {
     ],
     codeBlocks: [
       {
-        label:
-          'Unprotected action — rate-limited with input schema',
+        label: 'Unprotected action — rate-limited with input schema',
         code: `'use server';
 
 const loginAction = actionClient
@@ -352,8 +351,7 @@ const loginAction = actionClient
   });`,
       },
       {
-        label:
-          'Protected action — auth, feature flag, and input schema',
+        label: 'Protected action — auth, feature flag, and input schema',
         code: `'use server';
 
 const createBudgetAction = actionClient

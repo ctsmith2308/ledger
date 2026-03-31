@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { decisions } from '@/app/_lib/content/architecture';
+import { decisions } from '@/app/_shared/content/architecture';
 
 export default function ArchitecturePage() {
   return (

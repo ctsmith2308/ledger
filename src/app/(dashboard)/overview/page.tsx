@@ -8,9 +8,9 @@ import { bankingController } from '@/core/modules/banking';
 
 import { transactionsController } from '@/core/modules/transactions';
 
-import { ROUTES } from '@/app/_lib/config';
+import { ROUTES } from '@/app/_shared/routes';
 
-import { loadSession } from '@/app/_entities/identity/loaders';
+import { loadSession } from '@/app/_shared/lib/session/session.service';
 
 import { calcTotalsByType } from '@/app/_entities/banking/lib';
 
@@ -25,7 +25,9 @@ import { ConnectAccountCard } from '@/app/_features/plaid';
 
 import { AccountTotalsTable } from '@/app/_features/accounts';
 
-import { PageContainer, PageHeader, SpendingDoughnut } from '@/app/_widgets';
+import { SpendingDoughnut } from '@/app/_features/transactions';
+
+import { PageContainer, PageHeader } from '@/app/_widgets';
 
 const loadOverviewData = async () => {
   const session = await loadSession();

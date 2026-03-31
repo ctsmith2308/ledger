@@ -1,8 +1,8 @@
 'use server';
 
-import { actionClient } from '@/app/_lib/safe-action/action-client';
+import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
-import { deleteCookie } from '@/app/_entities/shared/session.service';
+import { deleteCookie } from '@/app/_shared/lib/session/session.service';
 
 // TODO: When refresh token is stored client-side (second cookie),
 // revoke the session in the DB here before deleting cookies.

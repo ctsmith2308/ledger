@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Label as LabelPrimitive } from "radix-ui"
 
-import { cn } from "@/app/_lib/tailwind"
+import { cn } from "@/app/_shared/lib/tailwind"
 
 function Label({
   className,

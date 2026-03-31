@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { queryDefaults } from '@/app/_lib/query/query-defaults';
+import { queryDefaults } from '@/app/_shared/lib/query/query-defaults';
 
 import { Toast } from '@/app/_components/toast';
 

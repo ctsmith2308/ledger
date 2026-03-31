@@ -2,10 +2,10 @@
 
 import { transactionsController } from '@/core/modules/transactions';
 
-import { actionClient } from '@/app/_lib/safe-action/action-client';
+import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
-import { withAuth } from '@/app/_entities/shared/with-auth';
-import { withFeatureFlag } from '@/app/_entities/shared/with-feature-flag';
+import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-auth';
+import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/with-feature-flag';
 
 const syncTransactionsAction = actionClient
   .use(withAuth)

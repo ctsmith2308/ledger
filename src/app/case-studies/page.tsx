@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { caseStudies } from '@/app/_lib/content/case-studies';
+import { caseStudies } from '@/app/_shared/content/case-studies';
 
 export default function CaseStudiesPage() {
   return (
