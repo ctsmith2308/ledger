@@ -4,22 +4,24 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
-import { deleteBudgetAction } from '@/app/_entities/budgets/actions';
+import { updateBudgetAction } from '@/app/_entities/budgets/actions/update-budget.action';
+
+import { type UpdateBudgetInput } from '@/app/_entities/budgets/schema/update-budget.schema';
 
 import { queryKeys } from '@/app/_entities/shared/query-keys';
 
-const useDeleteBudget = () => {
+const useUpdateBudget = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (budgetId: string) =>
-      execute(deleteBudgetAction({ budgetId })),
+    mutationFn: (input: UpdateBudgetInput) =>
+      execute(updateBudgetAction(input)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.budgetOverview });
     },
   });
 
-  return { deleteBudget: mutate, isDeleting: isPending };
+  return { updateBudget: mutate, isUpdating: isPending };
 };
 
-export { useDeleteBudget };
+export { useUpdateBudget };

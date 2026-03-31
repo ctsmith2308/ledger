@@ -1,3 +1,5 @@
+import { type TransactionDTO } from '@/core/modules/transactions';
+
 type BudgetDTO = {
   id: string;
   userId: string;
@@ -7,4 +9,12 @@ type BudgetDTO = {
   updatedAt: string;
 };
 
-export type { BudgetDTO };
+type BudgetOverviewItemDTO = {
+  id: string;
+  category: string;
+  monthlyLimit: number;
+  spent: number;
+  transactions: TransactionDTO[];
+};
+
+export type { BudgetDTO, BudgetOverviewItemDTO };

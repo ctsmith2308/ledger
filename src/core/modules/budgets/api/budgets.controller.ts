@@ -3,6 +3,8 @@ import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 import {
   CreateBudgetCommand,
   DeleteBudgetCommand,
+  UpdateBudgetCommand,
+  GetBudgetOverviewQuery,
   GetBudgetsQuery,
 } from '../application';
 
@@ -34,6 +36,27 @@ class BudgetsController {
     result.getValueOrThrow();
   }
 
+  async updateBudget(
+    userId: string,
+    budgetId: string,
+    monthlyLimit: number,
+  ) {
+    const result = await this.commandBus.dispatch(
+      new UpdateBudgetCommand(userId, budgetId, monthlyLimit),
+    );
+
+    return BudgetMapper.toDTO(result.getValueOrThrow());
+  }
+
+  async getBudgetOverview(userId: string, month: Date) {
+    const result = await this.queryBus.dispatch(
+      new GetBudgetOverviewQuery(userId, month),
+    );
+
+    return result.getValueOrThrow();
+  }
+
+  // TODO: Remove — getBudgetOverview supersedes this
   async getBudgets(userId: string) {
     const result = await this.queryBus.dispatch(
       new GetBudgetsQuery(userId),

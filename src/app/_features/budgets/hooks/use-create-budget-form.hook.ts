@@ -1,22 +1,25 @@
-import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
-import { useMutation } from '@tanstack/react-query';
+
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { execute } from '@/app/_lib/safe-action';
 
 import { createBudgetAction } from '@/app/_entities/budgets/actions';
+
 import { type CreateBudgetInput } from '@/app/_entities/budgets/schema';
+
+import { queryKeys } from '@/app/_entities/shared/query-keys';
 
 import { createBudgetFormSchema } from '../schema/create-budget-form.schema';
 
 const useCreateBudgetForm = () => {
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: CreateBudgetInput) =>
       execute(createBudgetAction(input)),
     onSuccess: () => {
-      router.refresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgetOverview });
     },
   });
 

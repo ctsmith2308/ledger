@@ -41,6 +41,7 @@ class BudgetRepository implements IBudgetRepository {
 
     return record ? BudgetPrismaMapper.toDomain(record) : null;
   }
+
   async deleteById(id: string): Promise<void> {
     await this.prisma.budget.delete({
       where: { id },

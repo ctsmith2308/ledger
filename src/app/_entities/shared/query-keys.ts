@@ -5,6 +5,7 @@ const queryKeys = {
   transactions: ['transactions'] as const,
   spending: (month: string) => ['spending', month] as const,
   budgets: ['budgets'] as const,
+  budgetOverview: ['budget-overview'] as const,
 };
 
 export { queryKeys };

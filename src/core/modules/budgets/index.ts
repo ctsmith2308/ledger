@@ -12,6 +12,10 @@ import {
   CreateBudgetHandler,
   DeleteBudgetCommand,
   DeleteBudgetHandler,
+  UpdateBudgetCommand,
+  UpdateBudgetHandler,
+  GetBudgetOverviewQuery,
+  GetBudgetOverviewHandler,
   GetBudgetsQuery,
   GetBudgetsHandler,
   createRecordSpendHandler,
@@ -19,7 +23,10 @@ import {
 
 import { BudgetRepository } from './infrastructure';
 
-import { CategoryRollupRepository } from '@/core/modules/transactions/infrastructure';
+import {
+  CategoryRollupRepository,
+  TransactionRepository,
+} from '@/core/modules/transactions/infrastructure';
 
 import { BudgetsController } from './api';
 
@@ -30,6 +37,7 @@ class BudgetsModule {
     const repos = {
       budgetRepository: new BudgetRepository(prisma),
       categoryRollupRepository: new CategoryRollupRepository(prisma),
+      transactionRepository: new TransactionRepository(prisma),
     };
 
     eventBus.register(
@@ -53,6 +61,20 @@ class BudgetsModule {
     commandBus.register(
       DeleteBudgetCommand,
       new DeleteBudgetHandler(repos.budgetRepository),
+    );
+
+    commandBus.register(
+      UpdateBudgetCommand,
+      new UpdateBudgetHandler(repos.budgetRepository),
+    );
+
+    queryBus.register(
+      GetBudgetOverviewQuery,
+      new GetBudgetOverviewHandler(
+        repos.budgetRepository,
+        repos.categoryRollupRepository,
+        repos.transactionRepository,
+      ),
     );
 
     queryBus.register(

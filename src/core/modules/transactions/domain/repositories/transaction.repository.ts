@@ -7,6 +7,11 @@ interface ITransactionRepository {
   findByIds(ids: string[]): Promise<Transaction[]>;
   findByUserId(userId: string): Promise<Transaction[]>;
   findByAccountId(accountId: string): Promise<Transaction[]>;
+  findByUserIdAndCategory(
+    userId: string,
+    category: string,
+    limit: number,
+  ): Promise<Transaction[]>;
   deleteByIds(ids: string[]): Promise<void>;
 }
 
