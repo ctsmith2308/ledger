@@ -22,68 +22,69 @@ const caseStudies: CaseStudy[] = [
       'Why the project moved from tRPC to server actions, and what that decision actually cost.',
     badge: 'Migration',
     summary:
-      'Ledger started with tRPC as the API layer — end-to-end type safety, a clean procedure model, and genuine framework portability. The switch to Next.js server actions was a deliberate tradeoff: less portability, significantly less ceremony. Here is the honest accounting of both sides.',
+      'Ledger started with tRPC as the API layer — end-to-end type safety, a clean procedure model, and genuine framework portability. The switch to Next.js server actions via next-safe-action was a deliberate tradeoff: less portability, a mature middleware model, and TanStack Query for server state caching.',
     sections: [
       {
         heading: 'Why tRPC first',
-        body: 'tRPC gives you end-to-end type safety without a code generator, a clean middleware model in `procedure.ts`, and adapters for every major framework. The portability argument was real — swap the route handler, keep everything else. TanStack Query and Nanostores made the client layer framework-agnostic too. The full stack could move to SvelteKit or Nuxt with surface-level changes only.',
+        body: 'tRPC gives you end-to-end type safety without a code generator, a clean middleware model in `procedure.ts`, and adapters for every major framework. The portability argument was real — swap the route handler, keep everything else. The full stack could move to SvelteKit or Nuxt with surface-level changes only.',
         table: {
-          headers: ['Concern', 'tRPC', 'Server Actions'],
+          headers: ['Concern', 'tRPC', 'next-safe-action + TanStack Query'],
           rows: [
-            ['API layer', 'tRPC — adapter swap to port', 'Next.js only'],
+            ['API layer', 'tRPC — adapter swap to port', 'Next.js server actions (POST only)'],
             [
               'Auth',
               'httpOnly cookie via tRPC context',
-              'Next.js session/cookie handling',
+              '.use(withAuth) middleware chain',
             ],
             [
               'Server state',
-              'TanStack Query — React, Vue, Svelte adapters',
-              'use(), useFormState() — React only',
+              'TanStack Query via tRPC hooks',
+              'TanStack Query — server hydrates cache, client reads',
             ],
             [
               'Type safety',
               'End-to-end via tRPC, no code generation',
-              'Server action return types only',
+              'Typed server action responses + Zod input schemas',
             ],
             [
               'Middleware',
               'Once in procedure.ts, applied everywhere',
-              'Per-action wrapper (createAction HOF)',
+              '.use() chaining — withAuth, withFeatureFlag, withRateLimit',
             ],
             [
               'Bundle',
               'tRPC client + TanStack Query',
-              'Zero additional client bundle',
+              'TanStack Query only (server actions have no client bundle)',
             ],
           ],
         },
       },
       {
         heading: 'The tipping point',
-        body: 'The tipping point was not a technical failure of tRPC — it was a scope question. This is a portfolio project, not a product targeting multiple frameworks. The portability argument is compelling in theory, but there is no SvelteKit migration on the roadmap. Carrying the tRPC mental model, the adapter wiring, and the TanStack Query setup for a benefit that would never be realised was ceremony without payoff. Server actions with a `createAction` HOF cover the same ground — auth check, error boundary, consistent response shape — with zero client bundle overhead and no additional dependency.',
+        body: 'The tipping point was not a technical failure of tRPC — it was a scope question. This is a portfolio project, not a product targeting multiple frameworks. The portability argument is compelling in theory, but there is no SvelteKit migration on the roadmap. Carrying the tRPC mental model and the adapter wiring for a benefit that would never be realised was ceremony without payoff. next-safe-action with .use() chaining provides the same middleware model — auth, rate limiting, feature flags — with Zod schema validation and a typed error boundary.',
       },
       {
-        heading: 'What the createAction factory recovers',
-        body: "The main thing tRPC provided was a shared middleware model. `createAction` replicates this: `protected: true` resolves the session before the handler runs, the catch block maps all failures to a consistent `ActionResult<T>`, and TypeScript narrows the handler signature based on the config discriminant. It is not as elegant as tRPC's procedure chain, but it covers the use cases this project actually has.",
+        heading: 'What next-safe-action provides',
+        body: 'next-safe-action provides the same middleware chaining model tRPC had. Each server action chains .use(withAuth).use(withFeatureFlag).inputSchema(schema) — composable, type-safe, and consistent. handleServerError is the single catch boundary that maps domain exceptions to client-facing error responses. The execute() utility bridges the serialisation gap to TanStack Query.',
         code: {
-          label: 'createAction vs tRPC procedure — equivalent patterns',
+          label: 'next-safe-action vs tRPC procedure — equivalent patterns',
           code: `// tRPC — middleware chain
 const protectedProcedure = publicProcedure.use(authMiddleware);
 const loginRouter = router({ login: publicProcedure.mutation(...) });
 
-// createAction — HOF with discriminated union config
-const loginAction = createAction({ handler: async (input) => { ... } });
-const getProfileAction = createAction({ protected: true, handler: async (session, input) => { ... } });`,
+// next-safe-action — .use() chaining
+const createBudgetAction = actionClient
+  .use(withAuth)
+  .use(withFeatureFlag)
+  .inputSchema(createBudgetSchema)
+  .action(async ({ ctx, parsedInput }) => {
+    return budgetsController.createBudget(ctx.userId, parsedInput.category, parsedInput.monthlyLimit);
+  });`,
         },
       },
       {
         heading: 'What was genuinely lost',
         body: 'Framework portability is the real loss. If the project ever needs to run outside of Next.js, the transport layer is now coupled to the framework. The domain core (`src/core/`) remains portable — it has zero Next.js dependencies. But the action layer would need to be rewritten, not just re-adapted. For a portfolio project, this is an acceptable tradeoff. For a product with an uncertain frontend future, it would not be.',
-      },
-      {
-        heading: 'The interview answer',
-        body: 'The honest version: tRPC is the better technical choice if framework portability is a requirement. Server actions with createAction are the better pragmatic choice for a Next.js-committed project. Knowing the difference — and being able to articulate the tradeoffs without advocating for one as universally correct — is the point.',
       },
     ],
   },
@@ -258,9 +259,133 @@ const identityModule = {
         heading: 'Why not full event sourcing',
         body: 'Full event sourcing would resolve the ownership question by requiring every event to flow through an aggregate — but it also requires aggregate reconstitution from event replay, a message broker for reliable delivery and projection rebuilds, and snapshot strategies for long-lived aggregates. The infrastructure cost is significant and not justified at this scale. The current architecture — durable event persistence with database-backed aggregate state — provides the audit trail and cross-module decoupling benefits without the operational overhead. The IEventBus interface preserves the upgrade path if the system grows into it.',
       },
+    ],
+  },
+  {
+    slug: 'observability-grafana-vs-newrelic',
+    title:
+      'Grafana Cloud over New Relic — open standards over proprietary agents',
+    subtitle:
+      'Having used New Relic on frontend apps, the choice to go with Grafana was deliberate, not unfamiliar.',
+    badge: 'Infrastructure',
+    summary:
+      'This project instruments with OpenTelemetry and exports to Grafana Cloud. New Relic was a real option — I have production experience with their browser monitoring agent for frontend log capture and performance tracking. The decision was about vendor independence, not capability gaps.',
+    sections: [
       {
-        heading: 'The interview answer',
-        body: 'Event sourcing is not a binary. You can persist events durably for audit and integration without committing to event replay as the source of truth. The ownership question — aggregate vs handler — depends on whether your events define state or describe it. In a fully event-sourced system, they define state and must come from the aggregate. In a durable event-driven system, some events describe use-case facts that no single aggregate owns, and the handler is the right dispatch point. Knowing which system you are in determines the correct answer.',
+        heading: 'New Relic experience',
+        body: "I have hands-on experience integrating New Relic's browser monitoring agent into frontend applications — manually capturing browser logs, tracking page load performance, and correlating frontend errors with backend traces. New Relic's browser SDK (`@newrelic/browser-agent`) provides real user monitoring (RUM), error tracking, and session replay out of the box. The DX is good. The data is rich. The dashboards are polished.",
+      },
+      {
+        heading: 'Why not New Relic here',
+        body: "New Relic's strength is its all-in-one platform — install the agent, everything lights up. But that convenience comes with coupling. The `@newrelic/next` agent instruments Next.js with New Relic-specific APIs. Your error capture, span creation, and log forwarding use New Relic's SDK, not an open standard. Switching to a different backend means rewriting instrumentation, not changing an endpoint.",
+        table: {
+          headers: ['Concern', 'New Relic', 'OpenTelemetry + Grafana'],
+          rows: [
+            [
+              'Instrumentation',
+              '@newrelic/next agent — proprietary SDK',
+              '@opentelemetry/sdk-node — open standard',
+            ],
+            [
+              'Vendor lock-in',
+              'High — New Relic APIs throughout codebase',
+              'None — zero vendor imports in application code',
+            ],
+            [
+              'Backend swap',
+              'Rewrite instrumentation',
+              'Change OTLP endpoint env var',
+            ],
+            [
+              'Free tier',
+              '100GB/month with retention limits',
+              '50GB traces, 50GB logs, 10k metrics',
+            ],
+            [
+              'Browser monitoring',
+              'Built-in RUM, session replay, log capture',
+              'Separate concern — Grafana Faro or keep New Relic for frontend',
+            ],
+            [
+              'Setup complexity',
+              'Lower — one agent, auto-instrumentation',
+              'Higher — SDK init, sampler config, manual span enrichment',
+            ],
+          ],
+        },
+      },
+      {
+        heading: 'The architectural argument',
+        body: 'The application code has zero Grafana imports. The IObservabilityService interface calls trace.getActiveSpan() from the OpenTelemetry API — a vendor-neutral package. The buses create spans via a tracer from the same API. The OTLP exporter reads the endpoint from environment variables. Grafana is a deployment decision, not a code decision. Switching to Datadog, Honeycomb, Jaeger, or back to New Relic is an env var change — not a refactor.',
+      },
+      {
+        heading: 'Where New Relic still wins',
+        body: "Browser monitoring. OpenTelemetry's frontend story is immature compared to New Relic's browser agent. For a full-stack observability picture — correlating frontend errors with backend traces, capturing user sessions, tracking Core Web Vitals — New Relic's browser SDK or Grafana Faro would complement the backend OpenTelemetry instrumentation. The backend chose open standards. The frontend can choose the best tool for the job independently.",
+      },
+    ],
+  },
+  {
+    slug: 'tanstack-query-safe-action',
+    title: 'TanStack Query + next-safe-action — server state without the Redux tax',
+    subtitle:
+      'The server owns the data. The client caches it. Mutations invalidate. No store, no reducers, no sync.',
+    badge: 'State Management',
+    summary:
+      'Ledger manages server state with TanStack Query and mutations with next-safe-action. Redux Toolkit Query, Nanostores, and React\'s native action hooks were all evaluated. The decision came down to what the application actually needs versus what each tool is optimised for.',
+    sections: [
+      {
+        heading: 'The problem',
+        body: 'Server-rendered pages fetch data on the server. Client components need access to that data — session, budget overview, spending breakdowns — without refetching. Mutations need to update the UI without a full page re-render. The gap between "server fetched the data" and "client component needs it" is the core state management problem.',
+      },
+      {
+        heading: 'Why TanStack Query',
+        body: 'TanStack Query solves server state caching. The server fetches data, hydrates the QueryClient, and client components read from the cache via useQuery. Mutations call server actions via useMutation, then invalidateQueries triggers a background refetch — the UI updates without router.refresh(). The cache is the single source of truth for server data on the client. No manual sync, no store mirroring, no stale state bugs.',
+      },
+      {
+        heading: 'What was eliminated',
+        body: 'Several alternatives were considered and rejected for specific reasons. The decision was not about capability but about fit.',
+        table: {
+          headers: ['Tool', 'What it does', 'Why not'],
+          rows: [
+            [
+              'RTK Query',
+              'Server state cache built on Redux',
+              'Bundles Redux as a dependency for a problem that doesn\'t exist here. No complex cross-cutting client state justifies the Redux machinery.',
+            ],
+            [
+              'Nanostores',
+              'Atom-based client state (~1kb)',
+              'Right tool if cross-feature client state arises. It hasn\'t. TanStack Query handles server state; local component state handles the rest.',
+            ],
+            [
+              'useActionState (React)',
+              'Form state with loading/error',
+              'Coupled to form submissions. No caching, no retry, no global error handling. Solves a narrower problem.',
+            ],
+            [
+              'useOptimisticAction',
+              'Optimistic UI updates',
+              'Useful for latency-sensitive mutations. Not needed when server round-trips are fast and the cache invalidation model is sufficient.',
+            ],
+            [
+              'Direct server action calls',
+              'Simple call, no loading UI',
+              'Works for fire-and-forget mutations. No loading states, no error boundaries, no cache coordination.',
+            ],
+          ],
+        },
+      },
+      {
+        heading: 'next-safe-action for mutations',
+        body: 'Server actions are POST requests. next-safe-action wraps them with middleware chaining (.use(withAuth).use(withFeatureFlag)), input schema validation (.inputSchema()), and a typed error boundary (handleServerError). The execute() utility bridges the serialisation gap — it unwraps the safe-action response and throws ActionError on failure, which TanStack Query catches via the global MutationCache onError handler. One toast, one error path, every mutation.',
+      },
+      {
+        heading: 'The hydration pattern',
+        body: 'Server components call controllers directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key — the data is already there, no fetch needed. This pattern applies to the session (useUserTier reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
+      },
+      {
+        heading: 'When Nanostores would enter',
+        body: 'If the application needed cross-feature client state — a global notification queue, a multi-step wizard shared across routes, or a collaborative editing buffer — Nanostores would be the right tool. Atom-based, no provider needed, each feature owns its atoms. But that need has not materialised. Adding Nanostores preemptively would be architecture for a problem that does not exist.',
       },
     ],
   },
