@@ -1,7 +1,11 @@
+import { trace } from '@opentelemetry/api';
+
 import { Query, type IObservabilityService } from '@/core/shared/domain';
 import { IHandler } from '@/core/shared/domain';
 
 type AnyQuery = Query<unknown>;
+
+const tracer = trace.getTracer('ledger');
 
 class QueryBus {
   private readonly _handlers = new Map<string, IHandler<AnyQuery, unknown>>();
@@ -29,12 +33,17 @@ class QueryBus {
       throw new Error(`No handler registered for query: ${key}`);
     }
 
-    try {
-      return await handler.execute(query) as Promise<T['_response']>;
-    } catch (error) {
-      this.observability.recordHandlerFailure(key, error);
-      throw error;
-    }
+    return tracer.startActiveSpan(`query.${key}`, async (span) => {
+      try {
+        const result = await handler.execute(query) as Promise<T['_response']>;
+        span.end();
+        return result;
+      } catch (error) {
+        this.observability.recordHandlerFailure(key, error);
+        span.end();
+        throw error;
+      }
+    });
   }
 }
 

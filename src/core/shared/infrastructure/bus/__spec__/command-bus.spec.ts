@@ -1,4 +1,18 @@
 import { describe, it, expect, vi } from 'vitest';
+
+const mockSpanEnd = vi.fn();
+
+vi.mock('@opentelemetry/api', () => ({
+  trace: {
+    getTracer: () => ({
+      startActiveSpan: (
+        _name: string,
+        fn: (span: { end: () => void }) => unknown,
+      ) => fn({ end: mockSpanEnd }),
+    }),
+  },
+}));
+
 import { CommandBus } from '../command-bus';
 import { Command, Result, DomainException, type IObservabilityService } from '@/core/shared/domain';
 
@@ -78,6 +92,18 @@ describe('CommandBus', () => {
         'TestCommand',
         expect.any(Error),
       );
+    });
+
+    it('ends the span on success', async () => {
+      const bus = new CommandBus(_mockObservability());
+
+      bus.register(TestCommand, {
+        execute: vi.fn().mockResolvedValue(Result.ok('hello')),
+      });
+
+      await bus.dispatch(new TestCommand('input'));
+
+      expect(mockSpanEnd).toHaveBeenCalled();
     });
 
     it('throws when no handler is registered', async () => {

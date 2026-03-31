@@ -1,7 +1,11 @@
+import { trace } from '@opentelemetry/api';
+
 import { Command, type IObservabilityService } from '@/core/shared/domain';
 import { IHandler } from '@/core/shared/domain';
 
 type AnyCommand = Command<unknown>;
+
+const tracer = trace.getTracer('ledger');
 
 class CommandBus {
   private readonly _handlers = new Map<string, IHandler<AnyCommand, unknown>>();
@@ -29,12 +33,17 @@ class CommandBus {
       throw new Error(`No handler registered for command: ${key}`);
     }
 
-    try {
-      return await handler.execute(command) as Promise<T['_response']>;
-    } catch (error) {
-      this.observability.recordHandlerFailure(key, error);
-      throw error;
-    }
+    return tracer.startActiveSpan(`command.${key}`, async (span) => {
+      try {
+        const result = await handler.execute(command) as Promise<T['_response']>;
+        span.end();
+        return result;
+      } catch (error) {
+        this.observability.recordHandlerFailure(key, error);
+        span.end();
+        throw error;
+      }
+    });
   }
 }
 
