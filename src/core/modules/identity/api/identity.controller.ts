@@ -7,7 +7,6 @@ import {
   UpdateUserProfileCommand,
   DeleteAccountCommand,
   CleanupExpiredTrialsCommand,
-  GetUserSessionQuery,
   GetUserProfileQuery,
 } from '../application';
 
@@ -51,17 +50,6 @@ class IdentityController {
     );
 
     result.getValueOrThrow();
-  }
-
-  // TODO: Refresh flow — GetUserSessionHandler needs IJwtService dep to sign
-  // a new access token. Handler should return LoginTokens, controller maps
-  // through LoginMapper.toDTO() — same output as loginUser.
-  async getUserSession(token: string) {
-    const result = await this.queryBus.dispatch(
-      new GetUserSessionQuery(token),
-    );
-
-    return result.getValueOrThrow();
   }
 
   async updateUserProfile(

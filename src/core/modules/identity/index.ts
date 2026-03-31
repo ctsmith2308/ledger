@@ -19,8 +19,6 @@ import {
   DeleteAccountHandler,
   CleanupExpiredTrialsCommand,
   CleanupExpiredTrialsHandler,
-  GetUserSessionQuery,
-  GetUserSessionHandler,
   GetUserProfileQuery,
   GetUserProfileHandler,
 } from './application';
@@ -100,11 +98,6 @@ class IdentityModule {
         repos.userSessionRepository,
         services.eventBus,
       ),
-    );
-
-    queryBus.register(
-      GetUserSessionQuery,
-      new GetUserSessionHandler(repos.userSessionRepository),
     );
 
     queryBus.register(
