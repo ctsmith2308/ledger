@@ -9,5 +9,6 @@ export * from './landing-header';
 export * from './page-container';
 export * from './page-header';
 export * from './site-header';
+export * from './spending-doughnut';
 export * from './summary-card';
 export * from './theme-toggle';

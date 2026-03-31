@@ -15,7 +15,7 @@ function ConnectAccountCard() {
   const { isDemo } = useUserTier();
 
   return (
-    <div className="mb-8 rounded-xl border border-dashed border-border bg-muted px-5 py-8">
+    <div className="rounded-xl border border-dashed border-border bg-muted px-5 py-8">
       <div className="flex flex-col items-center gap-3 text-center">
         <Building2 className="size-8 text-muted-foreground" />
 
@@ -31,7 +31,6 @@ function ConnectAccountCard() {
         <Button
           onClick={isReady ? () => open() : connect}
           disabled={isPending || isDemo}
-          className="mt-2"
         >
           {isPending && <Spinner />}
 

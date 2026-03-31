@@ -7,18 +7,18 @@ import { ROUTES } from '@/app/_lib/config';
 function NotFoundView() {
   return (
     <div className="flex min-h-[50vh] items-center justify-center px-4">
-      <div className="mx-auto max-w-md text-center">
-        <FileQuestion className="mx-auto size-10 text-muted-foreground" />
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 text-center">
+        <FileQuestion className="size-10 text-muted-foreground" />
 
-        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           Page not found
         </h2>
 
-        <p className="mt-2 leading-7 text-muted-foreground">
+        <p className="leading-7 text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
 
-        <Button asChild className="mt-6">
+        <Button asChild>
           <Link href={ROUTES.home}>Go home</Link>
         </Button>
       </div>

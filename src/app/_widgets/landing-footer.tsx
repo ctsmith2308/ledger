@@ -13,7 +13,7 @@ const _projectLinks = [
 function LandingFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto max-w-7xl px-6 py-16">
+      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-6 py-16">
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 flex flex-col gap-4 sm:col-span-1">
@@ -97,7 +97,7 @@ function LandingFooter() {
 
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} Ledger. Portfolio project.
           </p>

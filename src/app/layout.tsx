@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Ledger — Personal Finance',
-  description: 'Track spending, set budgets, and hit your savings goals — all in one place.',
+  description:
+    'Track spending, set budgets, and hit your savings goals — all in one place.',
 };
 
 export default function RootLayout({
@@ -27,12 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-400`}
       >
         <ThemeProvider>
-          <QueryProvider>
-            {children}
-          </QueryProvider>
+          <QueryProvider>{children}</QueryProvider>
         </ThemeProvider>
       </body>
     </html>

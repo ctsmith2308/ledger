@@ -1,4 +1,4 @@
-import { IHandler, IEventBus, Result } from '@/core/shared/domain';
+import { IHandler, IEventBus, Result, BudgetAlreadyExistsException } from '@/core/shared/domain';
 import { IBudgetRepository, Budget } from '@/core/modules/budgets/domain';
 import { IIdGenerator } from '@/core/shared/domain';
 import {
@@ -22,13 +22,7 @@ class CreateBudgetHandler
     );
 
     if (existing) {
-      existing.updateLimit(command.monthlyLimit);
-      await this.budgetRepository.save(existing);
-
-      const events = existing.pullDomainEvents();
-      await this.eventBus.dispatch(events);
-
-      return Result.ok(existing);
+      return Result.fail(new BudgetAlreadyExistsException());
     }
 
     const id = this.idGenerator.generate();

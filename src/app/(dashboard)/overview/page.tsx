@@ -15,8 +15,8 @@ import { loadSession } from '@/app/_entities/identity/loaders';
 import { calcTotalsByType } from '@/app/_entities/banking/lib';
 
 import {
-  calcMonthlySpending,
-  calcWeeklySpending,
+  calcMonthlySpendingByCategory,
+  calcWeeklySpendingByCategory,
 } from '@/app/_entities/transactions/lib';
 
 import { TransactionList } from '@/app/_features/transactions';
@@ -25,7 +25,7 @@ import { ConnectAccountCard } from '@/app/_features/plaid';
 
 import { AccountTotalsTable } from '@/app/_features/accounts';
 
-import { PageContainer, PageHeader, SummaryCard } from '@/app/_widgets';
+import { PageContainer, PageHeader, SpendingDoughnut } from '@/app/_widgets';
 
 const loadOverviewData = async () => {
   const session = await loadSession();
@@ -43,8 +43,8 @@ async function OverviewPage() {
   const { profile, accounts, transactions } = await loadOverviewData();
 
   const hasAccounts = accounts.length > 0;
-  const monthlySpending = calcMonthlySpending(transactions);
-  const weeklySpending = calcWeeklySpending(transactions);
+  const monthlyByCategory = calcMonthlySpendingByCategory(transactions);
+  const weeklyByCategory = calcWeeklySpendingByCategory(transactions);
   const accountTotals = calcTotalsByType(accounts);
 
   return (
@@ -54,23 +54,29 @@ async function OverviewPage() {
         description="Here's a summary of your finances."
       />
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <SummaryCard
-          label="Monthly Spending"
-          value={hasAccounts ? `$${monthlySpending.toFixed(2)}` : '—'}
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            Monthly Spending
+          </h2>
 
-        <SummaryCard
-          label="This Week's Spending"
-          value={hasAccounts ? `$${weeklySpending.toFixed(2)}` : '—'}
-        />
+          <SpendingDoughnut data={hasAccounts ? monthlyByCategory : []} />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            This Week&apos;s Spending
+          </h2>
+
+          <SpendingDoughnut data={hasAccounts ? weeklyByCategory : []} />
+        </div>
       </div>
 
       {!hasAccounts && <ConnectAccountCard />}
 
       {hasAccounts && (
-        <div className="mb-8">
-          <div className="mb-3 flex items-center justify-between">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">
               Recent Transactions
             </h2>
@@ -89,8 +95,8 @@ async function OverviewPage() {
       )}
 
       {hasAccounts && (
-        <div>
-          <div className="mb-3 flex items-center justify-between">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">
               Account Totals
             </h2>

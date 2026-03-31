@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,7 +11,7 @@ import {
   type SortingState,
   flexRender,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { type TransactionDTO } from '@/core/modules/transactions';
@@ -24,12 +26,15 @@ import {
   TableCell,
 } from '@/app/_components';
 
+import { formatCategory } from '@/app/_entities/budgets/lib/format-category';
+
 const PAGE_SIZE = 25;
 
 const columns: ColumnDef<TransactionDTO>[] = [
   {
     accessorKey: 'merchantName',
     header: 'Merchant',
+    size: 40,
     cell: ({ row }) => (
       <span className="font-medium text-foreground">
         {row.original.merchantName ?? row.original.name}
@@ -38,6 +43,7 @@ const columns: ColumnDef<TransactionDTO>[] = [
   },
   {
     accessorKey: 'date',
+    size: 20,
     header: ({ column }) => (
       <span
         className="inline-flex cursor-pointer items-center gap-1"
@@ -55,15 +61,25 @@ const columns: ColumnDef<TransactionDTO>[] = [
   },
   {
     accessorKey: 'category',
-    header: 'Category',
+    size: 25,
+    header: ({ column }) => (
+      <span
+        className="inline-flex cursor-pointer items-center gap-1"
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+      >
+        Category
+        <ArrowUpDown className="size-3" />
+      </span>
+    ),
     cell: ({ row }) => (
       <span className="text-muted-foreground">
-        {row.original.category ?? '—'}
+        {row.original.category ? formatCategory(row.original.category) : '—'}
       </span>
     ),
   },
   {
     accessorKey: 'amount',
+    size: 15,
     header: ({ column }) => (
       <span
         className="inline-flex cursor-pointer items-center gap-1"
@@ -115,97 +131,101 @@ function TransactionList({
   const currentPage = table.getState().pagination.pageIndex + 1;
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                const align =
-                  (header.column.columnDef.meta as { align?: string })
-                    ?.align === 'right'
-                    ? 'text-right'
-                    : '';
-
-                return (
-                  <TableHead key={header.id} className={align}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody>
-          {table.getRowModel().rows.length > 0 ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => {
+    <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <Table className="min-w-[600px] table-fixed">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
                   const align =
-                    (cell.column.columnDef.meta as { align?: string })
+                    (header.column.columnDef.meta as { align?: string })
                       ?.align === 'right'
                       ? 'text-right'
                       : '';
 
                   return (
-                    <TableCell key={cell.id} className={align}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                    <TableHead
+                      key={header.id}
+                      className={align}
+                      style={{ width: `${header.column.getSize()}%` }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
                   );
                 })}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => {
+                    const align =
+                      (cell.column.columnDef.meta as { align?: string })
+                        ?.align === 'right'
+                        ? 'text-right'
+                        : '';
+
+                    return (
+                      <TableCell key={cell.id} className={align}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No transactions found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+
+        {paginate && pageCount > 1 && (
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <p className="text-xs text-muted-foreground">
+              Page {currentPage} of {pageCount}
+            </p>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled={!table.getCanPreviousPage()}
+                onClick={() => table.previousPage()}
+                aria-label="Previous page"
               >
-                No transactions found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                <ChevronLeft className="size-4" />
+              </Button>
 
-      {paginate && pageCount > 1 && (
-        <div className="flex items-center justify-between border-t border-border px-4 py-3">
-          <p className="text-xs text-muted-foreground">
-            Page {currentPage} of {pageCount}
-          </p>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
-              aria-label="Next page"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled={!table.getCanNextPage()}
+                onClick={() => table.nextPage()}
+                aria-label="Next page"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

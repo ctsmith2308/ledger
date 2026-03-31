@@ -41,6 +41,10 @@ const domainTypeMap: Record<string, ErrorResponse> = {
     code: 'VALIDATION_ERROR',
     message: 'The request contains invalid data.',
   },
+  BUDGET_ALREADY_EXISTS: {
+    code: 'CONFLICT',
+    message: 'A budget for this category already exists.',
+  },
   CONFLICT: { code: 'CONFLICT', message: 'Resource already exists.' },
   NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },
   USER_NOT_FOUND: { code: 'NOT_FOUND', message: 'Resource not found.' },

@@ -4,11 +4,13 @@ import { PageContainer } from '@/app/_widgets';
 export default function Loading() {
   return (
     <PageContainer>
-      <Skeleton className="h-8 w-40" />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-8 w-40" />
 
-      <Skeleton className="mt-2 h-4 w-64" />
+        <Skeleton className="h-4 w-64" />
+      </div>
 
-      <div className="mt-8 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-24 w-full rounded-xl" />
 
         <Skeleton className="h-24 w-full rounded-xl" />

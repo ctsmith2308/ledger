@@ -8,7 +8,7 @@ function PageContainer({
   children: React.ReactNode;
 }) {
   return (
-    <main className={cn('px-6 py-6', className)}>
+    <main className={cn('flex animate-in fade-in duration-300 flex-col gap-6 p-6', className)}>
       {children}
     </main>
   );

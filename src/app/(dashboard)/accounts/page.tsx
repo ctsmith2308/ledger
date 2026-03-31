@@ -26,7 +26,7 @@ async function AccountsPage() {
     <PageContainer>
       <PageHeader
         title="Accounts"
-        description="Manage your linked bank accounts."
+        description="Manage your linked financial accounts."
       />
 
       <ConnectAccountCard />
