@@ -1,4 +1,4 @@
-import { SiteHeader } from '@/app/_components';
+import { MenuBar } from '@/app/_components';
 
 import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
 
@@ -9,7 +9,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader right={<ThemeToggle />} />
+      <MenuBar right={<ThemeToggle />} />
 
       <main className="flex flex-1 items-center justify-center px-4 pt-16 py-12">
         {children}

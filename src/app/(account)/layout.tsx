@@ -5,7 +5,7 @@ import { getQueryClient } from '@/app/_shared/lib/query';
 import { loadSession } from '@/app/_shared/lib/session/session.service';
 import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
-import { AppHeader } from '@/app/_widgets';
+import { AppMenuBar } from '@/app/_widgets';
 
 export default async function AccountLayout({
   children,
@@ -20,11 +20,9 @@ export default async function AccountLayout({
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <div className="min-h-screen bg-background">
-        <AppHeader />
+        <AppMenuBar />
 
-        <div className="pt-14">
-          {children}
-        </div>
+        <div className="pt-14">{children}</div>
       </div>
     </HydrationBoundary>
   );

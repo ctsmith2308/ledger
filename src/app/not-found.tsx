@@ -1,4 +1,4 @@
-import { NotFoundView } from '@/app/_widgets';
+import { NotFoundView } from '@/app/_components';
 
 export default function NotFound() {
   return <NotFoundView />;

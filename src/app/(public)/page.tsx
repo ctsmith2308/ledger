@@ -2,17 +2,15 @@ import Link from 'next/link';
 import { ROUTES } from '@/app/_shared/routes';
 import { ExternalLink, Github, PlayCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/app/_components';
-import { LandingHeader, LandingFooter, ContentCard } from '@/app/_widgets';
+import { ContentCard } from '@/app/_widgets';
 import { decisions } from '@/app/_shared/content/architecture';
 import { caseStudies } from '@/app/_shared/content/case-studies';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background font-sans">
-      <LandingHeader />
-
+    <>
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 pt-36 pb-24">
+      <section className="mx-auto max-w-7xl px-6 pt-20 pb-24">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
           {/* Left */}
           <div className="flex flex-col justify-center gap-8">
@@ -235,8 +233,7 @@ export default function Home() {
         </div>
       </section>
 
-      <LandingFooter />
-    </div>
+    </>
   );
 }
 
@@ -308,9 +305,7 @@ function CodePreview() {
               <span className="text-zinc-500">08</span>
               <span className="text-blue-300">extends</span>
               <span className="text-emerald-300">Command</span>
-              <span className="text-zinc-400">
-                {'<LoginUserResponse>'}
-              </span>
+              <span className="text-zinc-400">{'<LoginUserResponse>'}</span>
             </div>
 
             <div className="flex gap-2 pl-8">

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-function SiteHeader({
+function MenuBar({
   logoHref = '/',
   left,
   right,
@@ -31,4 +31,4 @@ function SiteHeader({
   );
 }
 
-export { SiteHeader };
+export { MenuBar };

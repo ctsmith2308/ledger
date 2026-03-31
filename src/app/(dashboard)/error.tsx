@@ -1,6 +1,6 @@
 'use client';
 
-import { ErrorView } from '@/app/_widgets';
+import { ErrorView } from '@/app/_components';
 
 export default function DashboardError({
   reset,

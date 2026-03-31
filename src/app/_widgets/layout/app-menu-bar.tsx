@@ -6,12 +6,12 @@ import { Menu, User } from 'lucide-react';
 import { Button } from '@/app/_components';
 import { ROUTES } from '@/app/_shared/routes';
 
-import { SiteHeader } from '@/app/_components';
+import { MenuBar } from '@/app/_components';
 import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
 
-function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
+function AppMenuBar({ onMenuToggle }: { onMenuToggle?: () => void }) {
   return (
-    <SiteHeader
+    <MenuBar
       logoHref={ROUTES.overview}
       left={
         onMenuToggle ? (
@@ -41,4 +41,4 @@ function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
   );
 }
 
-export { AppHeader };
+export { AppMenuBar };

@@ -4,12 +4,12 @@ import { Github, Linkedin } from 'lucide-react';
 import { Button } from '@/app/_components';
 import { ROUTES } from '@/app/_shared/routes';
 
-import { SiteHeader } from '@/app/_components';
+import { MenuBar } from '@/app/_components';
 import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
 
-function LandingHeader() {
+function LandingMenuBar() {
   return (
-    <SiteHeader
+    <MenuBar
       left={
         <>
           <Button variant="ghost" size="sm" asChild>
@@ -24,13 +24,23 @@ function LandingHeader() {
       right={
         <>
           <Button variant="ghost" size="icon-sm" asChild>
-            <a href="https://github.com/ctsmith2308/ledger" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+            <a
+              href="https://github.com/ctsmith2308/ledger"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+            >
               <Github className="size-4" />
             </a>
           </Button>
 
           <Button variant="ghost" size="icon-sm" asChild>
-            <a href="https://www.linkedin.com/in/christopher-smith-2308" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <a
+              href="https://www.linkedin.com/in/christopher-smith-2308"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+            >
               <Linkedin className="size-4" />
             </a>
           </Button>
@@ -46,4 +56,4 @@ function LandingHeader() {
   );
 }
 
-export { LandingHeader };
+export { LandingMenuBar };

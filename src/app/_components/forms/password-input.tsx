@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { Input } from './input';
-import { Button } from './button';
+import { Button } from '../buttons/button';
 import { cn } from '@/app/_shared/lib/tailwind';
 
 function PasswordInput({

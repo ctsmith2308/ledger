@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 import { queryDefaults } from '@/app/_shared/lib/query/query-defaults';
 
-import { Toast } from '@/app/_components/toast';
+import { Toast } from '@/app/_components';
 
 function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
