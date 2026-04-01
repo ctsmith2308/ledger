@@ -38,6 +38,7 @@ function DemoLoginForm() {
         <p className="text-sm font-medium text-foreground">
           Select a demo account
         </p>
+
         <div className="grid gap-2">
           {demoUsers.map((user) => (
             <UserCard
@@ -109,13 +110,10 @@ function UserCard({
           {user.name[0]}
         </span>
       </div>
+
       <div>
-        <p className="text-sm font-medium text-foreground">
-          {user.name}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {user.email}
-        </p>
+        <p className="text-sm font-medium text-foreground">{user.name}</p>
+        <p className="text-xs text-muted-foreground">{user.email}</p>
       </div>
     </button>
   );

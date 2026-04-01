@@ -3,3 +3,7 @@ export { registerAction } from './register.action';
 export { logoutAction } from './logout.action';
 export { updateUserProfileAction } from './update-user-profile.action';
 export { deleteAccountAction } from './delete-account.action';
+export { setupMfaAction } from './setup-mfa.action';
+export { verifyMfaSetupAction } from './verify-mfa-setup.action';
+export { verifyMfaLoginAction } from './verify-mfa-login.action';
+export { disableMfaAction } from './disable-mfa.action';

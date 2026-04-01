@@ -11,6 +11,7 @@ import { loadSession } from '@/app/_shared/lib/session/session.service';
 import {
   UpdateProfileForm,
   DeleteAccountCard,
+  MfaSettingsCard,
 } from '@/app/_features/user-account';
 
 import { LogoutButton } from '@/app/_features/auth';
@@ -18,13 +19,16 @@ import { LogoutButton } from '@/app/_features/auth';
 const loadSettingsData = async () => {
   const session = await loadSession();
 
-  const profile = await identityService.getUserProfile(session.userId);
+  const [profile, account] = await Promise.all([
+    identityService.getUserProfile(session.userId),
+    identityService.getUserAccount(session.userId),
+  ]);
 
-  return profile;
+  return { profile, account };
 };
 
 export default async function SettingsPage() {
-  const profile = await loadSettingsData();
+  const { profile, account } = await loadSettingsData();
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
@@ -53,6 +57,8 @@ export default async function SettingsPage() {
             lastName: profile.lastName,
           }}
         />
+
+        <MfaSettingsCard mfaEnabled={account.mfaEnabled} />
 
         <div className="rounded-xl border border-border bg-card p-4">
           <LogoutButton />

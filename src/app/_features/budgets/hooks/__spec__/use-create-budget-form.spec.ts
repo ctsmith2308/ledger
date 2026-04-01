@@ -1,15 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockRefresh = vi.fn();
+const mockInvalidateQueries = vi.fn();
 const mockMutate = vi.fn();
 let mockIsPending = false;
 let onSuccessCallback: (() => void) | null = null;
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: mockRefresh }),
-}));
-
 vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
   useMutation: (opts: { onSuccess?: () => void }) => {
     onSuccessCallback = opts.onSuccess ?? null;
     return { mutate: mockMutate, isPending: mockIsPending };
@@ -55,12 +52,12 @@ describe('useCreateBudgetForm', () => {
     expect(result.form).toBeDefined();
   });
 
-  it('refreshes router on success', () => {
+  it('invalidates budget overview cache on success', () => {
     useCreateBudgetForm();
 
     if (onSuccessCallback) onSuccessCallback();
 
-    expect(mockRefresh).toHaveBeenCalled();
+    expect(mockInvalidateQueries).toHaveBeenCalled();
   });
 
   it('reflects pending state', () => {

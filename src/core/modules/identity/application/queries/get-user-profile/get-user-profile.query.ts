@@ -1,4 +1,5 @@
 import { Query, DomainException, Result } from '@/core/shared/domain';
+
 import { UserProfile } from '@/core/modules/identity/domain';
 
 type GetUserProfileResponse = Result<UserProfile, DomainException>;

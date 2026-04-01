@@ -54,7 +54,7 @@ function SpendingDoughnut({ data }: { data: CategorySpending[] }) {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4">
       {data.length > 0 ? (
         <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-2">
           <div className="flex flex-col items-center gap-2">
@@ -93,8 +93,8 @@ function SpendingDoughnut({ data }: { data: CategorySpending[] }) {
           </div>
         </div>
       ) : (
-        <div className="flex h-40 items-center justify-center">
-          <span className="text-sm text-muted-foreground">No data</span>
+        <div className="flex flex-1 items-center justify-center">
+          <span className="text-sm text-muted-foreground">No data reported for this month</span>
         </div>
       )}
     </div>

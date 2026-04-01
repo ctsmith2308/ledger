@@ -1,6 +1,19 @@
 import { AggregateRoot } from '@/core/shared/domain';
-import { UserId, Email, Password, UserTier, USER_TIERS } from '../value-objects';
-import { UserRegisteredEvent } from '../events';
+
+import {
+  UserId,
+  Email,
+  Password,
+  UserTier,
+  USER_TIERS,
+} from '../value-objects';
+
+import {
+  UserRegisteredEvent,
+  UserLoggedInEvent,
+  MfaEnabledEvent,
+  MfaDisabledEvent,
+} from '../events';
 
 class User extends AggregateRoot {
   private constructor(
@@ -23,9 +36,25 @@ class User extends AggregateRoot {
     return user;
   }
 
-  enableMfa(secret: string): void {
+  loggedIn(): void {
+    this.addDomainEvent(new UserLoggedInEvent(this._id.value));
+  }
+
+  setMfaSecret(secret: string): void {
     this._mfaSecret = secret;
+  }
+
+  confirmMfa(): void {
+    if (!this._mfaSecret) return;
     this._mfaEnabled = true;
+    this.addDomainEvent(new MfaEnabledEvent(this._id.value));
+  }
+
+  disableMfa(): void {
+    if (!this._mfaEnabled) return;
+    this._mfaEnabled = false;
+    this._mfaSecret = undefined;
+    this.addDomainEvent(new MfaDisabledEvent(this._id.value));
   }
 
   static reconstitute(

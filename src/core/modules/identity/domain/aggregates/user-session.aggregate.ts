@@ -1,6 +1,10 @@
+// Roadmap: Wire into Redis for session-based auth.
+// Login creates session → push to Redis (keyed by session ID) →
+// JWT carries sessionId claim → proxy checks Redis on each request →
+// revocation is instant (delete key). See project roadmap for details.
+
 import { AggregateRoot } from '@/core/shared/domain';
-import { SessionId, UserId, UserTier } from '../value-objects';
-import { UserLoggedInEvent } from '../events';
+import { SessionId, UserId } from '../value-objects';
 
 const SESSION_DURATION_MS =
   Number(process.env.SESSION_DURATION_SECONDS ?? 604800) * 1000;
@@ -9,7 +13,6 @@ class UserSession extends AggregateRoot {
   private constructor(
     private readonly _id: SessionId,
     private readonly _userId: UserId,
-    private readonly _tier: UserTier,
     private readonly _expiresAt: Date,
     private _revokedAt: Date | undefined,
     private readonly _createdAt: Date,
@@ -17,19 +20,16 @@ class UserSession extends AggregateRoot {
     super();
   }
 
-  static create(id: SessionId, userId: UserId, tier: UserTier): UserSession {
+  static create(id: SessionId, userId: UserId): UserSession {
     const now = new Date();
 
     const session = new UserSession(
       id,
       userId,
-      tier,
       new Date(now.getTime() + SESSION_DURATION_MS),
       undefined,
       now,
     );
-
-    session.addDomainEvent(new UserLoggedInEvent(userId.value));
 
     return session;
   }
@@ -37,12 +37,11 @@ class UserSession extends AggregateRoot {
   static reconstitute(
     id: SessionId,
     userId: UserId,
-    tier: UserTier,
     expiresAt: Date,
     revokedAt: Date | undefined,
     createdAt: Date,
   ): UserSession {
-    return new UserSession(id, userId, tier, expiresAt, revokedAt, createdAt);
+    return new UserSession(id, userId, expiresAt, revokedAt, createdAt);
   }
 
   revoke(): void {
@@ -67,10 +66,6 @@ class UserSession extends AggregateRoot {
 
   get userId() {
     return this._userId;
-  }
-
-  get tier() {
-    return this._tier;
   }
 
   get expiresAt() {

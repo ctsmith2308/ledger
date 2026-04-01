@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import { IdentityService } from '../identity.service';
+
 import {
   Result,
-  DomainException,
   InvalidEmailException,
 } from '@/core/shared/domain';
+
 import {
   User,
   UserId,
@@ -21,17 +23,34 @@ const _mockBus = () => ({
   dispatch: vi.fn(),
 });
 
+const _mockJwtService = () => ({
+  sign: vi.fn().mockResolvedValue(Result.ok('signed-token')),
+  verify: vi.fn().mockResolvedValue(Result.ok('user-1')),
+});
+
 const _makeService = () => {
   const commandBus = _mockBus();
   const queryBus = _mockBus();
+  const jwtService = _mockJwtService();
 
   const service = new IdentityService(
     commandBus as never,
     queryBus as never,
+    jwtService as never,
   );
 
-  return { service, commandBus, queryBus };
+  return { service, commandBus, queryBus, jwtService };
 };
+
+const _makeUser = (mfaEnabled = false) =>
+  User.reconstitute(
+    UserId.from('user-1'),
+    Email.from('test@example.com'),
+    Password.fromHash('hash'),
+    UserTier.from('TRIAL'),
+    mfaEnabled,
+    mfaEnabled ? 'secret' : undefined,
+  );
 
 describe('IdentityService', () => {
   describe('registerUser', () => {
@@ -76,24 +95,33 @@ describe('IdentityService', () => {
   });
 
   describe('loginUser', () => {
-    it('returns JwtDTO on success', async () => {
+    it('returns SUCCESS with accessToken when MFA is not enabled', async () => {
       const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
-        Result.ok({
-          accessToken: 'jwt-token',
-          refreshToken: 'refresh-token',
-        }),
+        Result.ok({ type: 'SUCCESS', user: _makeUser() }),
       );
 
-      const dto = await service.loginUser(
-        'test@example.com',
-        'Secure!1',
-      );
+      const dto = await service.loginUser('test@example.com', 'Secure!1');
 
       expect(dto).toEqual({
-        accessToken: 'jwt-token',
-        refreshToken: 'refresh-token',
+        type: 'SUCCESS',
+        accessToken: 'signed-token',
+      });
+    });
+
+    it('returns MFA_REQUIRED with challengeToken when MFA is enabled', async () => {
+      const { service, commandBus } = _makeService();
+
+      commandBus.dispatch.mockResolvedValue(
+        Result.ok({ type: 'MFA_REQUIRED', user: _makeUser(true) }),
+      );
+
+      const dto = await service.loginUser('test@example.com', 'Secure!1');
+
+      expect(dto).toEqual({
+        type: 'MFA_REQUIRED',
+        challengeToken: 'signed-token',
       });
     });
 
@@ -107,6 +135,57 @@ describe('IdentityService', () => {
       await expect(
         service.loginUser('bad', 'Secure!1'),
       ).rejects.toBeInstanceOf(InvalidEmailException);
+    });
+  });
+
+  describe('verifyMfaLogin', () => {
+    it('returns accessToken on success', async () => {
+      const { service, commandBus, jwtService } = _makeService();
+
+      jwtService.verify.mockResolvedValue(Result.ok('user-1'));
+      commandBus.dispatch.mockResolvedValue(Result.ok(_makeUser(true)));
+
+      const result = await service.verifyMfaLogin('challenge-token', '123456');
+
+      expect(result).toEqual({ accessToken: 'signed-token' });
+    });
+  });
+
+  describe('setupMfa', () => {
+    it('returns qrCodeDataUrl on success', async () => {
+      const { service, commandBus } = _makeService();
+
+      commandBus.dispatch.mockResolvedValue(
+        Result.ok({ qrCodeDataUrl: 'data:image/png;base64,...' }),
+      );
+
+      const result = await service.setupMfa('user-1');
+
+      expect(result).toEqual({ qrCodeDataUrl: 'data:image/png;base64,...' });
+    });
+  });
+
+  describe('verifyMfaSetup', () => {
+    it('does not throw on success', async () => {
+      const { service, commandBus } = _makeService();
+
+      commandBus.dispatch.mockResolvedValue(Result.ok(_makeUser(true)));
+
+      await expect(
+        service.verifyMfaSetup('user-1', '123456'),
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe('disableMfa', () => {
+    it('does not throw on success', async () => {
+      const { service, commandBus } = _makeService();
+
+      commandBus.dispatch.mockResolvedValue(Result.ok(_makeUser()));
+
+      await expect(
+        service.disableMfa('user-1'),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -192,6 +271,22 @@ describe('IdentityService', () => {
         userId: 'user-1',
         firstName: 'Test',
         lastName: 'User',
+      });
+    });
+  });
+
+  describe('getUserAccount', () => {
+    it('returns UserAccountDTO on success', async () => {
+      const { service, queryBus } = _makeService();
+
+      queryBus.dispatch.mockResolvedValue(Result.ok(_makeUser()));
+
+      const dto = await service.getUserAccount('user-1');
+
+      expect(dto).toEqual({
+        email: 'test@example.com',
+        tier: 'TRIAL',
+        mfaEnabled: false,
       });
     });
   });

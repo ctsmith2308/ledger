@@ -17,7 +17,13 @@ const useLoginForm = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: LoginUserInput) => handleActionResponse(loginAction(input)),
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result?.challengeToken) {
+        sessionStorage.setItem('mfa_challenge', result.challengeToken);
+        router.push(ROUTES.mfa);
+        return;
+      }
+
       router.push(ROUTES.overview);
     },
   });

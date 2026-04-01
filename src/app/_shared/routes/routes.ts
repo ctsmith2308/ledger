@@ -7,7 +7,8 @@ const ROUTES = {
   settings: '/settings',
   login: '/login',
   register: '/register',
-  demoLogin: '/demo-login',
+  demoLogin: '/login',
+  mfa: '/mfa',
   architecture: '/architecture',
   caseStudies: '/case-studies',
 } as const;

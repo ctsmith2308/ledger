@@ -1,14 +1,8 @@
 'use client';
 
-import { useSession } from './use-session.hook';
-
+// TODO: Replace with useFeatureFlag when feature_flags table lands
 const useUserTier = () => {
-  const session = useSession();
-
-  const tier = session?.tier ?? null;
-  const isDemo = tier === 'DEMO';
-
-  return { tier, isDemo };
+  return { tier: null, isDemo: false };
 };
 
 export { useUserTier };

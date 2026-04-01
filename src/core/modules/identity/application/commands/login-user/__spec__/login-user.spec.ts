@@ -1,41 +1,38 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import { LoginUserHandler } from '../login-user.handler';
 import { LoginUserCommand } from '../login-user.command';
+
 import {
   type IUserRepository,
-  type IUserSessionRepository,
   type IPasswordHasher,
-  type IIdGenerator,
   Email,
   User,
   UserId,
   Password,
   UserTier,
 } from '@/core/modules/identity/domain';
+
 import {
   type IEventBus,
-  type IJwtService,
   InvalidEmailException,
   InvalidPasswordException,
-  Result,
 } from '@/core/shared/domain';
 
-const _existingUser = (tier = 'TRIAL') =>
+const _existingUser = (opts?: { tier?: string; mfaEnabled?: boolean }) =>
   User.reconstitute(
     UserId.from('user-12345'),
     Email.from('user@example.com'),
     Password.fromHash('stored-hash'),
-    UserTier.from(tier),
-    false,
+    UserTier.from(opts?.tier ?? 'TRIAL'),
+    opts?.mfaEnabled ?? false,
+    opts?.mfaEnabled ? 'totp-secret' : undefined,
   );
 
 const _makeHandler = (overrides: {
   userRepository?: Partial<IUserRepository>;
-  sessionRepository?: Partial<IUserSessionRepository>;
   eventBus?: Partial<IEventBus>;
   hasher?: Partial<IPasswordHasher>;
-  idGenerator?: Partial<IIdGenerator>;
-  jwtService?: Partial<IJwtService>;
 } = {}) => {
   const userRepository: IUserRepository = {
     save: vi.fn(),
@@ -44,14 +41,6 @@ const _makeHandler = (overrides: {
     deleteById: vi.fn(),
     findExpiredTrialUsers: vi.fn().mockResolvedValue([]),
     ...overrides.userRepository,
-  };
-
-  const sessionRepository: IUserSessionRepository = {
-    save: vi.fn(),
-    findById: vi.fn(),
-    revokeById: vi.fn(),
-    revokeAllForUser: vi.fn(),
-    ...overrides.sessionRepository,
   };
 
   const eventBus: IEventBus = {
@@ -66,27 +55,9 @@ const _makeHandler = (overrides: {
     ...overrides.hasher,
   };
 
-  const idGenerator: IIdGenerator = {
-    generate: vi.fn().mockReturnValue('generated-session-id'),
-    ...overrides.idGenerator,
-  };
+  const handler = new LoginUserHandler(userRepository, eventBus, hasher);
 
-  const jwtService: IJwtService = {
-    sign: vi.fn().mockResolvedValue(Result.ok('signed-access-token')),
-    verify: vi.fn(),
-    ...overrides.jwtService,
-  };
-
-  const handler = new LoginUserHandler(
-    userRepository,
-    sessionRepository,
-    eventBus,
-    hasher,
-    idGenerator,
-    jwtService,
-  );
-
-  return { handler, userRepository, sessionRepository, eventBus, hasher, jwtService };
+  return { handler, userRepository, eventBus, hasher };
 };
 
 describe('LoginUserHandler', () => {
@@ -95,23 +66,14 @@ describe('LoginUserHandler', () => {
     'Secure!1',
   );
 
-  describe('success path', () => {
-    it('returns access and refresh tokens on valid credentials', async () => {
+  describe('success path (no MFA)', () => {
+    it('returns SUCCESS with the user', async () => {
       const { handler } = _makeHandler();
 
       const result = await handler.execute(validCommand);
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value.accessToken).toBe('signed-access-token');
-      expect(result.value.refreshToken).toBe('generated-session-id');
-    });
-
-    it('persists the session', async () => {
-      const { handler, sessionRepository } = _makeHandler();
-
-      await handler.execute(validCommand);
-
-      expect(sessionRepository.save).toHaveBeenCalledTimes(1);
+      expect(result.value.type).toBe('SUCCESS');
     });
 
     it('verifies the password against the stored hash', async () => {
@@ -122,38 +84,43 @@ describe('LoginUserHandler', () => {
       expect(hasher.verify).toHaveBeenCalledWith('stored-hash', 'Secure!1');
     });
 
-    it('revokes existing sessions before creating a new one', async () => {
-      const { handler, sessionRepository } = _makeHandler();
-
-      await handler.execute(validCommand);
-
-      expect(sessionRepository.revokeAllForUser).toHaveBeenCalledTimes(1);
-
-      const revokeOrder = (sessionRepository.revokeAllForUser as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
-      const saveOrder = (sessionRepository.save as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
-
-      expect(revokeOrder).toBeLessThan(saveOrder);
-    });
-
-    it('skips session revocation for demo users', async () => {
-      const { handler, sessionRepository } = _makeHandler({
-        userRepository: {
-          findByEmail: vi.fn().mockResolvedValue(_existingUser('DEMO')),
-        },
-      });
-
-      await handler.execute(validCommand);
-
-      expect(sessionRepository.revokeAllForUser).not.toHaveBeenCalled();
-      expect(sessionRepository.save).toHaveBeenCalledTimes(1);
-    });
-
-    it('dispatches a login event', async () => {
+    it('dispatches a UserLoggedInEvent', async () => {
       const { handler, eventBus } = _makeHandler();
 
       await handler.execute(validCommand);
 
       expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('MFA path', () => {
+    it('returns MFA_REQUIRED when MFA is enabled', async () => {
+      const { handler } = _makeHandler({
+        userRepository: {
+          findByEmail: vi
+            .fn()
+            .mockResolvedValue(_existingUser({ mfaEnabled: true })),
+        },
+      });
+
+      const result = await handler.execute(validCommand);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.type).toBe('MFA_REQUIRED');
+    });
+
+    it('does not dispatch events on MFA path', async () => {
+      const { handler, eventBus } = _makeHandler({
+        userRepository: {
+          findByEmail: vi
+            .fn()
+            .mockResolvedValue(_existingUser({ mfaEnabled: true })),
+        },
+      });
+
+      await handler.execute(validCommand);
+
+      expect(eventBus.dispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -205,14 +172,26 @@ describe('LoginUserHandler', () => {
       expect(result.error).toBeInstanceOf(InvalidPasswordException);
     });
 
-    it('does not persist a session on password mismatch', async () => {
-      const { handler, sessionRepository } = _makeHandler({
+    it('dispatches LoginFailedEvent on user not found', async () => {
+      const { handler, eventBus } = _makeHandler({
+        userRepository: {
+          findByEmail: vi.fn().mockResolvedValue(null),
+        },
+      });
+
+      await handler.execute(validCommand);
+
+      expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('dispatches LoginFailedEvent on password mismatch', async () => {
+      const { handler, eventBus } = _makeHandler({
         hasher: { verify: vi.fn().mockResolvedValue(false) },
       });
 
       await handler.execute(validCommand);
 
-      expect(sessionRepository.save).not.toHaveBeenCalled();
+      expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,11 +1,28 @@
-type JwtDTO = {
+type LoginSuccessDTO = {
+  type: 'SUCCESS';
   accessToken: string;
-  refreshToken: string;
+};
+
+type MfaChallengeDTO = {
+  type: 'MFA_REQUIRED';
+  challengeToken: string;
+};
+
+type LoginResponseDTO = LoginSuccessDTO | MfaChallengeDTO;
+
+type MfaSetupDTO = {
+  qrCodeDataUrl: string;
 };
 
 type UserDTO =
   | { type: 'SUCCESS'; id: string; email: string }
   | { type: 'PENDING_VERIFICATION'; message: string };
+
+type UserAccountDTO = {
+  email: string;
+  tier: string;
+  mfaEnabled: boolean;
+};
 
 type UserProfileDTO = {
   userId: string;
@@ -18,4 +35,13 @@ type CleanupDTO = {
   total: number;
 };
 
-export type { JwtDTO, UserDTO, UserProfileDTO, CleanupDTO };
+export type {
+  LoginSuccessDTO,
+  MfaChallengeDTO,
+  LoginResponseDTO,
+  MfaSetupDTO,
+  UserDTO,
+  UserAccountDTO,
+  UserProfileDTO,
+  CleanupDTO,
+};

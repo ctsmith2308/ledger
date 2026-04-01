@@ -1,10 +1,9 @@
 import { jwtVerify, SignJWT } from 'jose';
 
 import { Result } from '../../domain/result';
-import type {
-  IJwtService,
-  JwtData,
-} from '../../domain/services/jwt.service.interface';
+
+import type { IJwtService } from '../../domain/services/jwt.service.interface';
+
 import { DomainException, InvalidJwtException } from '../../domain';
 
 const envSecret = process.env.JWT_SECRET;
@@ -15,44 +14,38 @@ if (!envSecret) {
 
 const SECRET = new TextEncoder().encode(envSecret);
 
-const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL ?? '15m';
-
 const JwtService: IJwtService = {
-  async sign(payload: JwtData): Promise<Result<string, DomainException>> {
+  async sign(
+    sub: string,
+    purpose: string,
+    ttl: string,
+  ): Promise<Result<string, DomainException>> {
     try {
-      const token = await new SignJWT({
-        email: payload.email,
-        tier: payload.tier,
-      })
+      const token = await new SignJWT({ purpose })
         .setProtectedHeader({ alg: 'HS256' })
-        .setSubject(payload.userId)
+        .setSubject(sub)
         .setIssuedAt()
-        .setExpirationTime(ACCESS_TOKEN_TTL)
+        .setExpirationTime(ttl)
         .sign(SECRET);
 
       return Result.ok(token);
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       return Result.fail(new InvalidJwtException('Jwt sign failed'));
     }
   },
 
-  async verify(token: string): Promise<Result<JwtData, DomainException>> {
+  async verify(
+    token: string,
+    purpose: string,
+  ): Promise<Result<string, DomainException>> {
     try {
       const { payload } = await jwtVerify(token, SECRET);
 
-      if (
-        typeof payload.sub !== 'string' ||
-        typeof payload.email !== 'string' ||
-        typeof payload.tier !== 'string'
-      ) {
+      if (typeof payload.sub !== 'string' || payload.purpose !== purpose) {
         throw new InvalidJwtException('Jwt verify failed');
       }
 
-      return Result.ok({
-        userId: payload.sub,
-        email: payload.email,
-        tier: payload.tier,
-      });
+      return Result.ok(payload.sub);
     } catch (_error: unknown) {
       return Result.fail(new InvalidJwtException('Jwt verify failed'));
     }

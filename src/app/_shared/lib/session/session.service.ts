@@ -46,9 +46,11 @@ const loadSession = cache(async () => {
 
   if (!token) throw new UnauthorizedException();
 
-  const result = await JwtService.verify(token);
+  const result = await JwtService.verify(token, 'access');
 
-  return result.getValueOrThrow();
+  const userId = result.getValueOrThrow();
+
+  return { userId };
 });
 
 export {

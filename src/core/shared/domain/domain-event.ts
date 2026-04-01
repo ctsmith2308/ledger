@@ -6,6 +6,7 @@ const IdentityEvents = {
   ACCOUNT_DELETED: 'identity.account_deleted',
   LOGIN_FAILED: 'identity.login_failed',
   MFA_ENABLED: 'identity.mfa_enabled',
+  MFA_DISABLED: 'identity.mfa_disabled',
 } as const;
 
 const BankingEvents = {

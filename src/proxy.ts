@@ -11,7 +11,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  const result = await JwtService.verify(token);
+  const result = await JwtService.verify(token, 'access');
 
   if (result.isFailure) {
     const response = NextResponse.redirect(new URL('/login', request.url));

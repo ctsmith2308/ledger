@@ -1,5 +1,7 @@
+import { MfaVerifyForm } from '@/app/_features/auth';
+
 function MfaPage() {
-  return <div>Im the MfaPage</div>;
+  return <MfaVerifyForm />;
 }
 
 export default MfaPage;

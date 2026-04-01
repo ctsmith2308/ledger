@@ -1,5 +1,6 @@
 import { UserProfile } from '@/core/modules/identity/domain';
-import { UserProfileDTO } from '../identity.dto';
+
+import { type UserProfileDTO } from '../identity.dto';
 
 const UserProfileMapper = {
   toDTO(profile: UserProfile): UserProfileDTO {

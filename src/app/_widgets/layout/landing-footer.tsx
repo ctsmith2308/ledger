@@ -6,7 +6,7 @@ import { caseStudies } from '@/app/_shared/content/case-studies';
 
 const _projectLinks = [
   { label: 'GitHub', href: 'https://github.com/ctsmith2308/ledger', external: true },
-  { label: 'Live demo', href: '/demo-login', external: false },
+  { label: 'Live demo', href: '/login', external: false },
   { label: 'Loom walkthrough', href: '#', external: true },
 ];
 

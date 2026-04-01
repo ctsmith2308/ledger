@@ -19,8 +19,18 @@ import {
   DeleteAccountHandler,
   CleanupExpiredTrialsCommand,
   CleanupExpiredTrialsHandler,
+  SetupMfaCommand,
+  SetupMfaHandler,
+  VerifyMfaSetupCommand,
+  VerifyMfaSetupHandler,
+  VerifyMfaLoginCommand,
+  VerifyMfaLoginHandler,
+  DisableMfaCommand,
+  DisableMfaHandler,
   GetUserProfileQuery,
   GetUserProfileHandler,
+  GetUserAccountQuery,
+  GetUserAccountHandler,
 } from '../application';
 
 import {
@@ -29,6 +39,7 @@ import {
   UserProfileRepository,
   PasswordHasher,
   IdGenerator,
+  TotpService,
 } from '../infrastructure';
 
 import { IdentityService } from './identity.service';
@@ -64,11 +75,8 @@ class IdentityModule {
       LoginUserCommand,
       new LoginUserHandler(
         repos.userRepository,
-        repos.userSessionRepository,
         services.eventBus,
         services.passwordHasher,
-        services.idGenerator,
-        JwtService,
       ),
     );
 
@@ -100,12 +108,45 @@ class IdentityModule {
       ),
     );
 
+    commandBus.register(
+      SetupMfaCommand,
+      new SetupMfaHandler(repos.userRepository, TotpService),
+    );
+
+    commandBus.register(
+      VerifyMfaSetupCommand,
+      new VerifyMfaSetupHandler(
+        repos.userRepository,
+        TotpService,
+        services.eventBus,
+      ),
+    );
+
+    commandBus.register(
+      VerifyMfaLoginCommand,
+      new VerifyMfaLoginHandler(
+        repos.userRepository,
+        services.eventBus,
+        TotpService,
+      ),
+    );
+
+    commandBus.register(
+      DisableMfaCommand,
+      new DisableMfaHandler(repos.userRepository, services.eventBus),
+    );
+
     queryBus.register(
       GetUserProfileQuery,
       new GetUserProfileHandler(repos.userProfileRepository),
     );
 
-    return new IdentityService(commandBus, queryBus);
+    queryBus.register(
+      GetUserAccountQuery,
+      new GetUserAccountHandler(repos.userRepository),
+    );
+
+    return new IdentityService(commandBus, queryBus, JwtService);
   }
 }
 

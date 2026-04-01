@@ -18,3 +18,4 @@ export * from './budget-not-found.exception';
 export * from './invalid-amount.exception';
 export * from './invalid-tier.exception';
 export * from './demo-restricted.exception';
+export * from './invalid-mfa-code.exception';

@@ -1,7 +1,6 @@
 import {
   IHandler,
   IEventBus,
-  IJwtService,
   InvalidEmailException,
   InvalidPasswordException,
   Result,
@@ -10,13 +9,9 @@ import {
 import {
   Email,
   IPasswordHasher,
-  IIdGenerator,
   IUserRepository,
-  IUserSessionRepository,
   Password,
-  SessionId,
   LoginFailedEvent,
-  UserSession,
 } from '@/core/modules/identity/domain';
 
 import { LoginUserCommand, LoginUserResponse } from './login-user.command';
@@ -27,11 +22,8 @@ class LoginUserHandler implements IHandler<
 > {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly sessionRepository: IUserSessionRepository,
     private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
-    private readonly idGenerator: IIdGenerator,
-    private readonly jwtService: IJwtService,
   ) {}
 
   async execute(command: LoginUserCommand): Promise<LoginUserResponse> {
@@ -66,33 +58,16 @@ class LoginUserHandler implements IHandler<
       return Result.fail(new InvalidPasswordException());
     }
 
-    if (!user.tier.isDemo) {
-      await this.sessionRepository.revokeAllForUser(user.id);
+    if (user.mfaEnabled) {
+      return Result.ok({ type: 'MFA_REQUIRED' as const, user });
     }
 
-    const sessionIdResult = SessionId.create(this.idGenerator.generate());
-    if (sessionIdResult.isFailure) return Result.fail(sessionIdResult.error);
-    const sessionId = sessionIdResult.value;
+    user.loggedIn();
 
-    const session = UserSession.create(sessionId, user.id, user.tier);
-
-    await this.sessionRepository.save(session);
-
-    const events = session.pullDomainEvents();
+    const events = user.pullDomainEvents();
     await this.eventBus.dispatch(events);
 
-    const tokenResult = await this.jwtService.sign({
-      userId: user.id.value,
-      email: user.email.value,
-      tier: user.tier.value,
-    });
-
-    if (tokenResult.isFailure) return Result.fail(tokenResult.error);
-
-    return Result.ok({
-      accessToken: tokenResult.value,
-      refreshToken: session.id.value,
-    });
+    return Result.ok({ type: 'SUCCESS' as const, user });
   }
 }
 

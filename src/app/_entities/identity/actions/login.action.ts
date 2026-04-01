@@ -13,12 +13,17 @@ const loginAction = actionClient
   .use(withRateLimit)
   .inputSchema(loginUserSchema)
   .action(async ({ parsedInput }) => {
-    const { accessToken } = await identityService.loginUser(
+    const response = await identityService.loginUser(
       parsedInput.email,
       parsedInput.password,
     );
 
-    await setCookie(accessToken);
+    if (response.type === 'SUCCESS') {
+      await setCookie(response.accessToken);
+      return;
+    }
+
+    return { challengeToken: response.challengeToken };
   });
 
 export { loginAction };

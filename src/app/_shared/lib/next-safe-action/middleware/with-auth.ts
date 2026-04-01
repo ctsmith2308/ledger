@@ -10,11 +10,11 @@ const withAuth = createMiddleware().define(async ({ next }) => {
 
   if (!token) throw new UnauthorizedException();
 
-  const result = await JwtService.verify(token);
+  const result = await JwtService.verify(token, 'access');
 
-  const jwt = result.getValueOrThrow();
+  const userId = result.getValueOrThrow();
 
-  return next({ ctx: { userId: jwt.userId, tier: jwt.tier } });
+  return next({ ctx: { userId } });
 });
 
 export { withAuth };

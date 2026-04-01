@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 
+vi.mock('@/core/shared/infrastructure', () => ({
+  JwtService: { sign: vi.fn(), verify: vi.fn() },
+}));
+
+vi.mock('@/core/shared/domain', () => ({
+  UnauthorizedException: class extends Error {},
+}));
+
 import { getCookieCurry, setCookieCurry } from '../session.service';
 
 const _makeCookieStore = (token?: string) => {
