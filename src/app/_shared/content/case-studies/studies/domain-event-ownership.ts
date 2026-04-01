@@ -15,7 +15,7 @@ const domainEventOwnership: CaseStudy = {
     },
     {
       heading: 'Where orthodoxy broke down',
-      body: 'Ledger is not event-sourced. Events are persisted to a `domain_events` table via a DurableEventBus, but aggregate state lives in Postgres and is rebuilt via `reconstitute()`, not by replaying events. This means events serve audit and integration — they are not the authoritative state record. Forcing every event through an aggregate created three modelling problems that the orthodox model does not account for.',
+      body: 'Ledger is not event-sourced. Events are persisted to a `domain_events` table via a DurableEventBus, but aggregate state lives in Postgres and is rebuilt via `reconstitute()`, not by replaying events. This means events serve audit and integration — they are not the authoritative state record. Forcing every event through an aggregate created two modelling problems that the orthodox model does not account for.',
       table: {
         headers: ['Event', 'Problem with aggregate ownership'],
         rows: [
@@ -26,10 +26,6 @@ const domainEventOwnership: CaseStudy = {
           [
             'AccountDeletedEvent',
             'The aggregate is being destroyed. Having a deleted aggregate raise its own death notice is a lifecycle contradiction.',
-          ],
-          [
-            'UserLoggedInEvent',
-            'UserSession.create() was raising this event, but login is a use-case coordination — a session does not know why it was created. It could be a login, a token refresh, or an admin impersonation.',
           ],
         ],
       },
@@ -43,10 +39,12 @@ const domainEventOwnership: CaseStudy = {
           ['UserRegisteredEvent', 'User.register()', 'Aggregate-raised'],
           [
             'UserProfileUpdatedEvent',
-            'UserProfile.updateName()',
+            'UserProfile.updateName() / UserProfile.save()',
             'Aggregate-raised',
           ],
-          ['UserLoggedInEvent', 'LoginUserHandler', 'Handler-dispatched'],
+          ['UserLoggedInEvent', 'User.loggedIn()', 'Aggregate-raised'],
+          ['MfaEnabledEvent', 'User.confirmMfa()', 'Aggregate-raised'],
+          ['MfaDisabledEvent', 'User.disableMfa()', 'Aggregate-raised'],
           ['LoginFailedEvent', 'LoginUserHandler', 'Handler-dispatched'],
           ['UserLoggedOutEvent', 'LogoutUserHandler', 'Handler-dispatched'],
           [

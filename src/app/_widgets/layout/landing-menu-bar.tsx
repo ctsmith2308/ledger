@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
 function LandingMenuBar() {
   return (
     <MenuBar
-      left={
+      right={
         <>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/#architecture">Architecture</Link>
@@ -19,10 +19,7 @@ function LandingMenuBar() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/#case-studies">Case Studies</Link>
           </Button>
-        </>
-      }
-      right={
-        <>
+
           <Button variant="ghost" size="icon-sm" asChild>
             <a
               href="https://github.com/ctsmith2308/ledger"

@@ -14,11 +14,14 @@ type IconSize = Extract<
 function ThemeToggle({ size = 'icon' }: { size?: IconSize }) {
   const { resolvedTheme, setTheme } = useTheme();
 
+  const handleToggle = () =>
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+
   return (
     <Button
       variant="ghost"
       size={size}
-      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+      onClick={handleToggle}
       aria-label="Toggle theme"
     >
       <Sun className="size-4 dark:hidden" />
