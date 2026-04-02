@@ -11,7 +11,7 @@ import {
 
 import { mapSpendingDtoToCategory } from '@/app/_entities/transactions/lib';
 
-import { SpendingDoughnut } from '@/app/_features/transactions';
+import { SpendingDoughnut, TransactionList } from '@/app/_features/transactions';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
@@ -19,13 +19,22 @@ const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
 
 const loadPeriodData = async (period: string) => {
   const session = await loadSession();
+  const periodDate = parsePeriod(period);
 
-  const spending = await transactionsService.getSpendingByCategory(
-    session.userId,
-    parsePeriod(period),
-  );
+  const [spending, allTransactions] = await Promise.all([
+    transactionsService.getSpendingByCategory(session.userId, periodDate),
+    transactionsService.getTransactions(session.userId),
+  ]);
 
-  return { spending };
+  const month = periodDate.getMonth();
+  const year = periodDate.getFullYear();
+
+  const transactions = allTransactions.filter((tx) => {
+    const txDate = new Date(tx.date);
+    return txDate.getMonth() === month && txDate.getFullYear() === year;
+  });
+
+  return { spending, transactions };
 };
 
 async function SpendingPeriodPage({
@@ -37,7 +46,7 @@ async function SpendingPeriodPage({
 
   if (!PERIOD_PATTERN.test(period)) notFound();
 
-  const { spending } = await loadPeriodData(period);
+  const { spending, transactions } = await loadPeriodData(period);
   const categoryData = mapSpendingDtoToCategory(spending);
   const title = formatPeriod(period);
 
@@ -53,9 +62,7 @@ async function SpendingPeriodPage({
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold text-foreground">Transactions</h2>
 
-        <p className="text-sm text-muted-foreground">
-          Transaction list coming soon.
-        </p>
+        <TransactionList transactions={transactions} />
       </div>
     </PageContainer>
   );
