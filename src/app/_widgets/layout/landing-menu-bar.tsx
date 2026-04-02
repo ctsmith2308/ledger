@@ -56,7 +56,7 @@ function LandingMenuBar() {
         >
           <nav className="flex flex-col gap-2 px-2">
             <Link
-              href="/#architecture"
+              href={ROUTES.architecture}
               onClick={handleClose}
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -64,7 +64,7 @@ function LandingMenuBar() {
             </Link>
 
             <Link
-              href="/#case-studies"
+              href={ROUTES.caseStudies}
               onClick={handleClose}
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -109,11 +109,11 @@ function NavLinks() {
   return (
     <>
       <Button variant="ghost" size="sm" asChild>
-        <Link href="/#architecture">Architecture</Link>
+        <Link href={ROUTES.architecture}>Architecture</Link>
       </Button>
 
       <Button variant="ghost" size="sm" asChild>
-        <Link href="/#case-studies">Case Studies</Link>
+        <Link href={ROUTES.caseStudies}>Case Studies</Link>
       </Button>
 
       <Button variant="ghost" size="icon-sm" asChild>

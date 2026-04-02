@@ -54,17 +54,18 @@ const events = user.pullDomainEvents();
 await this.eventBus.dispatch(events);`,
     },
     {
+      label: 'Aggregate-raised event — User owns the login event',
+      code: `// LoginUserHandler — aggregate-raised via User.loggedIn()
+user.loggedIn();
+const events = user.pullDomainEvents();
+await this.eventBus.dispatch(events);`,
+    },
+    {
       label: 'Handler-dispatched event — no aggregate owns the action',
-      code: `// LoginUserHandler — login is a use-case fact, not a session lifecycle fact
-const session = UserSession.create(sessionId, user.id, user.tier);
-await this.sessionRepository.save(session);
-await this.eventBus.dispatch([new UserLoggedInEvent(user.id.value)]);
-
-// LogoutUserHandler — the aggregate is being revoked, not transitioned
-await this.sessionRepository.revokeById(sessionId);
-if (session) {
-  await this.eventBus.dispatch([new UserLoggedOutEvent(session.userId.value)]);
-}`,
+      code: `// LogoutUserHandler — handler-dispatched, no aggregate owns logout
+await this.eventBus.dispatch([
+  new UserLoggedOutEvent(userId),
+]);`,
     },
   ],
 };

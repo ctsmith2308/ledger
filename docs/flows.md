@@ -4,7 +4,7 @@ Visual diagrams of the key data flows and architectural boundaries in Ledger. Re
 
 ---
 
-## Transaction Sync → Event → Read Model → Budget Check
+## Transaction Sync --> Event --> Read Model --> Budget Check
 
 The full end-to-end flow when a user syncs transactions from Plaid. Shows the durable event bus persisting to the event store, sequential handler dispatch, read model materialisation, and budget breach detection.
 
@@ -46,22 +46,22 @@ sequenceDiagram
 
 ## Module Boundaries and Event Flow
 
-How the four bounded contexts communicate through the shared event bus. Each module registers handlers during initialisation. Cross-module communication is event-driven — no direct imports between module domains.
+How the four bounded contexts communicate through the shared event bus. Each module registers handlers during initialisation. Cross-module communication is event-driven -- no direct imports between module domains.
 
 ```mermaid
 flowchart TB
     subgraph Shared Infrastructure
         CB[CommandBus]
         QB[QueryBus]
-        EB[DurableEventBus — singleton]
+        EB[DurableEventBus -- singleton]
         ES[(domain_events table)]
         EB -->|persist first| ES
     end
 
     subgraph Identity Module
         IC[IdentityService]
-        IR[RegisterUser / LoginUser]
-        IR -->|UserRegistered · UserLoggedIn| EB
+        IR[RegisterUser / LoginUser / MFA]
+        IR -->|UserRegistered - UserLoggedIn - MfaEnabled| EB
     end
 
     subgraph Banking Module
@@ -87,7 +87,7 @@ flowchart TB
         EB -->|TRANSACTION_CREATED| RSH
         RSH -->|reads| RDB
         RSH -->|checks| BUDA[(Budgets table)]
-        RSH -->|BudgetExceeded · ThresholdReached| EB
+        RSH -->|BudgetExceeded - ThresholdReached| EB
     end
 
     CB --> IC & BC & TC & BUC
@@ -98,7 +98,7 @@ flowchart TB
 
 ## Layered Architecture (Per Module)
 
-Every module follows the same layer structure. Dependencies point inward — domain has zero infrastructure knowledge. The transport layer is the only framework-coupled piece.
+Every module follows the same layer structure. Dependencies point inward -- domain has zero infrastructure knowledge. The transport layer is the only framework-coupled piece.
 
 ```mermaid
 flowchart LR
@@ -107,7 +107,7 @@ flowchart LR
     end
 
     subgraph API
-        SVC[Service<br/>dispatches via bus · maps to DTO]
+        APISVC[Service<br/>dispatches via bus - maps to DTO]
     end
 
     subgraph Application
@@ -124,20 +124,20 @@ flowchart LR
 
     subgraph Infrastructure
         REPO[Repository Impls<br/>Prisma]
-        SVC[Services<br/>Plaid · Argon2 · JWT]
-        BUS[EventBus · CommandBus · QueryBus]
+        INFRASVC[Services<br/>Plaid - Argon2 - JWT - TOTP]
+        BUS[EventBus - CommandBus - QueryBus]
     end
 
-    SA --> SVC --> CMD --> AGG & VO & DE & RI
+    SA --> APISVC --> CMD --> AGG & VO & DE & RI
     CMD --> BUS
     EH --> BUS
     RI -.->|implemented by| REPO
-    REPO --> SVC
+    REPO --> INFRASVC
 ```
 
 ---
 
-## Durable Event Bus — Persist First, Dispatch Second
+## Durable Event Bus -- Persist First, Dispatch Second
 
 The event lifecycle from aggregate to handler. Every event is written to Postgres before any handler executes. Failed handlers are tracked and retryable.
 
@@ -153,43 +153,223 @@ flowchart TD
     G -->|No| I[Mark failed<br/>increment attempts<br/>store error]
     I --> J{attempts < 3?}
     J -->|Yes| K[Available for replayFailed]
-    J -->|No| L[Dead — requires manual review]
+    J -->|No| L[Dead -- requires manual review]
 ```
 
 ---
 
-## Auth Flow — Registration and Login
+## Auth Flow -- Registration
 
-The identity module's command flow from server action through to session creation.
+The identity module's registration command flow from server action through to aggregate persistence and event dispatch.
 
 ```mermaid
 sequenceDiagram
     participant UI as Frontend
     participant SA as Server Action<br/>withRateLimit
+    participant SVC as IdentityService
     participant CB as CommandBus
     participant RH as RegisterUserHandler
     participant DB as Postgres
     participant EB as DurableEventBus
-    participant LH as LoginUserHandler
-    participant SS as SessionService
 
-    Note over UI,SS: Registration
-    UI->>SA: register(email, password)
-    SA->>CB: dispatch(RegisterUserCommand)
+    UI->>SA: register(firstName, lastName, email, password)
+    SA->>SVC: registerUser(...)
+    SVC->>CB: dispatch(RegisterUserCommand)
     CB->>RH: execute
-    RH->>RH: Email.create() · Password.create()
+    RH->>RH: Email.create() / Password.create()<br/>FirstName.create() / LastName.create()
+    RH->>RH: hash password
     RH->>DB: userRepository.save(user)
-    RH->>EB: dispatch(UserRegisteredEvent)
-    RH-->>SA: Result.ok(user)
+    RH->>DB: userProfileRepository.save(profile)
+    Note over RH: UserRegisteredEvent (aggregate-raised)
+    RH->>RH: user.pullDomainEvents()
+    RH->>EB: dispatch(events)
+    RH-->>SVC: Result.ok({ type: SUCCESS, user })
+    SVC-->>SA: UserDTO
+```
 
-    Note over UI,SS: Login
+---
+
+## Auth Flow -- Login (No MFA)
+
+When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, caches feature flags in Upstash, and `IdentityService` signs the JWT. The action sets the cookie directly.
+
+```mermaid
+sequenceDiagram
+    participant UI as Frontend
+    participant SA as Server Action<br/>withRateLimit
+    participant SVC as IdentityService
+    participant CB as CommandBus
+    participant LH as LoginUserHandler
+    participant DB as Postgres
+    participant EB as DurableEventBus
+    participant FF as FeatureFlagCache<br/>Upstash
+
     UI->>SA: login(email, password)
-    SA->>CB: dispatch(LoginUserCommand)
+    SA->>SVC: loginUser(email, password)
+    SVC->>CB: dispatch(LoginUserCommand)
     CB->>LH: execute
     LH->>DB: userRepository.findByEmail
     LH->>LH: verify password hash
-    LH->>DB: userSessionRepository.save(session)
-    LH->>EB: dispatch(UserLoggedInEvent)
-    LH-->>SA: Result.ok({ sessionId })
-    SA->>SS: set session cookie
+    LH->>LH: user.loggedIn()
+    Note over LH: UserLoggedInEvent (aggregate-raised)
+    LH->>LH: user.pullDomainEvents()
+    LH->>EB: dispatch(events)
+    LH->>DB: featureFlagRepo.findEnabledByTier
+    LH->>FF: featureFlagCache.setFeatures
+    LH-->>SVC: Result.ok({ type: SUCCESS, user })
+    SVC->>SVC: jwtService.sign(userId, access, 15m)
+    SVC-->>SA: { type: SUCCESS, accessToken }
+    SA->>SA: setCookie(accessToken)
+    SA-->>UI: redirect /overview
 ```
+
+---
+
+## Auth Flow -- Login (MFA Enabled)
+
+When the user has MFA enabled, login is a two-step flow. The first step returns a short-lived challenge token. The client stores it in `sessionStorage` and redirects to `/mfa`. The second step verifies the TOTP code and completes login.
+
+```mermaid
+sequenceDiagram
+    participant UI as Frontend
+    participant SA as Server Action<br/>withRateLimit
+    participant SVC as IdentityService
+    participant CB as CommandBus
+    participant LH as LoginUserHandler
+    participant VH as VerifyMfaLoginHandler
+    participant DB as Postgres
+    participant EB as DurableEventBus
+    participant FF as FeatureFlagCache<br/>Upstash
+
+    Note over UI,FF: Step 1 -- Credential Check
+    UI->>SA: login(email, password)
+    SA->>SVC: loginUser(email, password)
+    SVC->>CB: dispatch(LoginUserCommand)
+    CB->>LH: execute
+    LH->>DB: userRepository.findByEmail
+    LH->>LH: verify password hash
+    LH->>LH: user.mfaEnabled == true
+    LH-->>SVC: Result.ok({ type: MFA_REQUIRED, user })
+    SVC->>SVC: jwtService.sign(userId, mfa_challenge, 5m)
+    SVC-->>SA: { type: MFA_REQUIRED, challengeToken }
+    SA-->>UI: { challengeToken }
+    UI->>UI: sessionStorage.set(challengeToken)
+    UI->>UI: redirect /mfa
+
+    Note over UI,FF: Step 2 -- TOTP Verification
+    UI->>SA: verifyMfaLogin(challengeToken, totpCode)
+    SA->>SVC: verifyMfaLogin(challengeToken, totpCode)
+    SVC->>SVC: jwtService.verify(token, mfa_challenge)
+    SVC->>CB: dispatch(VerifyMfaLoginCommand)
+    CB->>VH: execute
+    VH->>DB: userRepository.findById
+    VH->>VH: totpService.verify(secret, code)
+    VH->>VH: user.loggedIn()
+    Note over VH: UserLoggedInEvent (aggregate-raised)
+    VH->>VH: user.pullDomainEvents()
+    VH->>EB: dispatch(events)
+    VH->>DB: featureFlagRepo.findEnabledByTier
+    VH->>FF: featureFlagCache.setFeatures
+    VH-->>SVC: Result.ok(user)
+    SVC->>SVC: jwtService.sign(userId, access, 15m)
+    SVC-->>SA: { accessToken }
+    SA->>SA: setCookie(accessToken)
+    SA-->>UI: redirect /overview
+```
+
+---
+
+## MFA Setup Flow
+
+MFA setup is a two-step process gated by `withAuth` and `withFeatureFlag(MFA)`. The first step generates a TOTP secret and returns a QR code. The second step verifies a TOTP code to confirm setup, raising `MfaEnabledEvent` from the aggregate.
+
+```mermaid
+sequenceDiagram
+    participant UI as Settings Page
+    participant SA1 as setupMfaAction<br/>withAuth + withFeatureFlag
+    participant SVC as IdentityService
+    participant CB as CommandBus
+    participant SH as SetupMfaHandler
+    participant DB as Postgres
+
+    UI->>SA1: setupMfa()
+    SA1->>SVC: setupMfa(userId)
+    SVC->>CB: dispatch(SetupMfaCommand)
+    CB->>SH: execute
+    SH->>SH: totpService.generateSecret()
+    SH->>SH: user.setMfaSecret(secret)
+    SH->>DB: userRepository.save(user)
+    SH->>SH: totpService.generateQrDataUrl(secret, email)
+    SH-->>SVC: Result.ok({ qrCodeDataUrl })
+    SVC-->>SA1: { qrCodeDataUrl }
+    SA1-->>UI: display QR code
+```
+
+```mermaid
+sequenceDiagram
+    participant UI as Settings Page
+    participant SA2 as verifyMfaSetupAction<br/>withAuth + withFeatureFlag
+    participant SVC as IdentityService
+    participant CB as CommandBus
+    participant VH as VerifyMfaSetupHandler
+    participant DB as Postgres
+    participant EB as DurableEventBus
+
+    UI->>SA2: verifyMfaSetup(totpCode)
+    SA2->>SVC: verifyMfaSetup(userId, totpCode)
+    SVC->>CB: dispatch(VerifyMfaSetupCommand)
+    CB->>VH: execute
+    VH->>DB: userRepository.findById
+    VH->>VH: totpService.verify(secret, code)
+    VH->>VH: user.confirmMfa()
+    Note over VH: MfaEnabledEvent (aggregate-raised)
+    VH->>DB: userRepository.save(user)
+    VH->>VH: user.pullDomainEvents()
+    VH->>EB: dispatch(events)
+    VH-->>SVC: Result.ok(user)
+    SA2-->>UI: MFA enabled
+```
+
+---
+
+## Feature Flag Flow
+
+Feature flags are cached per-user in Upstash on login. The `withFeatureFlag` middleware checks the cache on every gated action. On cache miss, it falls back to the database and repopulates the cache.
+
+```mermaid
+flowchart TD
+    subgraph Login -- Cache Population
+        L1[LoginUserHandler / VerifyMfaLoginHandler] --> L2[featureFlagRepo.findEnabledByTier]
+        L2 --> L3[featureFlagCache.setFeatures<br/>Upstash]
+    end
+
+    subgraph Server Action -- Cache Check
+        A1[Server Action] --> A2[withAuth middleware]
+        A2 --> A3["withFeatureFlag(feature) middleware"]
+        A3 --> A4{featureFlagCache.getFeatures}
+        A4 -->|cache hit| A5{feature enabled?}
+        A4 -->|cache miss| A6[identityService.getUserAccount]
+        A6 --> A7[featureFlagRepo.findEnabledByTier]
+        A7 --> A8[featureFlagCache.setFeatures]
+        A8 --> A5
+        A5 -->|yes| A9[proceed to action handler]
+        A5 -->|no| A10[throw FeatureDisabledException]
+    end
+```
+
+---
+
+## Domain Event Inventory
+
+Summary of all domain events, their ownership pattern, and dispatch origin.
+
+| Event | Owner | Pattern |
+|---|---|---|
+| `UserRegisteredEvent` | `User.register()` | Aggregate-raised |
+| `UserLoggedInEvent` | `User.loggedIn()` | Aggregate-raised |
+| `UserProfileUpdatedEvent` | `UserProfile.updateName()` / `UserProfile.save()` | Aggregate-raised |
+| `MfaEnabledEvent` | `User.confirmMfa()` | Aggregate-raised |
+| `MfaDisabledEvent` | `User.disableMfa()` | Aggregate-raised |
+| `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
+| `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
+| `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |

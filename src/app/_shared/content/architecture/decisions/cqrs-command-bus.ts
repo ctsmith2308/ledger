@@ -59,8 +59,9 @@ class LoginUserCommand extends Command<LoginUserResponse> {
       label: 'Self-registration in the command folder index',
       code: `// commands/login-user/index.ts
 import { commandBus, eventBus, prisma } from '@/core/shared/infrastructure';
-import { UserRepository, UserSessionRepository } from '../../../infrastructure/repository';
-import { PasswordHasher, IdGenerator } from '../../../infrastructure/services';
+import { UserRepository } from '../../../infrastructure/repository';
+import { PasswordHasher } from '../../../infrastructure/services';
+import { FeatureFlagRepository, featureFlagCache } from '../../../infrastructure/feature-flags';
 import { LoginUserCommand } from './login-user.command';
 import { LoginUserHandler } from './login-user.handler';
 
@@ -68,10 +69,10 @@ commandBus.register(
   LoginUserCommand,
   new LoginUserHandler(
     new UserRepository(prisma),
-    new UserSessionRepository(prisma),
     eventBus,
     PasswordHasher,
-    IdGenerator,
+    new FeatureFlagRepository(prisma),
+    featureFlagCache,
   ),
 );
 

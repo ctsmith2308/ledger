@@ -14,7 +14,7 @@ const serverActions: ArchitectureDecision = {
     '`.use(withAuth)` resolves the session before the handler runs and injects it into `ctx`. A missing or invalid session rejects before the handler is ever called.',
     '`handleServerError` is the single catch boundary. It maps thrown errors via `toErrorResponse` and returns `{ code, message }` as `result.serverError` — no per-action error handling needed.',
     '`toErrorResponse` maps `DomainException`, Prisma errors, and unexpected errors to stable external codes. The client never sees stack traces or internal exception names.',
-    'The `execute()` utility bridges next-safe-action results to TanStack Query — it checks `result.serverError` and throws `ActionError(code, message)`, which TanStack Query catches for retry and global error handling.',
+    'The `handleActionResponse()` utility bridges next-safe-action results to TanStack Query — it checks `result.serverError` and throws `ActionError(code, message)`, which TanStack Query catches for retry and global error handling.',
   ],
   tradeoffs: [
     {
@@ -58,7 +58,7 @@ const createBudgetAction = actionClient
   });`,
     },
     {
-      label: 'actionClient setup with handleServerError + execute() bridge',
+      label: 'actionClient setup with handleServerError + handleActionResponse() bridge',
       code: `// actionClient — single catch boundary
 const actionClient = createSafeActionClient({
   handleServerError: (err) => {
@@ -67,8 +67,8 @@ const actionClient = createSafeActionClient({
   },
 });
 
-// execute() — bridges next-safe-action to TanStack Query
-const execute = async <T>(
+// handleActionResponse() — bridges next-safe-action to TanStack Query
+const handleActionResponse = async <T>(
   result: SafeActionResult<T>,
 ): Promise<T> => {
   if (result.serverError) {

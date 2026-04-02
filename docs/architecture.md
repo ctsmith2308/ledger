@@ -240,53 +240,129 @@ See [Application Layer — Command Bus](#command-bus--query-bus) for the full im
 
 ```
 src/
-  core/                           # framework-agnostic domain and application logic
+  proxy.ts                          # Next.js edge middleware — JWT validation, route protection
+
+  core/                             # framework-agnostic domain and application logic
     modules/
-      identity/                   # identity bounded context
-        domain/                   # pure business rules — no infrastructure dependencies
-        application/              # commands, queries, handlers
+      identity/                     # identity bounded context
+        domain/                     # pure business rules — no infrastructure dependencies
+          aggregates/               # User, UserProfile, UserSession
+          events/                   # UserRegisteredEvent, LoginFailedEvent, MfaEnabledEvent, ...
+          repositories/             # IUserRepository, IUserProfileRepository, IUserSessionRepository
+          services/                 # IPasswordHasher, ITotpService, IIdGenerator
+          value-objects/            # Email, Password, UserId, FirstName, LastName, UserTier, ...
+        application/                # commands, queries, handlers
           commands/
-            login-user/           # command + handler + bus registration
+            login-user/             # command + handler
             register-user/
+            logout-user/
+            delete-account/
+            update-user-profile/
+            setup-mfa/
+            verify-mfa-setup/
+            verify-mfa-login/
+            disable-mfa/
+            cleanup-expired-trials/
           queries/
             get-user-profile/
-        infrastructure/           # Prisma repository, password hasher, id generator
-        _deps.ts                  # shared infrastructure instances for this module
-        identity.module.ts        # side-effect imports trigger bus registration
+            get-user-account/
+        infrastructure/             # Prisma repositories, password hasher, id generator, TOTP service
+          repositories/             # .impl.ts suffix — UserRepository, UserProfileRepository, UserSessionRepository
+          mappers/                  # Prisma-to-domain mappers (user, profile, session)
+          services/                 # PasswordHasher, IdGenerator, TotpService
+        api/                        # composition root + public API
+          identity.service.ts       # IdentityService — dispatches via bus, maps results to DTOs, signs JWTs
+          identity.dto.ts           # response DTOs
+          mappers/                  # domain-to-DTO mappers (UserMapper, UserProfileMapper, etc.)
+          index.ts                  # IdentityModule.init() — wires repos, registers handlers, returns service
+      banking/                      # Plaid integration bounded context
+        domain/
+        application/
+        infrastructure/
+        api/                        # BankingService, BankingModule.init()
+      budgets/                      # budget management bounded context
+        domain/
+        application/
+        infrastructure/
+        api/                        # BudgetsService, BudgetsModule.init()
+      transactions/                 # transaction sync and analytics bounded context
+        domain/
+        application/
+        infrastructure/
+        api/                        # TransactionsService, TransactionsModule.init()
     shared/
-      domain/                     # shared domain primitives
-        exceptions/               # typed domain exceptions
-        services/                 # IEventBus, IJwtService interfaces
+      domain/                       # shared domain primitives
+        constants/                  # FEATURE_KEYS, USER_TIERS, JWT_TYPE, ERROR_CODES, TRANSACTION_CATEGORIES
+        exceptions/                 # typed domain exceptions
+        repositories/               # IFeatureFlagRepository
+        services/                   # IEventBus, IJwtService, IFeatureFlagCache, IObservabilityService
         aggregate-root.ts
-        bus.ts                    # Command<T> and Query<T> base classes
+        bus/                        # Command<T> and Query<T> base classes
         domain-event.ts
-        handler.ts                # IHandler<TRequest, TResponse>
-        result.ts                 # Result<T, E>
+        handler.ts                  # IHandler<TRequest, TResponse>
+        result.ts                   # Result<T, E>
         value-object.ts
-      infrastructure/             # shared infrastructure implementations
-        bus/                      # CommandBus, QueryBus singletons
-        persistence/              # Prisma singleton, PrismaService
-        services/                 # JwtService, InProcessEventBus, TelemetryService
-        utils/                    # SchemaValidator, logger, toErrorResponse
+      infrastructure/               # shared infrastructure implementations
+        bus/                        # CommandBus, QueryBus singletons
+        cache/                      # UpstashFeatureFlagCache (Upstash Redis)
+        persistence/                # Prisma singleton, PrismaService
+        repositories/               # FeatureFlagRepository (Prisma)
+        services/                   # JwtService, ObservabilityService (OpenTelemetry)
+        utils/                      # logger, toErrorResponse, correlationIdGenerator
 
-  app/                            # Next.js app — transport and UI layer
-    _lib/                         # shared utilities, factories, services
-      factories/                  # createAction HOF
-      services/                   # SessionService
-      utils/                      # cn (tailwind merge)
-      content/                    # portfolio copy — architecture decisions, case studies
-    _components/                  # primitive, stateless UI
-    _widgets/                     # compositional UI blocks
-    _providers/                   # app-level context
-    _features/                    # domain feature modules
+  app/                              # Next.js app — transport and UI layer
+    _shared/                        # shared utilities, libraries, content
+      lib/
+        next-safe-action/           # actionClient, handleActionResponse, ActionError
+          middleware/               # withAuth, withFeatureFlag, withRateLimit
+        session/                    # setCookie, deleteCookie, loadSession (React.cache)
+        query/                      # getQueryClient, queryKeys, queryDefaults
+        rate-limit/                 # rate limit service
+        tailwind/                   # cn (tailwind merge)
+      content/                      # portfolio copy — architecture decisions, case studies
+      routes/                       # route constants
+    _components/                    # primitive, stateless UI — button, input, card
+    _widgets/                       # compositional blocks — headers, footers, dashboard shell
+    _providers/                     # app-level context — theme, query
+    _layouts/                       # shared layout wrappers
+    _entities/                      # data access layer — server actions, action schemas, entity hooks
+      identity/
+        actions/                    # login, register, logout, delete, mfa actions
+        hooks/                      # useSession, useFeatureFlags
+        schema/                     # Zod schemas for action inputs
+      banking/
+        actions/                    # createLinkToken, exchangePublicToken
+        schema/
+      budgets/
+        actions/                    # createBudget, updateBudget, deleteBudget
+        hooks/                      # useBudgetOverview
+        schema/
+      transactions/
+        actions/                    # syncTransactions
+        schema/
+    _features/                      # domain feature modules — hooks, UI, feature-specific schemas
       auth/
-        actions/                  # server actions — thin transport wrappers
-        hooks/                    # client hooks (TanStack Form)
-        ui/                       # feature-specific components
-    (auth)/                       # auth route group with shared centered layout
-    (dashboard)/                  # dashboard route group with shared header layout
-    architecture/                 # portfolio — architecture decision pages
-    case-studies/                 # portfolio — case study pages
+        hooks/                      # useLoginForm, useRegisterForm, useLogout, useMfaVerifyForm
+        ui/                         # LoginForm, RegisterForm, LogoutButton, MfaVerifyForm
+      budgets/
+        hooks/                      # useCreateBudgetForm, useUpdateBudget, useDeleteBudget
+        schema/                     # form-level schemas
+        ui/                         # BudgetList, CreateBudgetForm
+      plaid/
+        hooks/                      # usePlaidLinkFlow
+        ui/                         # ConnectAccountCard
+      accounts/
+        ui/                         # AccountGroupList, AccountTotalsTable
+      transactions/
+        ui/                         # TransactionList, SpendingDoughnut
+      user-account/
+        hooks/                      # useConfigureMfa, useDeleteAccount, useUpdateProfileForm
+        ui/                         # MfaSettingsCard, DeleteAccountCard, UpdateProfileForm
+      theme/
+        ui/                         # ThemeToggle
+    (auth)/                         # auth route group — centered layout
+    (dashboard)/                    # dashboard route group — header layout
+    (public)/                       # public route group
 ```
 
 ---
@@ -323,9 +399,27 @@ Aggregates are the consistency boundary. They raise domain events, enforce invar
 ```ts
 class User extends AggregateRoot {
   static register(id: UserId, email: Email, passwordHash: Password): User {
-    const user = new User(id, email, passwordHash);
-    user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
+    const tier = UserTier.from(USER_TIERS.TRIAL);
+    const user = new User(id, email, passwordHash, tier);
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
     return user;
+  }
+
+  loggedIn(): void {
+    this.addDomainEvent(new UserLoggedInEvent(this._id.value));
+  }
+
+  confirmMfa(): void {
+    if (!this._mfaSecret) return;
+    this._mfaEnabled = true;
+    this.addDomainEvent(new MfaEnabledEvent(this._id.value));
+  }
+
+  disableMfa(): void {
+    if (!this._mfaEnabled) return;
+    this._mfaEnabled = false;
+    this._mfaSecret = undefined;
+    this.addDomainEvent(new MfaDisabledEvent(this._id.value));
   }
 }
 ```
@@ -340,8 +434,9 @@ Events follow two ownership patterns depending on whether the event describes th
 // Aggregate owns the event
 class User extends AggregateRoot {
   static register(id: UserId, email: Email, passwordHash: Password): User {
-    const user = new User(id, email, passwordHash);
-    user.addDomainEvent(new UserRegisteredEvent(id.value, email.address));
+    const tier = UserTier.from(USER_TIERS.TRIAL);
+    const user = new User(id, email, passwordHash, tier);
+    user.addDomainEvent(new UserRegisteredEvent(id.value, email.value));
     return user;
   }
 }
@@ -370,8 +465,10 @@ Both paths flow through the same `DurableEventBus` and land in the `domain_event
 | Event | Owner | Pattern |
 |---|---|---|
 | `UserRegisteredEvent` | `User.register()` | Aggregate-raised |
+| `UserLoggedInEvent` | `User.loggedIn()` | Aggregate-raised |
 | `UserProfileUpdatedEvent` | `UserProfile.updateName()` | Aggregate-raised |
-| `UserLoggedInEvent` | `LoginUserHandler` | Handler-dispatched |
+| `MfaEnabledEvent` | `User.confirmMfa()` | Aggregate-raised |
+| `MfaDisabledEvent` | `User.disableMfa()` | Aggregate-raised |
 | `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
 | `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
 | `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |
@@ -384,11 +481,11 @@ All domain operations return `Result<T, E>` — never throw directly. Unwrapping
 
 ```ts
 // Correct — stack trace points to the exact line
-const result = await commandBus.dispatch(new LoginUserCommand(dto.email, dto.password));
-const { jwt } = result.getValueOrThrow();
+const result = await identityService.loginUser(dto.email, dto.password);
+const { accessToken } = result;
 
 // Wrong — hard to trace in stack
-const { jwt } = (await commandBus.dispatch(new LoginUserCommand(dto.email, dto.password))).getValueOrThrow();
+const { accessToken } = (await identityService.loginUser(dto.email, dto.password));
 ```
 
 ### Repository Interfaces
@@ -403,7 +500,21 @@ interface IUserRepository {
 }
 ```
 
-Implementations live in `infrastructure/repository/` and are wired via `_deps.ts`. The domain can be unit tested with a mock `IUserRepository` — no database required.
+Implementations live in `infrastructure/repositories/` with an `.impl.ts` suffix (e.g., `user.repository.impl.ts`). Infrastructure mappers that convert between Prisma rows and domain aggregates live in `infrastructure/mappers/`. The domain can be unit tested with a mock `IUserRepository` — no database required.
+
+### Domain Constants
+
+Shared domain constants live in `core/shared/domain/constants/`:
+
+| Constant | Purpose |
+|---|---|
+| `FEATURE_KEYS` | Feature flag identifiers (`BUDGET_WRITE`, `PLAID_CONNECT`, `ACCOUNT_WRITE`, `MFA`) |
+| `USER_TIERS` | User tier values (`DEMO`, `TRIAL`, `FULL`) |
+| `JWT_TYPE` | JWT purpose discriminator (`ACCESS`, `MFA_CHALLENGE`) |
+| `ERROR_CODES` | Stable error codes for external responses (`UNAUTHORIZED`, `VALIDATION_ERROR`, `FEATURE_DISABLED`, ...) |
+| `TRANSACTION_CATEGORIES` | Transaction category constants |
+
+These are imported by both domain and infrastructure layers. They contain no logic — only typed constant objects.
 
 ---
 
@@ -448,30 +559,100 @@ register<T extends AnyCommand>(
 }
 ```
 
-### Self-Registration Pattern
+### Composition Root — `api/index.ts`
 
-Each command folder registers its own handler as a side effect of being imported:
-
-```ts
-// commands/login-user/index.ts
-commandBus.register(
-  LoginUserCommand,
-  new LoginUserHandler(_repo, _eventBus, _passwordHasher, _jwtService),
-);
-
-export { LoginUserCommand };
-export type { LoginUserResponse } from './login-user.command';
-```
-
-`identity.module.ts` imports each command folder — three lines, no handler instantiation:
+Each module's composition root is `api/index.ts`. It instantiates repositories and services, registers all handlers on the buses, and exports the module's service instance. There is no self-registration pattern and no side-effect imports — wiring is explicit and visible in one place:
 
 ```ts
-import './application/commands/login-user';
-import './application/commands/register-user';
-import './application/queries/get-user-profile';
+// identity/api/index.ts
+class IdentityModule {
+  private constructor() {}
+
+  static init(): IdentityService {
+    const repos = {
+      userRepository: new UserRepository(prisma),
+      userSessionRepository: new UserSessionRepository(prisma),
+      userProfileRepository: new UserProfileRepository(prisma),
+    };
+
+    const services = {
+      passwordHasher: PasswordHasher,
+      idGenerator: IdGenerator,
+      eventBus,
+    };
+
+    commandBus.register(
+      RegisterUserCommand,
+      new RegisterUserHandler(
+        repos.userRepository,
+        repos.userProfileRepository,
+        services.eventBus,
+        services.passwordHasher,
+        services.idGenerator,
+      ),
+    );
+
+    commandBus.register(
+      LoginUserCommand,
+      new LoginUserHandler(
+        repos.userRepository,
+        services.eventBus,
+        services.passwordHasher,
+        featureFlagRepo,
+        featureFlagCache,
+      ),
+    );
+
+    // ... remaining handler registrations ...
+
+    return new IdentityService(commandBus, queryBus, JwtService);
+  }
+}
+
+const identityService = IdentityModule.init();
+export { identityService, type IdentityService };
 ```
 
-Adding a new command requires one new folder. Nothing else changes.
+The module's `index.ts` re-exports from `api/`:
+
+```ts
+// identity/index.ts
+export { identityService } from './api';
+export * from './api/identity.dto';
+```
+
+### Service Layer — `api/identity.service.ts`
+
+The service is the module's public API surface. It dispatches commands/queries via the bus, maps domain results to DTOs using dedicated mappers, and handles JWT signing for auth flows. Services replace the previous controller pattern:
+
+```ts
+class IdentityService {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly jwtService: IJwtService,
+  ) {}
+
+  async loginUser(email: string, password: string): Promise<LoginResponseDTO> {
+    const result = await this.commandBus.dispatch(
+      new LoginUserCommand(email, password),
+    );
+
+    const loginResult = result.getValueOrThrow();
+    const userId = loginResult.user.id.value;
+    const isSuccess = loginResult.type === 'SUCCESS';
+    const purpose = isSuccess ? JWT_TYPE.ACCESS : JWT_TYPE.MFA_CHALLENGE;
+    const ttl = isSuccess ? '15m' : '5m';
+
+    const tokenResult = await this.jwtService.sign(userId, purpose, ttl);
+    const token = tokenResult.getValueOrThrow();
+
+    return isSuccess
+      ? { type: 'SUCCESS', accessToken: token }
+      : { type: 'MFA_REQUIRED', challengeToken: token };
+  }
+}
+```
 
 ### Handler Contract
 
@@ -490,7 +671,7 @@ async execute(command: RegisterUserCommand): Promise<RegisterUserResponse> {
 }
 ```
 
-No try/catch in handlers. Failures return as `Result.fail` values and surface as thrown exceptions via `getValueOrThrow()`, landing in `createAction`'s catch boundary.
+No try/catch in handlers. Failures return as `Result.fail` values and surface as thrown exceptions via `getValueOrThrow()` in the service, landing in `handleServerError`'s catch boundary.
 
 ---
 
@@ -504,6 +685,26 @@ Prisma uses a `globalThis` singleton to survive Next.js hot reload in developmen
 const globalForPrisma = globalThis as unknown as { prisma: PrismaService };
 const prisma = globalForPrisma.prisma ?? new PrismaService();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+```
+
+### Repository Implementation
+
+Repository implementations live in `infrastructure/repositories/` with an `.impl.ts` suffix. Prisma-to-domain mappers live in `infrastructure/mappers/`:
+
+```
+infrastructure/
+  repositories/
+    user.repository.impl.ts
+    user-profile.repository.impl.ts
+    user-session.repository.impl.ts
+  mappers/
+    user-prisma.mapper.ts
+    user-profile-prisma.mapper.ts
+    user-session-prisma.mapper.ts
+  services/
+    password-hasher.service.ts
+    id-generator.service.ts
+    totp.service.ts
 ```
 
 ### Durable Event Bus
@@ -524,7 +725,42 @@ The `domain_events` table serves three roles: durable delivery guarantee (persis
 
 `JwtService` is a plain object singleton implementing `IJwtService`. Uses `jose` (HS256). The `JWT_SECRET` environment variable is required at startup — the service throws a fatal error if missing.
 
-**Known TODOs:** expiration time, audience/issuer claims, test setup.
+The JWT carries only `userId` in the `sub` claim plus a `type` discriminator. The interface is `sign(sub, type, ttl)` / `verify(token, type)`. Two JWT types are used:
+
+- `JWT_TYPE.ACCESS` — standard access token (15-minute TTL)
+- `JWT_TYPE.MFA_CHALLENGE` — short-lived challenge token for MFA verification (5-minute TTL)
+
+`verify()` validates both the cryptographic signature and the `type` claim, rejecting tokens that do not match the expected purpose.
+
+### Feature Flags
+
+Feature flags are stored in the `feature_flags` Prisma table (keyed by tier and feature name) and cached in Upstash Redis:
+
+- `FeatureFlagRepository` — Prisma implementation of `IFeatureFlagRepository`. Queries flags by tier.
+- `UpstashFeatureFlagCache` — Redis implementation of `IFeatureFlagCache`. Caches enabled features per user with a 1-hour TTL.
+
+Feature flags are checked in two places:
+
+1. **Server-side** — the `withFeatureFlag` middleware on `next-safe-action` chains. Resolves the user's tier via `identityService.getUserAccount()`, queries flags, caches the result, and throws `FeatureDisabledException` if the feature is not enabled.
+2. **Client-side** — the `useFeatureFlags` hook reads cached feature flags from the TanStack Query cache and exposes `isEnabled(feature)` / `isDisabled(feature)` for conditional UI rendering.
+
+### Observability
+
+`ObservabilityService` is a plain object singleton implementing `IObservabilityService`. It uses OpenTelemetry's `@opentelemetry/api` to record handler failures as span attributes:
+
+```ts
+const ObservabilityService: IObservabilityService = {
+  recordHandlerFailure(handlerName: string, error: unknown): void {
+    const span = trace.getActiveSpan();
+    if (!span) return;
+    span.setAttribute('handler.name', handlerName);
+    span.setAttribute('error.type', error instanceof Error ? error.constructor.name : 'UnknownError');
+    span.setStatus({ code: SpanStatusCode.ERROR, message });
+  },
+};
+```
+
+Events replace application-level logging for audit purposes. The `logger` utility is reserved for infrastructure-level errors.
 
 ### Error Response Mapping
 
@@ -542,74 +778,148 @@ const prismaErrorMap: Record<string, ErrorResponse> = {
 
 ## 7. Transport Layer
 
-### `createAction` — the action factory
+### `next-safe-action` — the action framework
 
-All server actions are created via `createAction`. It provides:
-- Optional session resolution (`protected: true`) — injects `AuthUser` before handler runs
-- Single catch boundary — `DomainException`, `ZodError`, and unexpected errors all land here
-- Consistent `ActionResult<T>` response shape via `_toSuccess` / `_toFailure` mappers
+All server actions are created via `next-safe-action`. The `actionClient` is configured with a single `handleServerError` catch boundary that maps all thrown errors through `toErrorResponse`:
 
 ```ts
-// Unprotected
-const loginAction = createAction({
-  handler: async (input: unknown) => {
-    const dto = SchemaValidator.parse(loginUserSchema, input).getValueOrThrow();
-    const result = await commandBus.dispatch(new LoginUserCommand(dto.email, dto.password));
-    const { jwt } = result.getValueOrThrow();
-    SessionService.set(jwt);
-  },
-});
-
-// Protected — session resolved and injected
-const getProfileAction = createAction({
-  protected: true,
-  handler: async (session: AuthUser, input: unknown) => {
-    const result = await queryBus.dispatch(new GetUserProfileQuery(session.id));
-    return result.getValueOrThrow();
+// _shared/lib/next-safe-action/action-client.ts
+const actionClient = createSafeActionClient({
+  handleServerError: (error): ErrorResponse => {
+    logger.error(error);
+    return toErrorResponse(error);
   },
 });
 ```
+
+Actions chain middleware inline using `.use()` and declare input schemas via `.inputSchema()`:
+
+```ts
+// Unprotected — rate-limited, schema-validated
+const loginAction = actionClient
+  .use(withRateLimit)
+  .inputSchema(loginUserSchema)
+  .action(async ({ parsedInput }) => {
+    const response = await identityService.loginUser(
+      parsedInput.email,
+      parsedInput.password,
+    );
+
+    if (response.type === 'SUCCESS') {
+      await setCookie(response.accessToken);
+      return;
+    }
+
+    return { challengeToken: response.challengeToken };
+  });
+
+// Protected — auth resolved, feature-flagged
+const setupMfaAction = actionClient
+  .use(withAuth)
+  .use(withFeatureFlag(FEATURE_KEYS.MFA))
+  .action(async ({ ctx }) => {
+    return identityService.setupMfa(ctx.userId);
+  });
+```
+
+### Middleware
+
+Middleware is defined in `_shared/lib/next-safe-action/middleware/` using `createMiddleware()`:
+
+- **`withAuth`** — reads the session cookie, verifies the JWT via `JwtService.verify(token, JWT_TYPE.ACCESS)`, and injects `{ userId }` into `ctx`. Throws `UnauthorizedException` if missing or invalid.
+- **`withFeatureFlag(feature)`** — resolves the user's tier, checks the feature flag cache (falls back to the database), and throws `FeatureDisabledException` if the feature is not enabled for the user's tier.
+- **`withRateLimit`** — enforces request rate limits.
+
+### `handleActionResponse` — the serialization bridge
+
+`handleActionResponse` bridges the gap between next-safe-action's result shape and TanStack Query's error expectations:
+
+```ts
+const handleActionResponse = async <T>(
+  response: Promise<SafeActionResponse<T>>,
+): Promise<T> => {
+  const result = await response;
+
+  if (result.serverError) {
+    throw new ActionError(result.serverError.code, result.serverError.message);
+  }
+
+  if (result.validationErrors) {
+    throw new ActionError('VALIDATION_ERROR', 'The request contains invalid data.');
+  }
+
+  return result.data as T;
+};
+```
+
+Feature hooks call `handleActionResponse(action(input))` inside `useMutation`. If the action fails, `handleActionResponse` throws an `ActionError` with the stable error code and message. TanStack Query catches it — `retry` checks `error.code` (skipping non-retryable codes like `UNAUTHORIZED` and `RATE_LIMIT_EXCEEDED`), and global `onError` toasts the message.
 
 ### Full request flow
 
 ```
-Client calls action (e.g. loginAction(formData))
-  → createAction catch boundary enters
-    → protected: true — SessionService.get().getValueOrThrow() — throws if invalid
-    → handler(input) executes
-      → SchemaValidator.parse() — throws ValidationException if invalid
-      → commandBus.dispatch(new LoginUserCommand(...))
-        → LoginUserHandler.execute()
-          → Email.create(), Password.create() — domain validation
-          → userRepository.findByEmail()
-          → hasher.verify()
-          → jwtService.sign()
-          → eventBus.dispatch([UserLoggedInEvent])
-          → Result.ok({ jwt })
-      → result.getValueOrThrow() — throws DomainException on failure
-    → _toSuccess({ jwt })
-  → ActionResult<{ jwt: string }> { success: true, data: { jwt } }
+Client calls handleActionResponse(loginAction({ email, password }))
+  → next-safe-action chain enters
+    → withRateLimit — enforce rate limit
+    → .inputSchema(loginUserSchema) — Zod validates input
+    → .action() handler executes
+      → identityService.loginUser(email, password)
+        → commandBus.dispatch(new LoginUserCommand(...))
+          → LoginUserHandler.execute()
+            → Email.create(), Password.create() — domain validation
+            → userRepository.findByEmail()
+            → hasher.verify()
+            → user.loggedIn() — raises UserLoggedInEvent
+            → pullDomainEvents() + eventBus.dispatch()
+            → featureFlagRepo + cache warm
+            → Result.ok({ type: 'SUCCESS', user })
+        → service signs JWT via jwtService.sign(userId, JWT_TYPE.ACCESS, '15m')
+        → returns { type: 'SUCCESS', accessToken }
+      → setCookie(accessToken) — httpOnly cookie
+      → returns void (success with no data)
+  → next-safe-action returns { data: undefined }
+  → handleActionResponse unwraps — returns undefined
 
 On any throw:
-  → _toFailure(err) — toErrorResponse maps to stable code + message
-  → ActionResult { success: false, code, message }
+  → handleServerError catches — logger.error(error), toErrorResponse maps to { code, message }
+  → next-safe-action returns { serverError: { code, message } }
+  → handleActionResponse sees serverError — throws ActionError(code, message)
+  → TanStack Query onError — global toast handler
 ```
 
 ### Auth flow
 
 ```
-loginAction → identityModule → SessionService.set(jwt) → httpOnly cookie
+loginAction → identityService.loginUser() → signs JWT (userId in sub)
+  → MFA disabled: { type: 'SUCCESS', accessToken } → setCookie(accessToken)
+  → MFA enabled:  { type: 'MFA_REQUIRED', challengeToken } → returned to client
 
-middleware.ts (Next.js edge middleware)
-  → reads 'session' cookie
-  → JwtService.verify(token)
+verifyMfaLoginAction → identityService.verifyMfaLogin(challengeToken, totpCode)
+  → verifies MFA_CHALLENGE JWT, validates TOTP code
+  → signs new ACCESS JWT → { accessToken } → setCookie(accessToken)
+
+proxy.ts (Next.js edge middleware, exported as `middleware`)
+  → reads session cookie
+  → JwtService.verify(token, JWT_TYPE.ACCESS)
   → invalid/missing → redirect /login
   → valid → NextResponse.next()
 
-createAction({ protected: true })
-  → SessionService.get() → JwtService.verify(token)
-  → injects AuthUser into handler
+withAuth middleware (on protected server actions)
+  → getCookie() → JwtService.verify(token, JWT_TYPE.ACCESS)
+  → injects { userId } into ctx
+
+loadSession() (for React Server Components)
+  → React.cache() wrapped — getCookie() → JwtService.verify()
+  → returns { userId }
 ```
+
+### Cookie Helpers
+
+Session cookies are managed via standalone helpers in `_shared/lib/session/session.service.ts`:
+
+- `setCookie(accessToken)` — sets an httpOnly, secure, sameSite=lax cookie
+- `deleteCookie()` — clears the session cookie
+- `getCookie()` — reads the cookie value
+- `loadSession()` — `React.cache()` wrapper that reads the cookie, verifies the JWT, and returns `{ userId }`. Used in React Server Components for session resolution.
 
 ---
 
@@ -619,7 +929,7 @@ This project applies a **lite variant of Feature-Sliced Design** — the same la
 
 The [official FSD specification](https://feature-sliced.design/overview) defines additional conventions around slice/segment naming, public API enforcement via index files, and cross-import rules that are stricter than what is applied here. The full spec is worth reading if you want the complete picture. What this project takes from FSD:
 
-- The **layer names and responsibilities** (lib, components, widgets, providers, features)
+- The **layer names and responsibilities** (shared, entities, components, widgets, providers, features)
 - The **one-way dependency rule** — lower layers never import from higher ones
 - The **barrel index** convention — consumers import from `index.ts`, never from internal paths
 - The **feature isolation** rule — features never import from other features
@@ -635,31 +945,58 @@ FSD enforces strict one-way dependencies between UI layers. Lower layers never i
 
 | Layer | Directory | Responsibility |
 |---|---|---|
-| lib | `_lib/` | Shared utilities, factories, services. Base layer. |
+| shared | `_shared/` | Cross-cutting libraries, utilities, session management, action client. Base layer. |
+| entities | `_entities/` | Data access layer grouped by domain. Server actions, action-level schemas, entity hooks. |
 | components | `_components/` | Primitive, stateless UI — button, input, card. No feature dependencies. |
 | widgets | `_widgets/` | Compositional blocks — headers, footers, dashboard shell. |
-| providers | `_providers/` | App-level context — theme, auth. |
-| features | `_features/` | Domain feature modules. Each owns actions, hooks, and UI. |
+| providers | `_providers/` | App-level context — theme, query. |
+| features | `_features/` | Domain feature modules. Each owns hooks, UI, and feature-specific schemas. |
 
-**Dependency rule:** `_lib` → `_components` → `_widgets` → `_features` → routes. No layer imports from above itself. Features never import from other features. Cross-feature sharing belongs in `_lib` or `_components`.
+**Dependency rule:** `_shared` -> `_entities` -> `_components` -> `_widgets` -> `_features` -> routes. No layer imports from above itself. Features never import from other features. Entities never import from features, widgets, or components.
 
 Each layer exposes a barrel `index.ts`. Consumers import from the barrel, never from deep internal paths. This means a layer's internal structure can change without touching any import paths outside it.
 
+### Entity module structure
+
+Entities are the data access layer. They own server actions, action-level Zod schemas, and entity-level hooks. Entities do not know about UI, TanStack Query mutations, or feature-specific logic.
+
+```
+_entities/identity/
+  actions/
+    login.action.ts               # 'use server' — calls identityService, sets cookie
+    register.action.ts
+    setup-mfa.action.ts
+    verify-mfa-login.action.ts
+    index.ts
+  hooks/
+    use-session.hook.ts            # session state hook
+    use-feature-flags.hook.ts      # reads feature flags from query cache
+    index.ts
+  schema/
+    login.schema.ts                # Zod schema for login input
+    register.schema.ts
+    verify-mfa.schema.ts
+    fields.ts                      # shared field validators
+    index.ts
+```
+
 ### Feature module structure
+
+Features compose entity actions into hooks that wrap them with TanStack Query. Features own hooks, UI, and feature-specific form schemas. Components are dumb — they consume the hook's return value and render.
 
 ```
 _features/auth/
-  actions/
-    login.action.ts       # 'use server' — calls commandBus, thin wrapper
-    register.action.ts
-    index.ts
   hooks/
-    use-login-form.hook.ts     # TanStack Form + action mutation
+    use-login-form.hook.ts         # TanStack Form + useMutation wrapping handleActionResponse
     use-register-form.hook.ts
+    use-logout.hook.ts
+    use-mfa-verify-form.hook.ts
     index.ts
   ui/
-    login-form.tsx        # uses hooks + _components only
+    login-form.tsx                 # uses hooks + _components only
     register-form.tsx
+    mfa-verify-form.tsx
+    logout-button.tsx
     index.ts
 ```
 
@@ -669,15 +1006,21 @@ _features/auth/
 
 Validation occurs at two explicit boundaries:
 
-### Transport boundary — `SchemaValidator`
+### Transport boundary — `next-safe-action` `.inputSchema()`
 
-Wraps Zod `safeParse`, returns `Result<T, ValidationException>`. Validates shape and types before the payload reaches the domain.
+Zod schemas are declared on the action chain via `.inputSchema()`. next-safe-action runs `safeParse` before the handler executes. Invalid input never reaches the service layer.
 
 ```ts
-const dto = SchemaValidator.parse(loginUserSchema, input).getValueOrThrow();
+const loginAction = actionClient
+  .use(withRateLimit)
+  .inputSchema(loginUserSchema)
+  .action(async ({ parsedInput }) => {
+    // parsedInput is fully typed and validated
+    return identityService.loginUser(parsedInput.email, parsedInput.password);
+  });
 ```
 
-Swapping Zod means replacing `SchemaValidator` once. The domain and all handlers are untouched.
+Schemas live in the entity layer (`_entities/<domain>/schema/`), co-located with the actions they validate. Feature-specific form schemas (e.g., client-side-only validation) live in the feature layer (`_features/<domain>/schema/`).
 
 ### Domain boundary — value objects
 
@@ -688,12 +1031,12 @@ const emailResult = Email.create(command.email); // enforces valid format
 const passwordResult = Password.create(command.password); // enforces strength rules
 ```
 
-| | `SchemaValidator` | Value objects |
+| | `.inputSchema()` | Value objects |
 |---|---|---|
-| Layer | Infrastructure | Domain |
+| Layer | Transport (next-safe-action) | Domain |
 | Validates | Shape and types | Business invariants |
-| Fails with | `ZodError` → `VALIDATION_ERROR` | `DomainException` → `VALIDATION_ERROR` |
-| Swappable | Yes | No — these are the rules |
+| Fails with | Zod validation error -> `VALIDATION_ERROR` | `DomainException` -> `VALIDATION_ERROR` |
+| Swappable | Yes (replace Zod) | No — these are the rules |
 
 Both map to the same `VALIDATION_ERROR` response externally.
 
@@ -703,6 +1046,9 @@ Both map to the same `VALIDATION_ERROR` response externally.
 
 - **User enumeration prevention**: Registration returns `PENDING_VERIFICATION` regardless of whether the email already exists. Login returns a generic failure for both "email not found" and "password incorrect" cases. The external response is identical; the internal exception is distinct for logging.
 - **Password storage**: Argon2 via `argon2` package. Passwords are hashed before persistence; the domain never stores or logs plaintext passwords.
-- **JWT**: HS256 via `jose`. Stored in an httpOnly cookie — not accessible from JavaScript. Verified in both Next.js edge middleware and `createAction` for protected actions.
-- **Input validation**: All action inputs are typed as `unknown`. Schema validation is the handler's first step — unvalidated data never reaches the domain.
+- **JWT**: HS256 via `jose`. Carries only `userId` in the `sub` claim and a `type` discriminator (`ACCESS` or `MFA_CHALLENGE`). Stored in an httpOnly cookie — not accessible from JavaScript. Verified in both the edge proxy (`proxy.ts`) and `withAuth` middleware for protected server actions.
+- **MFA**: TOTP-based multi-factor authentication. When MFA is enabled, login returns a short-lived `MFA_CHALLENGE` JWT (5-minute TTL) instead of an access token. The client submits the challenge token with a TOTP code to `verifyMfaLogin`, which validates both before issuing an access token. MFA setup and verification are gated behind the `FEATURE_KEYS.MFA` feature flag.
+- **Feature flags**: Server-side feature gating via the `withFeatureFlag` middleware. Flags are stored in Prisma and cached in Upstash Redis. Disabled features throw `FeatureDisabledException`, which maps to a stable `FEATURE_DISABLED` error code.
+- **Input validation**: All action inputs are validated via Zod schemas declared on the `next-safe-action` chain. Unvalidated data never reaches the service or domain layers.
 - **Prisma**: Parameterised queries only. No raw SQL in the current codebase.
+- **Rate limiting**: The `withRateLimit` middleware enforces request rate limits on sensitive actions (login, registration).

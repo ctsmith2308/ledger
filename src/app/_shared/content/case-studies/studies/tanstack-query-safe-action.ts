@@ -53,11 +53,11 @@ const tanstackQuerySafeAction: CaseStudy = {
     },
     {
       heading: 'next-safe-action for mutations',
-      body: 'Server actions are POST requests. next-safe-action wraps them with middleware chaining (.use(withAuth).use(withFeatureFlag)), input schema validation (.inputSchema()), and a typed error boundary (handleServerError). The execute() utility bridges the serialisation gap — it unwraps the safe-action response and throws ActionError on failure, which TanStack Query catches via the global MutationCache onError handler. One toast, one error path, every mutation.',
+      body: 'Server actions are POST requests. next-safe-action wraps them with middleware chaining (.use(withAuth).use(withFeatureFlag)), input schema validation (.inputSchema()), and a typed error boundary (handleServerError). The handleActionResponse() utility bridges the serialisation gap — it unwraps the safe-action response and throws ActionError on failure, which TanStack Query catches via the global MutationCache onError handler. One toast, one error path, every mutation.',
     },
     {
       heading: 'The hydration pattern',
-      body: 'Server components call module services directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key — the data is already there, no fetch needed. This pattern applies to the session (useUserTier reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
+      body: 'Server components call module services directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key — the data is already there, no fetch needed. This pattern applies to feature flags (useFeatureFlags reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
     },
     {
       heading: 'When Nanostores would enter',

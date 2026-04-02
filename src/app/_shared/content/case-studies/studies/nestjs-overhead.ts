@@ -70,7 +70,7 @@ class IdentityModule {
   static init(): IdentityService {
     const repos = { userRepository: new UserRepository(prisma) };
     commandBus.register(RegisterUserCommand, new RegisterUserHandler(repos.userRepository, ...));
-    return new IdentityService(commandBus, queryBus);
+    return new IdentityService(commandBus, queryBus, JwtService);
   }
 }
 

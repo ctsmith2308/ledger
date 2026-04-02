@@ -12,7 +12,6 @@ export * from './session-revoked.exception';
 export * from './invalid-session-id.exception';
 export * from './user-not-found.exception';
 export * from './plaid-error.exception';
-export * from './account-not-found.exception';
 export * from './budget-already-exists.exception';
 export * from './budget-not-found.exception';
 export * from './invalid-amount.exception';
