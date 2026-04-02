@@ -48,7 +48,8 @@ const noCacheHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // output: 'standalone' — enable for Docker/containerized deployments.
+  // Railway's Nixpacks builder doesn't need it; uses npm start directly.
   headers: async () => [
     {
       source: '/(.*)',
