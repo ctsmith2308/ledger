@@ -1,8 +1,14 @@
 import { Query, DomainException, Result } from '@/core/shared/domain';
 
-import { User } from '@/core/modules/identity/domain';
+import { User, UserProfile } from '@/core/modules/identity/domain';
 
-type GetUserAccountResponse = Result<User, DomainException>;
+type GetUserAccountData = {
+  user: User;
+  profile: UserProfile;
+  features: string[];
+};
+
+type GetUserAccountResponse = Result<GetUserAccountData, DomainException>;
 
 class GetUserAccountQuery extends Query<GetUserAccountResponse> {
   constructor(readonly userId: string) {
@@ -11,4 +17,4 @@ class GetUserAccountQuery extends Query<GetUserAccountResponse> {
 }
 
 export { GetUserAccountQuery };
-export type { GetUserAccountResponse };
+export type { GetUserAccountData, GetUserAccountResponse };

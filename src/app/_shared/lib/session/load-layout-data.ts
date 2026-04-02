@@ -4,7 +4,7 @@ import { QueryClient } from '@tanstack/react-query';
 
 import { UnauthorizedException } from '@/core/shared/domain';
 
-import { featureFlagCache } from '@/core/shared/infrastructure';
+import { identityService } from '@/core/modules/identity';
 
 import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
@@ -19,15 +19,11 @@ const loadLayoutData = async (queryClient: QueryClient) => {
     throw error;
   }
 
-  let features: string[] = [];
-  try {
-    features = (await featureFlagCache.getFeatures(session.userId)) ?? [];
-  } catch {
-    // Cache failure is non-fatal — degrade to no feature flags
-  }
+  const account = await identityService.getUserAccount(session.userId);
 
   queryClient.setQueryData(queryKeys.session, session);
-  queryClient.setQueryData(queryKeys.featureFlags, features);
+  queryClient.setQueryData(queryKeys.userAccount, account);
+  queryClient.setQueryData(queryKeys.featureFlags, account.features);
 };
 
 export { loadLayoutData };

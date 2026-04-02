@@ -1,8 +1,6 @@
 import {
   IHandler,
   IEventBus,
-  IFeatureFlagRepository,
-  IFeatureFlagCache,
   InvalidEmailException,
   InvalidPasswordException,
   Result,
@@ -26,8 +24,6 @@ class LoginUserHandler implements IHandler<
     private readonly userRepository: IUserRepository,
     private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
-    private readonly featureFlagRepo: IFeatureFlagRepository,
-    private readonly featureFlagCache: IFeatureFlagCache,
   ) {}
 
   async execute(command: LoginUserCommand): Promise<LoginUserResponse> {
@@ -70,9 +66,6 @@ class LoginUserHandler implements IHandler<
 
     const events = user.pullDomainEvents();
     await this.eventBus.dispatch(events);
-
-    const features = await this.featureFlagRepo.findEnabledByTier(user.tier.value);
-    await this.featureFlagCache.setFeatures(user.id.value, features);
 
     return Result.ok({ type: 'SUCCESS' as const, user });
   }

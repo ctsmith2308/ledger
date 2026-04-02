@@ -32,16 +32,24 @@ class CommandBus {
       throw new Error(`No handler registered for command: ${key}`);
     }
 
+    // startActiveSpan sets this span as the active context parent.
+    // If infrastructure adapters (Prisma, Redis, Plaid) add their own
+    // spans in the future, they will automatically nest under this one.
+    // Switch to startSpan if parent context is not needed.
     return tracer.startActiveSpan(`command.${key}`, async (span) => {
       try {
         const result = (await handler.execute(command)) as Promise<
           T['_response']
         >;
+
         span.end();
+
         return result;
       } catch (error) {
         this.observability.recordHandlerFailure(key, error);
+
         span.end();
+
         throw error;
       }
     });

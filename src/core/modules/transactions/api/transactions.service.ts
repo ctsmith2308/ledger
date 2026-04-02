@@ -6,7 +6,17 @@ import {
   GetSpendingByCategoryQuery,
 } from '../application';
 
-import { TransactionMapper } from './mappers';
+import {
+  SpendingByCategoryMapper,
+  SyncResultMapper,
+  TransactionMapper,
+} from './mappers';
+
+import {
+  type SpendingByCategoryDTO,
+  type SyncResultDTO,
+  type TransactionDTO,
+} from './transactions.dto';
 
 class TransactionsService {
   constructor(
@@ -14,17 +24,15 @@ class TransactionsService {
     private readonly queryBus: QueryBus,
   ) {}
 
-  async syncTransactions(userId: string) {
+  async syncTransactions(userId: string): Promise<SyncResultDTO> {
     const result = await this.commandBus.dispatch(
       new SyncTransactionsCommand(userId),
     );
 
-    const { added, modified, removed } = result.getValueOrThrow();
-
-    return { added, modified, removed };
+    return SyncResultMapper.toDTO(result.getValueOrThrow());
   }
 
-  async getTransactions(userId: string) {
+  async getTransactions(userId: string): Promise<TransactionDTO[]> {
     const result = await this.queryBus.dispatch(
       new GetTransactionsQuery(userId),
     );
@@ -32,12 +40,12 @@ class TransactionsService {
     return TransactionMapper.toDTOList(result.getValueOrThrow());
   }
 
-  async getSpendingByCategory(userId: string, month: Date) {
+  async getSpendingByCategory(userId: string, month: Date): Promise<SpendingByCategoryDTO[]> {
     const result = await this.queryBus.dispatch(
       new GetSpendingByCategoryQuery(userId, month),
     );
 
-    return result.getValueOrThrow();
+    return SpendingByCategoryMapper.toDTOList(result.getValueOrThrow());
   }
 }
 

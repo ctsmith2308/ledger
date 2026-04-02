@@ -20,11 +20,11 @@ const loginAction = actionClient
     );
 
     if (response.type === 'SUCCESS') {
-      await setCookie(response.accessToken);
+      await setCookie(response.token);
       return;
     }
 
-    return { challengeToken: response.challengeToken };
+    return { challengeToken: response.token };
   });
 
 export { loginAction };

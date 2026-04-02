@@ -32,17 +32,17 @@ import { PageContainer, PageHeader } from '@/app/_widgets';
 const loadOverviewData = async () => {
   const session = await loadSession();
 
-  const [profile, accounts, transactions] = await Promise.all([
-    identityService.getUserProfile(session.userId),
+  const [account, accounts, transactions] = await Promise.all([
+    identityService.getUserAccount(session.userId),
     bankingService.getAccounts(session.userId),
     transactionsService.getTransactions(session.userId),
   ]);
 
-  return { profile, accounts, transactions };
+  return { account, accounts, transactions };
 };
 
 async function OverviewPage() {
-  const { profile, accounts, transactions } = await loadOverviewData();
+  const { account, accounts, transactions } = await loadOverviewData();
 
   const hasAccounts = accounts.length > 0;
   const monthlyByCategory = calcMonthlySpendingByCategory(transactions);
@@ -52,7 +52,7 @@ async function OverviewPage() {
   return (
     <PageContainer>
       <PageHeader
-        title={`Welcome back, ${profile.firstName}`}
+        title={`Welcome back, ${account.firstName}`}
         description="Here's a summary of your finances."
       />
 

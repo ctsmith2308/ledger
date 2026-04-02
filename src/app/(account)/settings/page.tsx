@@ -19,16 +19,11 @@ import { LogoutButton } from '@/app/_features/auth';
 const loadSettingsData = async () => {
   const session = await loadSession();
 
-  const [profile, account] = await Promise.all([
-    identityService.getUserProfile(session.userId),
-    identityService.getUserAccount(session.userId),
-  ]);
-
-  return { profile, account };
+  return identityService.getUserAccount(session.userId);
 };
 
 export default async function SettingsPage() {
-  const { profile, account } = await loadSettingsData();
+  const account = await loadSettingsData();
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
@@ -53,8 +48,8 @@ export default async function SettingsPage() {
       <div className="space-y-6">
         <UpdateProfileForm
           initial={{
-            firstName: profile.firstName,
-            lastName: profile.lastName,
+            firstName: account.firstName,
+            lastName: account.lastName,
           }}
         />
 

@@ -15,8 +15,6 @@ import {
 
 import {
   type IEventBus,
-  type IFeatureFlagRepository,
-  type IFeatureFlagCache,
   UserNotFoundException,
   InvalidMfaCodeException,
 } from '@/core/shared/domain';
@@ -45,8 +43,6 @@ const _makeHandler = (overrides: {
   userRepository?: Partial<IUserRepository>;
   eventBus?: Partial<IEventBus>;
   totpService?: Partial<ITotpService>;
-  featureFlagRepo?: Partial<IFeatureFlagRepository>;
-  featureFlagCache?: Partial<IFeatureFlagCache>;
 } = {}) => {
   const userRepository: IUserRepository = {
     save: vi.fn(),
@@ -70,24 +66,10 @@ const _makeHandler = (overrides: {
     ...overrides.totpService,
   };
 
-  const featureFlagRepo: IFeatureFlagRepository = {
-    findEnabledByTier: vi.fn().mockResolvedValue([]),
-    ...overrides.featureFlagRepo,
-  };
-
-  const featureFlagCache: IFeatureFlagCache = {
-    getFeatures: vi.fn().mockResolvedValue(null),
-    setFeatures: vi.fn(),
-    invalidate: vi.fn(),
-    ...overrides.featureFlagCache,
-  };
-
   const handler = new VerifyMfaLoginHandler(
     userRepository,
     eventBus,
     totpService,
-    featureFlagRepo,
-    featureFlagCache,
   );
 
   return {
@@ -95,8 +77,6 @@ const _makeHandler = (overrides: {
     userRepository,
     eventBus,
     totpService,
-    featureFlagRepo,
-    featureFlagCache,
   };
 };
 
@@ -123,25 +103,14 @@ describe('VerifyMfaLoginHandler', () => {
       expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     });
 
-    it('caches feature flags for the user', async () => {
-      const { handler, featureFlagRepo, featureFlagCache } = _makeHandler();
-
-      await handler.execute(validCommand);
-
-      expect(featureFlagRepo.findEnabledByTier).toHaveBeenCalledWith('TRIAL');
-      expect(featureFlagCache.setFeatures).toHaveBeenCalledWith(
-        'user-12345',
-        [],
-      );
-    });
-
-    it('returns the user on success', async () => {
+    it('returns SUCCESS with the user on success', async () => {
       const { handler } = _makeHandler();
 
       const result = await handler.execute(validCommand);
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value).toBeInstanceOf(User);
+      expect(result.value.type).toBe('SUCCESS');
+      expect(result.value.user).toBeInstanceOf(User);
     });
   });
 
@@ -193,16 +162,5 @@ describe('VerifyMfaLoginHandler', () => {
       expect(eventBus.dispatch).not.toHaveBeenCalled();
     });
 
-    it('does not cache feature flags on failure', async () => {
-      const { handler, featureFlagCache } = _makeHandler({
-        userRepository: {
-          findById: vi.fn().mockResolvedValue(null),
-        },
-      });
-
-      await handler.execute(validCommand);
-
-      expect(featureFlagCache.setFeatures).not.toHaveBeenCalled();
-    });
   });
 });

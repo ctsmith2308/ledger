@@ -8,7 +8,12 @@ import {
   GetBudgetsQuery,
 } from '../application';
 
-import { BudgetMapper } from './mappers';
+import { BudgetMapper, BudgetOverviewMapper } from './mappers';
+
+import {
+  type BudgetDTO,
+  type BudgetOverviewItemDTO,
+} from './budgets.dto';
 
 class BudgetsService {
   constructor(
@@ -20,7 +25,7 @@ class BudgetsService {
     userId: string,
     category: string,
     monthlyLimit: number,
-  ) {
+  ): Promise<BudgetDTO> {
     const result = await this.commandBus.dispatch(
       new CreateBudgetCommand(userId, category, monthlyLimit),
     );
@@ -28,7 +33,7 @@ class BudgetsService {
     return BudgetMapper.toDTO(result.getValueOrThrow());
   }
 
-  async deleteBudget(userId: string, budgetId: string) {
+  async deleteBudget(userId: string, budgetId: string): Promise<void> {
     const result = await this.commandBus.dispatch(
       new DeleteBudgetCommand(userId, budgetId),
     );
@@ -40,7 +45,7 @@ class BudgetsService {
     userId: string,
     budgetId: string,
     monthlyLimit: number,
-  ) {
+  ): Promise<BudgetDTO> {
     const result = await this.commandBus.dispatch(
       new UpdateBudgetCommand(userId, budgetId, monthlyLimit),
     );
@@ -48,16 +53,16 @@ class BudgetsService {
     return BudgetMapper.toDTO(result.getValueOrThrow());
   }
 
-  async getBudgetOverview(userId: string, month: Date) {
+  async getBudgetOverview(userId: string, month: Date): Promise<BudgetOverviewItemDTO[]> {
     const result = await this.queryBus.dispatch(
       new GetBudgetOverviewQuery(userId, month),
     );
 
-    return result.getValueOrThrow();
+    return BudgetOverviewMapper.toDTOList(result.getValueOrThrow());
   }
 
   // TODO: Remove — getBudgetOverview supersedes this
-  async getBudgets(userId: string) {
+  async getBudgets(userId: string): Promise<BudgetDTO[]> {
     const result = await this.queryBus.dispatch(
       new GetBudgetsQuery(userId),
     );

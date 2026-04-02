@@ -2,7 +2,9 @@ import { Command, DomainException, Result } from '@/core/shared/domain';
 
 import { User } from '@/core/modules/identity/domain';
 
-type VerifyMfaLoginResponse = Result<User, DomainException>;
+type MfaLoginResult = { type: 'SUCCESS'; user: User };
+
+type VerifyMfaLoginResponse = Result<MfaLoginResult, DomainException>;
 
 class VerifyMfaLoginCommand extends Command<VerifyMfaLoginResponse> {
   constructor(
@@ -13,4 +15,4 @@ class VerifyMfaLoginCommand extends Command<VerifyMfaLoginResponse> {
   }
 }
 
-export { VerifyMfaLoginCommand, type VerifyMfaLoginResponse };
+export { VerifyMfaLoginCommand, type VerifyMfaLoginResponse, type MfaLoginResult };

@@ -29,8 +29,6 @@ import {
   VerifyMfaLoginHandler,
   DisableMfaCommand,
   DisableMfaHandler,
-  GetUserProfileQuery,
-  GetUserProfileHandler,
   GetUserAccountQuery,
   GetUserAccountHandler,
 } from '../application';
@@ -79,8 +77,6 @@ class IdentityModule {
         repos.userRepository,
         services.eventBus,
         services.passwordHasher,
-        featureFlagRepo,
-        featureFlagCache,
       ),
     );
 
@@ -135,8 +131,6 @@ class IdentityModule {
         repos.userRepository,
         services.eventBus,
         TotpService,
-        featureFlagRepo,
-        featureFlagCache,
       ),
     );
 
@@ -146,13 +140,13 @@ class IdentityModule {
     );
 
     queryBus.register(
-      GetUserProfileQuery,
-      new GetUserProfileHandler(repos.userProfileRepository),
-    );
-
-    queryBus.register(
       GetUserAccountQuery,
-      new GetUserAccountHandler(repos.userRepository),
+      new GetUserAccountHandler(
+        repos.userRepository,
+        repos.userProfileRepository,
+        featureFlagRepo,
+        featureFlagCache,
+      ),
     );
 
     return new IdentityService(commandBus, queryBus, JwtService);

@@ -1,4 +1,4 @@
-import { type IJwtService, JWT_TYPE } from '@/core/shared/domain';
+import { type IJwtService } from '@/core/shared/domain';
 
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
@@ -13,15 +13,14 @@ import {
   VerifyMfaSetupCommand,
   VerifyMfaLoginCommand,
   DisableMfaCommand,
-  GetUserProfileQuery,
   GetUserAccountQuery,
 } from '../application';
 
 import {
   CleanupMapper,
+  LoginMapper,
   UserMapper,
   UserAccountMapper,
-  UserProfileMapper,
 } from './mappers';
 
 import { type LoginResponseDTO } from './identity.dto';
@@ -52,17 +51,12 @@ class IdentityService {
     );
 
     const loginResult = result.getValueOrThrow();
-    const userId = loginResult.user.id.value;
-    const isSuccess = loginResult.type === 'SUCCESS';
-    const purpose = isSuccess ? JWT_TYPE.ACCESS : JWT_TYPE.MFA_CHALLENGE;
-    const ttl = isSuccess ? '15m' : '5m';
+    const { userId, purpose, ttl } = LoginMapper.toSigningParams(loginResult);
 
     const tokenResult = await this.jwtService.sign(userId, purpose, ttl);
     const token = tokenResult.getValueOrThrow();
 
-    return isSuccess
-      ? { type: 'SUCCESS', accessToken: token }
-      : { type: 'MFA_REQUIRED', challengeToken: token };
+    return LoginMapper.toDTO(loginResult.type, token);
   }
 
   async setupMfa(userId: string) {
@@ -79,26 +73,21 @@ class IdentityService {
     result.getValueOrThrow();
   }
 
-  async verifyMfaLogin(challengeToken: string, totpCode: string) {
-    const verifyResult = await this.jwtService.verify(
-      challengeToken,
-      JWT_TYPE.MFA_CHALLENGE,
-    );
-
-    const userId = verifyResult.getValueOrThrow();
-
+  async verifyMfaLogin(
+    userId: string,
+    totpCode: string,
+  ): Promise<LoginResponseDTO> {
     const result = await this.commandBus.dispatch(
       new VerifyMfaLoginCommand(userId, totpCode),
     );
 
-    const user = result.getValueOrThrow();
-    const tokenResult = await this.jwtService.sign(
-      user.id.value,
-      JWT_TYPE.ACCESS,
-      '15m',
-    );
+    const loginResult = result.getValueOrThrow();
+    const { userId: mfaUserId, purpose, ttl } = LoginMapper.toSigningParams(loginResult);
 
-    return { accessToken: tokenResult.getValueOrThrow() };
+    const tokenResult = await this.jwtService.sign(mfaUserId, purpose, ttl);
+    const token = tokenResult.getValueOrThrow();
+
+    return LoginMapper.toDTO(loginResult.type, token);
   }
 
   async disableMfa(userId: string) {
@@ -117,12 +106,16 @@ class IdentityService {
     result.getValueOrThrow();
   }
 
-  async updateUserProfile(userId: string, firstName: string, lastName: string) {
+  async updateUserProfile(
+    userId: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<void> {
     const result = await this.commandBus.dispatch(
       new UpdateUserProfileCommand(userId, firstName, lastName),
     );
 
-    return UserProfileMapper.toDTO(result.getValueOrThrow());
+    result.getValueOrThrow();
   }
 
   async deleteAccount(userId: string) {
@@ -139,14 +132,6 @@ class IdentityService {
     );
 
     return CleanupMapper.toDTO(result.getValueOrThrow());
-  }
-
-  async getUserProfile(userId: string) {
-    const result = await this.queryBus.dispatch(
-      new GetUserProfileQuery(userId),
-    );
-
-    return UserProfileMapper.toDTO(result.getValueOrThrow());
   }
 
   async getUserAccount(userId: string) {

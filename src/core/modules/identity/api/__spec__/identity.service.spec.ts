@@ -95,7 +95,7 @@ describe('IdentityService', () => {
   });
 
   describe('loginUser', () => {
-    it('returns SUCCESS with accessToken when MFA is not enabled', async () => {
+    it('returns SUCCESS with token when MFA is not enabled', async () => {
       const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
@@ -106,11 +106,11 @@ describe('IdentityService', () => {
 
       expect(dto).toEqual({
         type: 'SUCCESS',
-        accessToken: 'signed-token',
+        token: 'signed-token',
       });
     });
 
-    it('returns MFA_REQUIRED with challengeToken when MFA is enabled', async () => {
+    it('returns MFA_REQUIRED with token when MFA is enabled', async () => {
       const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
@@ -121,7 +121,7 @@ describe('IdentityService', () => {
 
       expect(dto).toEqual({
         type: 'MFA_REQUIRED',
-        challengeToken: 'signed-token',
+        token: 'signed-token',
       });
     });
 
@@ -139,15 +139,16 @@ describe('IdentityService', () => {
   });
 
   describe('verifyMfaLogin', () => {
-    it('returns accessToken on success', async () => {
-      const { service, commandBus, jwtService } = _makeService();
+    it('returns SUCCESS with token', async () => {
+      const { service, commandBus } = _makeService();
 
-      jwtService.verify.mockResolvedValue(Result.ok('user-1'));
-      commandBus.dispatch.mockResolvedValue(Result.ok(_makeUser(true)));
+      commandBus.dispatch.mockResolvedValue(
+        Result.ok({ type: 'SUCCESS', user: _makeUser(true) }),
+      );
 
-      const result = await service.verifyMfaLogin('challenge-token', '123456');
+      const result = await service.verifyMfaLogin('user-1', '123456');
 
-      expect(result).toEqual({ accessToken: 'signed-token' });
+      expect(result).toEqual({ type: 'SUCCESS', token: 'signed-token' });
     });
   });
 
@@ -202,7 +203,7 @@ describe('IdentityService', () => {
   });
 
   describe('updateUserProfile', () => {
-    it('returns UserProfileDTO on success', async () => {
+    it('does not throw on success', async () => {
       const { service, commandBus } = _makeService();
 
       const profile = UserProfile.save(
@@ -213,17 +214,9 @@ describe('IdentityService', () => {
 
       commandBus.dispatch.mockResolvedValue(Result.ok(profile));
 
-      const dto = await service.updateUserProfile(
-        'user-1',
-        'Updated',
-        'Name',
-      );
-
-      expect(dto).toEqual({
-        userId: 'user-1',
-        firstName: 'Updated',
-        lastName: 'Name',
-      });
+      await expect(
+        service.updateUserProfile('user-1', 'Updated', 'Name'),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -253,33 +246,20 @@ describe('IdentityService', () => {
     });
   });
 
-  describe('getUserProfile', () => {
-    it('returns UserProfileDTO on success', async () => {
+  describe('getUserAccount', () => {
+    it('returns unified UserAccountDTO on success', async () => {
       const { service, queryBus } = _makeService();
 
+      const user = _makeUser();
       const profile = UserProfile.save(
         UserId.from('user-1'),
         FirstName.create('Test').value,
         LastName.create('User').value,
       );
 
-      queryBus.dispatch.mockResolvedValue(Result.ok(profile));
-
-      const dto = await service.getUserProfile('user-1');
-
-      expect(dto).toEqual({
-        userId: 'user-1',
-        firstName: 'Test',
-        lastName: 'User',
-      });
-    });
-  });
-
-  describe('getUserAccount', () => {
-    it('returns UserAccountDTO on success', async () => {
-      const { service, queryBus } = _makeService();
-
-      queryBus.dispatch.mockResolvedValue(Result.ok(_makeUser()));
+      queryBus.dispatch.mockResolvedValue(
+        Result.ok({ user, profile, features: ['BUDGET_WRITE', 'MFA'] }),
+      );
 
       const dto = await service.getUserAccount('user-1');
 
@@ -287,6 +267,9 @@ describe('IdentityService', () => {
         email: 'test@example.com',
         tier: 'TRIAL',
         mfaEnabled: false,
+        firstName: 'Test',
+        lastName: 'User',
+        features: ['BUDGET_WRITE', 'MFA'],
       });
     });
   });

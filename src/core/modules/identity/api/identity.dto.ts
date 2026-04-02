@@ -1,11 +1,11 @@
 type LoginSuccessDTO = {
   type: 'SUCCESS';
-  accessToken: string;
+  token: string;
 };
 
 type MfaChallengeDTO = {
   type: 'MFA_REQUIRED';
-  challengeToken: string;
+  token: string;
 };
 
 type LoginResponseDTO = LoginSuccessDTO | MfaChallengeDTO;
@@ -22,12 +22,9 @@ type UserAccountDTO = {
   email: string;
   tier: string;
   mfaEnabled: boolean;
-};
-
-type UserProfileDTO = {
-  userId: string;
   firstName: string;
   lastName: string;
+  features: string[];
 };
 
 type CleanupDTO = {
@@ -42,6 +39,5 @@ export type {
   MfaSetupDTO,
   UserDTO,
   UserAccountDTO,
-  UserProfileDTO,
   CleanupDTO,
 };

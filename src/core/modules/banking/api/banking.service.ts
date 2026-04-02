@@ -6,7 +6,17 @@ import {
   GetAccountsQuery,
 } from '../application';
 
-import { PlaidItemMapper, BankAccountMapper } from './mappers';
+import {
+  BankAccountMapper,
+  LinkTokenMapper,
+  PlaidItemMapper,
+} from './mappers';
+
+import {
+  type BankAccountDTO,
+  type LinkTokenDTO,
+  type PlaidItemDTO,
+} from './banking.dto';
 
 class BankingService {
   constructor(
@@ -14,17 +24,15 @@ class BankingService {
     private readonly queryBus: QueryBus,
   ) {}
 
-  async createLinkToken(userId: string) {
+  async createLinkToken(userId: string): Promise<LinkTokenDTO> {
     const result = await this.commandBus.dispatch(
       new CreateLinkTokenCommand(userId),
     );
 
-    const { linkToken } = result.getValueOrThrow();
-
-    return { linkToken };
+    return LinkTokenMapper.toDTO(result.getValueOrThrow());
   }
 
-  async exchangePublicToken(userId: string, publicToken: string) {
+  async exchangePublicToken(userId: string, publicToken: string): Promise<PlaidItemDTO> {
     const result = await this.commandBus.dispatch(
       new ExchangePublicTokenCommand(userId, publicToken),
     );
@@ -32,7 +40,7 @@ class BankingService {
     return PlaidItemMapper.toDTO(result.getValueOrThrow());
   }
 
-  async getAccounts(userId: string) {
+  async getAccounts(userId: string): Promise<BankAccountDTO[]> {
     const result = await this.queryBus.dispatch(new GetAccountsQuery(userId));
 
     return BankAccountMapper.toDTOList(result.getValueOrThrow());

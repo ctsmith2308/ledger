@@ -30,6 +30,7 @@ const domainTypeMap = new Map<string, ErrorResponse>([
   ['INVALID_AMOUNT', { code: ERROR_CODES.VALIDATION_ERROR, message: 'The request contains invalid data.' }],
   ['DEMO_RESTRICTED', { code: ERROR_CODES.DEMO_RESTRICTED, message: 'This action is not available for demo accounts.' }],
   ['FEATURE_DISABLED', { code: ERROR_CODES.FEATURE_DISABLED, message: 'This feature is not available for your account tier.' }],
+  ['FEATURE_FLAG_CACHE_ERROR', { code: ERROR_CODES.SERVER_ERROR, message: 'Feature flag service is temporarily unavailable.' }],
   ['SERVER_ERROR', { code: ERROR_CODES.SERVER_ERROR, message: 'Internal Server Error' }],
 ]);
 

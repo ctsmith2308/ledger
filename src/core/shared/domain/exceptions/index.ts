@@ -19,3 +19,4 @@ export * from './invalid-tier.exception';
 export * from './demo-restricted.exception';
 export * from './invalid-mfa-code.exception';
 export * from './feature-disabled.exception';
+export * from './feature-flag-cache.exception';

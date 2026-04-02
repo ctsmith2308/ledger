@@ -1,5 +1,6 @@
 const queryKeys = {
   session: ['session'] as const,
+  userAccount: ['user-account'] as const,
   profile: ['profile'] as const,
   accounts: ['accounts'] as const,
   transactions: ['transactions'] as const,
