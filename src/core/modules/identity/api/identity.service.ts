@@ -84,6 +84,7 @@ class IdentityService {
       challengeToken,
       JWT_TYPE.MFA_CHALLENGE,
     );
+
     const userId = verifyResult.getValueOrThrow();
 
     const result = await this.commandBus.dispatch(

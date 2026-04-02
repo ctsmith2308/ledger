@@ -37,21 +37,7 @@ async function BudgetsPage() {
         </PageHeader>
         <BudgetDemoFootnote />
 
-        {overview.length > 0 ? (
-          <BudgetList />
-        ) : (
-          <div className="rounded-xl border border-border bg-card">
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <p className="text-sm font-medium text-muted-foreground">
-                No budgets yet
-              </p>
-
-              <p className="text-xs text-muted-foreground/70">
-                Create your first budget to start tracking.
-              </p>
-            </div>
-          </div>
-        )}
+        <BudgetList />
       </PageContainer>
     </HydrationBoundary>
   );

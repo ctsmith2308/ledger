@@ -46,6 +46,22 @@ function BudgetList() {
 
   if (!overview) return null;
 
+  if (overview.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card transition-colors">
+        <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            No budgets yet
+          </p>
+
+          <p className="text-xs text-muted-foreground/70">
+            Create your first budget to start tracking.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const budgetWriteDisabled = isDisabled(FEATURE_KEYS.BUDGET_WRITE);
 
   return (

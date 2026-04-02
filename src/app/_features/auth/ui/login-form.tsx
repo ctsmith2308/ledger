@@ -70,7 +70,7 @@ function LoginForm() {
             <Button
               type="submit"
               form={formId}
-              disabled={isPending || !selectedUser}
+              disabled={isPending}
             >
               {isPending && <Spinner />}
               Login
@@ -136,7 +136,6 @@ function EmailField({ form }: { form: LoginFormApi }) {
               onChange={(e) => field.handleChange(e.target.value)}
               aria-invalid={isInvalid}
               placeholder="m@example.com"
-              readOnly
             />
 
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -166,7 +165,6 @@ function PasswordField({ form }: { form: LoginFormApi }) {
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
               aria-invalid={isInvalid}
-              readOnly
             />
 
             {isInvalid && <FieldError errors={field.state.meta.errors} />}

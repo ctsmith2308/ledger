@@ -50,6 +50,7 @@ function UpdateProfileForm({
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    form.handleSubmit();
     setConfirmOpen(true);
   };
 
