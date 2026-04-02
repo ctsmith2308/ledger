@@ -1,5 +1,6 @@
 // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 import argon2id from 'argon2';
+
 import { IPasswordHasher } from '@/core/modules/identity/domain';
 
 const PasswordHasher: IPasswordHasher = {

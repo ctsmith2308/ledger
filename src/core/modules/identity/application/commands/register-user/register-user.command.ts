@@ -1,4 +1,5 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
+
 import { User } from '@/core/modules/identity/domain';
 
 type RegisterUserResult =
@@ -18,4 +19,8 @@ class RegisterUserCommand extends Command<RegisterUserResponse> {
   }
 }
 
-export { RegisterUserCommand, type RegisterUserResponse, type RegisterUserResult };
+export {
+  RegisterUserCommand,
+  type RegisterUserResponse,
+  type RegisterUserResult,
+};

@@ -1,4 +1,5 @@
 import { type IJwtService, JWT_TYPE } from '@/core/shared/domain';
+
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
 import {
@@ -45,10 +46,7 @@ class IdentityService {
     return UserMapper.toDTO(result.getValueOrThrow());
   }
 
-  async loginUser(
-    email: string,
-    password: string,
-  ): Promise<LoginResponseDTO> {
+  async loginUser(email: string, password: string): Promise<LoginResponseDTO> {
     const result = await this.commandBus.dispatch(
       new LoginUserCommand(email, password),
     );
@@ -68,9 +66,7 @@ class IdentityService {
   }
 
   async setupMfa(userId: string) {
-    const result = await this.commandBus.dispatch(
-      new SetupMfaCommand(userId),
-    );
+    const result = await this.commandBus.dispatch(new SetupMfaCommand(userId));
 
     return result.getValueOrThrow();
   }
@@ -84,7 +80,10 @@ class IdentityService {
   }
 
   async verifyMfaLogin(challengeToken: string, totpCode: string) {
-    const verifyResult = await this.jwtService.verify(challengeToken, JWT_TYPE.MFA_CHALLENGE);
+    const verifyResult = await this.jwtService.verify(
+      challengeToken,
+      JWT_TYPE.MFA_CHALLENGE,
+    );
     const userId = verifyResult.getValueOrThrow();
 
     const result = await this.commandBus.dispatch(
@@ -92,7 +91,11 @@ class IdentityService {
     );
 
     const user = result.getValueOrThrow();
-    const tokenResult = await this.jwtService.sign(user.id.value, JWT_TYPE.ACCESS, '15m');
+    const tokenResult = await this.jwtService.sign(
+      user.id.value,
+      JWT_TYPE.ACCESS,
+      '15m',
+    );
 
     return { accessToken: tokenResult.getValueOrThrow() };
   }
@@ -113,11 +116,7 @@ class IdentityService {
     result.getValueOrThrow();
   }
 
-  async updateUserProfile(
-    userId: string,
-    firstName: string,
-    lastName: string,
-  ) {
+  async updateUserProfile(userId: string, firstName: string, lastName: string) {
     const result = await this.commandBus.dispatch(
       new UpdateUserProfileCommand(userId, firstName, lastName),
     );

@@ -1,5 +1,7 @@
 import { AggregateRoot } from '@/core/shared/domain';
+
 import { UserId, FirstName, LastName } from '../value-objects';
+
 import { UserProfileUpdatedEvent } from '../events';
 
 class UserProfile extends AggregateRoot {

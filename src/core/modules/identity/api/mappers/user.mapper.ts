@@ -1,4 +1,5 @@
 import { RegisterUserResult } from '@/core/modules/identity/application';
+
 import { UserDTO } from '../identity.dto';
 
 const UserMapper = {

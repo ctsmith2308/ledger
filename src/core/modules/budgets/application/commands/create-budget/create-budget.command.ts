@@ -1,4 +1,5 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
+
 import { Budget } from '@/core/modules/budgets/domain';
 
 type CreateBudgetResponse = Result<Budget, DomainException>;

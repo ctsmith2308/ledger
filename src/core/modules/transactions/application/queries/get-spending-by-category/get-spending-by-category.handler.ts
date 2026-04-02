@@ -1,4 +1,5 @@
 import { IHandler, Result } from '@/core/shared/domain';
+
 import { type ICategoryRollupRepository } from '@/core/modules/transactions/domain';
 
 import {
@@ -12,13 +13,11 @@ const _formatPeriod = (date: Date): string => {
   return `${year}-${month}`;
 };
 
-class GetSpendingByCategoryHandler
-  implements
-    IHandler<GetSpendingByCategoryQuery, GetSpendingByCategoryResponse>
-{
-  constructor(
-    private readonly rollupRepository: ICategoryRollupRepository,
-  ) {}
+class GetSpendingByCategoryHandler implements IHandler<
+  GetSpendingByCategoryQuery,
+  GetSpendingByCategoryResponse
+> {
+  constructor(private readonly rollupRepository: ICategoryRollupRepository) {}
 
   async execute(
     query: GetSpendingByCategoryQuery,

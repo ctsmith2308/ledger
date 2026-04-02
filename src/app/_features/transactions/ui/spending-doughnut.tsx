@@ -1,6 +1,7 @@
 'use client';
 
 import { Doughnut } from 'react-chartjs-2';
+
 import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
 
 import { type CategorySpending } from '@/app/_entities/transactions/lib';
@@ -93,7 +94,9 @@ function SpendingDoughnut({ data }: { data: CategorySpending[] }) {
         </div>
       ) : (
         <div className="flex flex-1 items-center justify-center">
-          <span className="text-sm text-muted-foreground">No data reported for this month</span>
+          <span className="text-sm text-muted-foreground">
+            No data reported for this month
+          </span>
         </div>
       )}
     </div>

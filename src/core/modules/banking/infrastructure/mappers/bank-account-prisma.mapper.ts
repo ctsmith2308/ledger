@@ -1,4 +1,5 @@
 import { BankAccountModel } from '@generated-prisma/models/BankAccount';
+
 import { BankAccount } from '@/core/modules/banking/domain';
 
 const BankAccountPrismaMapper = {

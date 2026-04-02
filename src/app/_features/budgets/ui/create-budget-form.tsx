@@ -2,7 +2,7 @@
 
 import { Plus } from 'lucide-react';
 
-import { FEATURE_KEYS, TRANSACTION_CATEGORIES } from '@/core/shared/domain';
+import { FEATURE_KEYS, TRANSACTION_CATEGORY_LIST } from '@/core/shared/domain';
 
 import { useFeatureFlags } from '@/app/_entities/identity/hooks';
 
@@ -94,7 +94,7 @@ function CategoryField({ form }: { form: CreateBudgetFormApi }) {
               </SelectTrigger>
 
               <SelectContent>
-                {TRANSACTION_CATEGORIES.map((cat) => (
+                {TRANSACTION_CATEGORY_LIST.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat.replaceAll('_', ' ')}
                   </SelectItem>

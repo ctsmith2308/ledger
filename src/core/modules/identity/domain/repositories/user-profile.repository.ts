@@ -1,4 +1,5 @@
 import { UserProfile } from '../aggregates';
+
 import { UserId } from '../value-objects';
 
 interface IUserProfileRepository {

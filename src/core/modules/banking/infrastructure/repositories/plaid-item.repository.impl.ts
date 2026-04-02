@@ -1,5 +1,7 @@
 import { PrismaService } from '@/core/shared/infrastructure';
+
 import { IPlaidItemRepository, PlaidItem } from '@/core/modules/banking/domain';
+
 import { PlaidItemPrismaMapper } from '../mappers/plaid-item-prisma.mapper';
 
 class PlaidItemRepository implements IPlaidItemRepository {

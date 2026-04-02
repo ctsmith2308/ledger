@@ -1,4 +1,5 @@
 import { BudgetModel } from '@generated-prisma/models/Budget';
+
 import { Budget } from '@/core/modules/budgets/domain/aggregates';
 
 const BudgetPrismaMapper = {

@@ -3,6 +3,7 @@ import {
   Result,
   BudgetNotFoundException,
 } from '@/core/shared/domain';
+
 import { IBudgetRepository } from '@/core/modules/budgets/domain';
 
 import {
@@ -10,12 +11,11 @@ import {
   DeleteBudgetResponse,
 } from './delete-budget.command';
 
-class DeleteBudgetHandler
-  implements IHandler<DeleteBudgetCommand, DeleteBudgetResponse>
-{
-  constructor(
-    private readonly budgetRepository: IBudgetRepository,
-  ) {}
+class DeleteBudgetHandler implements IHandler<
+  DeleteBudgetCommand,
+  DeleteBudgetResponse
+> {
+  constructor(private readonly budgetRepository: IBudgetRepository) {}
 
   async execute(command: DeleteBudgetCommand): Promise<DeleteBudgetResponse> {
     const budget = await this.budgetRepository.findById(command.budgetId);

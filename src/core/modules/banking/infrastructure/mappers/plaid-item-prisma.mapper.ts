@@ -1,4 +1,5 @@
 import { PlaidItemModel } from '@generated-prisma/models/PlaidItem';
+
 import { PlaidItem } from '@/core/modules/banking/domain';
 
 const PlaidItemPrismaMapper = {

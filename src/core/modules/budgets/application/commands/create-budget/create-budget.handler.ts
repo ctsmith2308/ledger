@@ -1,14 +1,23 @@
-import { IHandler, IEventBus, Result, BudgetAlreadyExistsException } from '@/core/shared/domain';
+import {
+  IHandler,
+  IEventBus,
+  Result,
+  BudgetAlreadyExistsException,
+} from '@/core/shared/domain';
+
 import { IBudgetRepository, Budget } from '@/core/modules/budgets/domain';
+
 import { IIdGenerator } from '@/core/shared/domain';
+
 import {
   CreateBudgetCommand,
   CreateBudgetResponse,
 } from './create-budget.command';
 
-class CreateBudgetHandler
-  implements IHandler<CreateBudgetCommand, CreateBudgetResponse>
-{
+class CreateBudgetHandler implements IHandler<
+  CreateBudgetCommand,
+  CreateBudgetResponse
+> {
   constructor(
     private readonly budgetRepository: IBudgetRepository,
     private readonly eventBus: IEventBus,

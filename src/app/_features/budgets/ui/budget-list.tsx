@@ -1,16 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+
 import Link from 'next/link';
+
 import { ArrowRight, Pencil, Trash2 } from 'lucide-react';
 
 import { type BudgetOverviewItemDTO } from '@/core/modules/budgets';
+
 import { FEATURE_KEYS } from '@/core/shared/domain';
 
 import { ROUTES } from '@/app/_shared/routes';
+
 import { formatCategory } from '@/app/_shared/lib/formatters/format-category';
 
 import { useFeatureFlags } from '@/app/_entities/identity/hooks';
+
 import { useBudgetOverview } from '@/app/_entities/budgets/hooks/use-budget-overview.hook';
 
 import { TransactionList } from '@/app/_features/transactions';
@@ -86,14 +91,20 @@ function BudgetRow({
             {formatCategory(item.category)}
           </span>
 
-          <span className="hidden text-xs text-muted-foreground sm:inline">·</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            ·
+          </span>
 
           <span className="text-xs">
             <span className="font-semibold text-foreground">
-              ${remaining >= 0 ? remaining.toFixed(2) : Math.abs(remaining).toFixed(2)}
-            </span>
-            {' '}
-            <span className={`font-medium ${remaining >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+              $
+              {remaining >= 0
+                ? remaining.toFixed(2)
+                : Math.abs(remaining).toFixed(2)}
+            </span>{' '}
+            <span
+              className={`font-medium ${remaining >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
+            >
               {remaining >= 0 ? 'under budget' : 'over budget'}
             </span>
           </span>
@@ -133,7 +144,9 @@ function BudgetRow({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="font-medium text-muted-foreground">Allocated</span>
+              <span className="font-medium text-muted-foreground">
+                Allocated
+              </span>
 
               <span className="font-semibold text-foreground">
                 ${item.monthlyLimit.toFixed(2)}
@@ -142,62 +155,61 @@ function BudgetRow({
           </div>
 
           <div className="flex items-center gap-2">
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isDemo || isUpdating}
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isDemo || isUpdating}
+                  />
+                }
+              >
+                <Pencil className="size-3" />
+                Edit
+              </DialogTrigger>
+
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    Edit {formatCategory(item.category)} budget
+                  </DialogTitle>
+
+                  <DialogDescription>
+                    Update the monthly spending limit.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder={item.monthlyLimit.toFixed(2)}
+                  value={editLimit}
+                  onChange={(e) => setEditLimit(e.target.value)}
                 />
-              }
+
+                <DialogFooter>
+                  <DialogClose render={<Button variant="outline" />}>
+                    Cancel
+                  </DialogClose>
+
+                  <Button disabled={isUpdating} onClick={handleEdit}>
+                    {isUpdating && <Spinner />}
+                    Save
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isDemo || isDeleting}
+              onClick={() => deleteBudget(item.id)}
             >
-              <Pencil className="size-3" />
-              Edit
-            </DialogTrigger>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  Edit {formatCategory(item.category)} budget
-                </DialogTitle>
-
-                <DialogDescription>
-                  Update the monthly spending limit.
-                </DialogDescription>
-              </DialogHeader>
-
-              <Input
-                type="number"
-                step="0.01"
-                placeholder={item.monthlyLimit.toFixed(2)}
-                value={editLimit}
-                onChange={(e) => setEditLimit(e.target.value)}
-              />
-
-              <DialogFooter>
-                <DialogClose render={<Button variant="outline" />}>
-                  Cancel
-                </DialogClose>
-
-                <Button disabled={isUpdating} onClick={handleEdit}>
-                  {isUpdating && <Spinner />}
-                  Save
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={isDemo || isDeleting}
-            onClick={() => deleteBudget(item.id)}
-          >
-            <Trash2 className="size-3 text-muted-foreground hover:text-red-500" />
-            Delete
-          </Button>
-
+              <Trash2 className="size-3 text-muted-foreground hover:text-red-500" />
+              Delete
+            </Button>
           </div>
         </div>
       </AccordionContent>

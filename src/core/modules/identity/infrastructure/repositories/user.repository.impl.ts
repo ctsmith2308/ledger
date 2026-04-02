@@ -1,5 +1,12 @@
 import { PrismaService } from '@/core/shared/infrastructure';
-import { UserId, Email, User, IUserRepository } from '@/core/modules/identity/domain';
+
+import {
+  UserId,
+  Email,
+  User,
+  IUserRepository,
+} from '@/core/modules/identity/domain';
+
 import { UserPrismaMapper } from '../mappers/user-prisma.mapper';
 
 class UserRepository implements IUserRepository {

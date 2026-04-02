@@ -1,4 +1,5 @@
 import { UserProfileModel } from '@generated-prisma/models/UserProfile';
+
 import { UserProfile } from '@/core/modules/identity/domain/aggregates';
 
 import { UserId, FirstName, LastName } from '@/core/modules/identity/domain';

@@ -1,4 +1,5 @@
 import { AggregateRoot } from '@/core/shared/domain';
+
 import { TransactionCreatedEvent } from '../events';
 
 type TransactionUpdateFields = {

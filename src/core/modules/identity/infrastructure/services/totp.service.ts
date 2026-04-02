@@ -1,4 +1,5 @@
 import { TOTP, Secret } from 'otpauth';
+
 import QRCode from 'qrcode';
 
 import { type ITotpService } from '@/core/modules/identity/domain';

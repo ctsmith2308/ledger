@@ -1,4 +1,5 @@
 import { Skeleton } from '@/app/_components';
+
 import { PageContainer } from '@/app/_widgets';
 
 export default function Loading() {

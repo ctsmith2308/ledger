@@ -5,4 +5,7 @@ export {
   calcWeeklySpendingByCategory,
   type CategorySpending,
 } from './calc-spending-by-category';
-export { TRANSACTION_CATEGORIES } from '@/core/shared/domain';
+export {
+  TRANSACTION_CATEGORIES,
+  TRANSACTION_CATEGORY_LIST,
+} from '@/core/shared/domain';

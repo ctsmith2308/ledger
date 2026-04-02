@@ -1,4 +1,5 @@
 import { PlaidItem } from '@/core/modules/banking/domain';
+
 import { PlaidItemDTO } from '../banking.dto';
 
 const PlaidItemMapper = {

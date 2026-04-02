@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ExternalLink, Github, PlayCircle, ArrowRight } from 'lucide-react';
+import { ExternalLink, Github, ArrowRight } from 'lucide-react';
 
 import { ROUTES } from '@/app/_shared/routes';
 import { decisions } from '@/app/_shared/content/architecture';
@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 pt-20 pb-24">
+      <section className="mx-auto max-w-7xl px-6 pt-10 pb-16">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
           {/* Left */}
           <div className="flex flex-col justify-center gap-8">
@@ -42,7 +42,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="grid w-fit grid-cols-2 gap-3">
               <Button size="lg" asChild>
                 <a
                   href="https://github.com/ctsmith2308/ledger"
@@ -55,13 +55,6 @@ export default function Home() {
               </Button>
 
               <Button variant="outline" size="lg" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
-                  <PlayCircle className="size-4" />
-                  Loom walkthrough
-                </a>
-              </Button>
-
-              <Button variant="ghost" size="lg" asChild>
                 <Link href={ROUTES.demoLogin}>
                   <ExternalLink className="size-4" />
                   Live demo
@@ -206,7 +199,7 @@ export default function Home() {
               Explore the project
             </h2>
 
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="grid w-fit grid-cols-2 gap-3">
               <Button size="lg" asChild>
                 <a
                   href="https://github.com/ctsmith2308/ledger"
@@ -219,13 +212,6 @@ export default function Home() {
               </Button>
 
               <Button variant="outline" size="lg" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
-                  <PlayCircle className="size-4" />
-                  Loom walkthrough
-                </a>
-              </Button>
-
-              <Button variant="ghost" size="lg" asChild>
                 <Link href={ROUTES.demoLogin}>
                   <ExternalLink className="size-4" />
                   Live demo
@@ -242,7 +228,7 @@ export default function Home() {
 
 function CodePreview() {
   return (
-    <div className="flex items-center justify-center">
+    <div className="hidden items-center justify-center lg:flex">
       <div className="relative h-[460px] w-full max-w-lg overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 to-zinc-800 shadow-2xl">
         <div className="absolute inset-0 p-6">
           <div className="mb-5 flex items-center gap-2">
@@ -256,66 +242,86 @@ function CodePreview() {
           <div className="flex flex-col gap-3 font-mono text-xs">
             <div className="flex gap-2">
               <span className="text-zinc-500">01</span>
+              <span className="text-zinc-500">{'// service signs — handlers never touch JWTs'}</span>
+            </div>
+
+            <div className="flex gap-2">
+              <span className="text-zinc-500">02</span>
               <span className="text-emerald-400">const</span>
-              <span className="text-blue-300">result</span>
+              <span className="text-blue-300">loginResult</span>
               <span className="text-zinc-400">=</span>
               <span className="text-yellow-300">await</span>
               <span className="text-zinc-200">commandBus</span>
             </div>
 
             <div className="flex gap-2 pl-8">
-              <span className="text-zinc-500">02</span>
+              <span className="text-zinc-500">03</span>
               <span className="text-zinc-400">.dispatch(</span>
               <span className="text-blue-300">new</span>
               <span className="text-emerald-300">LoginUserCommand</span>
-              <span className="text-zinc-400">(dto));</span>
+              <span className="text-zinc-400">(email, pw));</span>
             </div>
 
             <div className="mt-2 flex gap-2">
-              <span className="text-zinc-500">03</span>
-              <span className="text-zinc-500">
-                {'//  ↑  return type inferred via phantom field'}
-              </span>
+              <span className="text-zinc-500">04</span>
+              <span className="text-emerald-400">const</span>
+              <span className="text-zinc-200">isSuccess</span>
+              <span className="text-zinc-400">= loginResult.type ===</span>
+              <span className="text-yellow-300">{`'SUCCESS'`}</span>
+              <span className="text-zinc-400">;</span>
             </div>
 
             <div className="flex gap-2">
-              <span className="text-zinc-500">04</span>
-              <span className="text-zinc-500">
-                {'//  no explicit generic needed'}
-              </span>
+              <span className="text-zinc-500">05</span>
+              <span className="text-emerald-400">const</span>
+              <span className="text-zinc-200">purpose</span>
+              <span className="text-zinc-400">= isSuccess ?</span>
+              <span className="text-yellow-300">{`'access'`}</span>
+              <span className="text-zinc-400">:</span>
+              <span className="text-yellow-300">{`'mfa_challenge'`}</span>
+              <span className="text-zinc-400">;</span>
             </div>
 
             <div className="mt-2 flex gap-2">
-              <span className="text-zinc-500">05</span>
+              <span className="text-zinc-500">06</span>
               <span className="text-emerald-400">const</span>
-              <span className="text-zinc-400">{'{ jwt } = result'}</span>
+              <span className="text-blue-300">token</span>
+              <span className="text-zinc-400">=</span>
+              <span className="text-yellow-300">await</span>
+              <span className="text-zinc-200">jwtService</span>
             </div>
 
             <div className="flex gap-2 pl-8">
-              <span className="text-zinc-500">06</span>
-              <span className="text-zinc-400">.getValueOrThrow();</span>
+              <span className="text-zinc-500">07</span>
+              <span className="text-zinc-400">.sign(userId, purpose, ttl);</span>
             </div>
 
             <div className="mt-4 h-px w-full bg-zinc-700" />
 
             <div className="mt-2 flex gap-2">
-              <span className="text-zinc-500">07</span>
-              <span className="text-emerald-400">class</span>
-              <span className="text-yellow-300">LoginUserCommand</span>
-            </div>
-
-            <div className="flex gap-2 pl-8">
               <span className="text-zinc-500">08</span>
-              <span className="text-blue-300">extends</span>
-              <span className="text-emerald-300">Command</span>
-              <span className="text-zinc-400">{'<LoginUserResponse>'}</span>
+              <span className="text-zinc-500">{'// feature flags cached in Upstash on login'}</span>
+            </div>
+
+            <div className="flex gap-2">
+              <span className="text-zinc-500">09</span>
+              <span className="text-emerald-400">const</span>
+              <span className="text-blue-300">features</span>
+              <span className="text-zinc-400">=</span>
+              <span className="text-yellow-300">await</span>
+              <span className="text-zinc-200">flagRepo</span>
             </div>
 
             <div className="flex gap-2 pl-8">
-              <span className="text-zinc-500">09</span>
-              <span className="text-zinc-500">
-                {'// phantom: declare _response: T'}
-              </span>
+              <span className="text-zinc-500">10</span>
+              <span className="text-zinc-400">.findEnabledByTier(user.tier);</span>
+            </div>
+
+            <div className="flex gap-2">
+              <span className="text-zinc-500">11</span>
+              <span className="text-yellow-300">await</span>
+              <span className="text-zinc-200">flagCache</span>
+              <span className="text-zinc-400">.setFeatures(userId, features);</span>
             </div>
           </div>
         </div>

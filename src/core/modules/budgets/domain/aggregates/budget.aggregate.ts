@@ -1,4 +1,5 @@
 import { AggregateRoot } from '@/core/shared/domain';
+
 import { BudgetCreatedEvent } from '../events';
 
 class Budget extends AggregateRoot {
@@ -20,14 +21,7 @@ class Budget extends AggregateRoot {
     monthlyLimit: number,
   ): Budget {
     const now = new Date();
-    const budget = new Budget(
-      id,
-      userId,
-      category,
-      monthlyLimit,
-      now,
-      now,
-    );
+    const budget = new Budget(id, userId, category, monthlyLimit, now, now);
 
     budget.addDomainEvent(
       new BudgetCreatedEvent(id, userId, category, monthlyLimit),

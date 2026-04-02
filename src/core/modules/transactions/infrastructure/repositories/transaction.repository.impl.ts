@@ -1,8 +1,10 @@
 import { PrismaService } from '@/core/shared/infrastructure';
+
 import {
   Transaction,
   ITransactionRepository,
 } from '@/core/modules/transactions/domain';
+
 import { TransactionPrismaMapper } from '../mappers/transaction-prisma.mapper';
 
 class TransactionRepository implements ITransactionRepository {

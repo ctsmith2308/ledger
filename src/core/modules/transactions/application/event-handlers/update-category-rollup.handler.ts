@@ -1,5 +1,7 @@
 import { type ICategoryRollupRepository } from '@/core/modules/transactions/domain';
+
 import { TransactionCreatedEvent } from '@/core/modules/transactions/domain';
+
 import { logger } from '@/core/shared/infrastructure';
 
 const _formatPeriod = (date: Date): string => {

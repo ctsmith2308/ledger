@@ -1,6 +1,9 @@
 import { useState } from 'react';
+
 import { useRouter } from 'next/navigation';
+
 import { useForm } from '@tanstack/react-form';
+
 import { useMutation } from '@tanstack/react-query';
 
 import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
@@ -21,7 +24,9 @@ type MfaProgress = (typeof MFA_PROGRESS)[keyof typeof MFA_PROGRESS];
 
 const useConfigureMfa = () => {
   const router = useRouter();
-  const [mfaProgress, setMfaProgress] = useState<MfaProgress>(MFA_PROGRESS.IDLE);
+  const [mfaProgress, setMfaProgress] = useState<MfaProgress>(
+    MFA_PROGRESS.IDLE,
+  );
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
 
   const setupMutation = useMutation({

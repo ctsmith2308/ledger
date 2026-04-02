@@ -5,6 +5,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import argon2id from 'argon2';
 
 import { FEATURE_KEYS } from '../src/core/shared/domain/constants/feature-flag.constants';
+import { TRANSACTION_CATEGORIES as TC } from '../src/core/shared/domain/constants/transaction-category.constants';
+import { USER_TIERS } from '../src/core/shared/domain/constants/user-tier.constants';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -20,16 +22,16 @@ async function main() {
   const users = await Promise.all([
     prisma.user.upsert({
       where: { id: 'a0000000-0000-0000-0000-000000000001' },
-      update: {},
+      update: { email: 'chris@ledger.app', passwordHash },
       create: {
         id: 'a0000000-0000-0000-0000-000000000001',
-        email: 'demo@ledger.app',
+        email: 'chris@ledger.app',
         passwordHash,
-        tier: 'TRIAL',
+        tier: USER_TIERS.DEMO,
         profile: {
           create: {
-            firstName: 'Demo',
-            lastName: 'User',
+            firstName: 'Chris',
+            lastName: 'Smith',
             timezone: 'America/Denver',
             currency: 'USD',
           },
@@ -43,7 +45,7 @@ async function main() {
         id: 'a0000000-0000-0000-0000-000000000002',
         email: 'alice@ledger.app',
         passwordHash,
-        tier: 'DEMO',
+        tier: USER_TIERS.DEMO,
         profile: {
           create: {
             firstName: 'Alice',
@@ -61,7 +63,7 @@ async function main() {
         id: 'a0000000-0000-0000-0000-000000000003',
         email: 'ben@ledger.app',
         passwordHash,
-        tier: 'DEMO',
+        tier: USER_TIERS.DEMO,
         profile: {
           create: {
             firstName: 'Ben',
@@ -79,94 +81,94 @@ async function main() {
   const demoBudgets = [
     {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      category: 'FOOD_AND_DRINK',
+      category: TC.FOOD_AND_DRINK,
       monthlyLimit: 500,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      category: 'TRANSPORTATION',
+      category: TC.TRANSPORTATION,
       monthlyLimit: 200,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      category: 'ENTERTAINMENT',
+      category: TC.ENTERTAINMENT,
       monthlyLimit: 150,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      category: 'SHOPPING',
+      category: TC.SHOPPING,
       monthlyLimit: 300,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      category: 'RENT_AND_UTILITIES',
+      category: TC.RENT_AND_UTILITIES,
       monthlyLimit: 1800,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000001',
-      category: 'HEALTH_AND_FITNESS',
+      category: TC.HEALTH_AND_FITNESS,
       monthlyLimit: 100,
     },
 
     {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      category: 'FOOD_AND_DRINK',
+      category: TC.FOOD_AND_DRINK,
       monthlyLimit: 400,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      category: 'TRANSPORTATION',
+      category: TC.TRANSPORTATION,
       monthlyLimit: 150,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      category: 'ENTERTAINMENT',
+      category: TC.ENTERTAINMENT,
       monthlyLimit: 200,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      category: 'SHOPPING',
+      category: TC.SHOPPING,
       monthlyLimit: 250,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      category: 'RENT_AND_UTILITIES',
+      category: TC.RENT_AND_UTILITIES,
       monthlyLimit: 2200,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000002',
-      category: 'EDUCATION',
+      category: TC.EDUCATION,
       monthlyLimit: 300,
     },
 
     {
       userId: 'a0000000-0000-0000-0000-000000000003',
-      category: 'FOOD_AND_DRINK',
+      category: TC.FOOD_AND_DRINK,
       monthlyLimit: 600,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000003',
-      category: 'TRANSPORTATION',
+      category: TC.TRANSPORTATION,
       monthlyLimit: 250,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000003',
-      category: 'ENTERTAINMENT',
+      category: TC.ENTERTAINMENT,
       monthlyLimit: 100,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000003',
-      category: 'SHOPPING',
+      category: TC.SHOPPING,
       monthlyLimit: 350,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000003',
-      category: 'RENT_AND_UTILITIES',
+      category: TC.RENT_AND_UTILITIES,
       monthlyLimit: 1500,
     },
     {
       userId: 'a0000000-0000-0000-0000-000000000003',
-      category: 'LOAN_PAYMENTS',
+      category: TC.LOAN_PAYMENTS,
       monthlyLimit: 450,
     },
   ];
@@ -189,9 +191,9 @@ async function main() {
 
   const features = Object.values(FEATURE_KEYS);
   const tiers = [
-    { tier: 'DEMO', enabled: false },
-    { tier: 'TRIAL', enabled: true },
-    { tier: 'FULL', enabled: true },
+    { tier: USER_TIERS.DEMO, enabled: false },
+    { tier: USER_TIERS.TRIAL, enabled: true },
+    { tier: USER_TIERS.FULL, enabled: true },
   ];
 
   const featureFlagRows = tiers.flatMap(({ tier, enabled }) =>

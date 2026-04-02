@@ -91,7 +91,10 @@ class IdentityModule {
 
     commandBus.register(
       UpdateUserProfileCommand,
-      new UpdateUserProfileHandler(repos.userProfileRepository, services.eventBus),
+      new UpdateUserProfileHandler(
+        repos.userProfileRepository,
+        services.eventBus,
+      ),
     );
 
     commandBus.register(

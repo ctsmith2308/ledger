@@ -1,4 +1,5 @@
 import { UserSession } from '../aggregates';
+
 import { SessionId, UserId } from '../value-objects';
 
 interface IUserSessionRepository {

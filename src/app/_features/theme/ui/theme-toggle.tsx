@@ -1,7 +1,9 @@
 'use client';
 
 import { useTheme } from 'next-themes';
+
 import { Moon, Sun } from 'lucide-react';
+
 import { type VariantProps } from 'class-variance-authority';
 
 import { Button, buttonVariants } from '@/app/_components';

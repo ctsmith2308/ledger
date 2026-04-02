@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+
 import {
   QueryClient,
   QueryClientProvider,
   QueryCache,
   MutationCache,
 } from '@tanstack/react-query';
+
 import { toast } from 'sonner';
 
 import { queryDefaults } from '@/app/_shared/lib/query/query-defaults';

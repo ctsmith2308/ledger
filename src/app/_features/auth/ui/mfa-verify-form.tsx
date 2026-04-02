@@ -1,5 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+
+import { ROUTES } from '@/app/_shared/routes';
+
 import {
   Button,
   Card,
@@ -51,6 +55,10 @@ function MfaVerifyForm() {
             Verify
           </Button>
         </Field>
+
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={ROUTES.login}>Back to login</Link>
+        </Button>
       </CardFooter>
     </Card>
   );

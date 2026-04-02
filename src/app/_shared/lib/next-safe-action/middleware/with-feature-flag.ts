@@ -1,7 +1,12 @@
 import { createMiddleware } from 'next-safe-action';
 
 import { FeatureDisabledException } from '@/core/shared/domain';
-import { featureFlagCache, featureFlagRepo } from '@/core/shared/infrastructure';
+
+import {
+  featureFlagCache,
+  featureFlagRepo,
+} from '@/core/shared/infrastructure';
+
 import { identityService } from '@/core/modules/identity';
 
 const withFeatureFlag = (feature: string) =>

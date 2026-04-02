@@ -1,4 +1,5 @@
 import { Query, DomainException, Result } from '@/core/shared/domain';
+
 import { Budget } from '@/core/modules/budgets/domain';
 
 type GetBudgetsResponse = Result<Budget[], DomainException>;

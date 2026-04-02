@@ -59,18 +59,18 @@ async function OverviewPage() {
       <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold text-foreground">
-            Monthly Spending
-          </h2>
-
-          <SpendingDoughnut data={hasAccounts ? monthlyByCategory : []} />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold text-foreground">
             This Week&apos;s Spending
           </h2>
 
           <SpendingDoughnut data={hasAccounts ? weeklyByCategory : []} />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            Monthly Spending
+          </h2>
+
+          <SpendingDoughnut data={hasAccounts ? monthlyByCategory : []} />
         </div>
       </div>
 

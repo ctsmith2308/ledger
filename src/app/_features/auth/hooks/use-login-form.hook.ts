@@ -1,11 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+
 import { useRouter } from 'next/navigation';
+
 import { useForm } from '@tanstack/react-form';
+
 import { useMutation } from '@tanstack/react-query';
 
 import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
+
 import { ROUTES } from '@/app/_shared/routes';
 
 import { loginAction } from '@/app/_entities/identity/actions';
@@ -22,7 +26,7 @@ type DemoUser = {
 };
 
 const DEMO_USERS: DemoUser[] = [
-  { name: 'Demo User', email: 'demo@ledger.app', password: 'Password@123!' },
+  { name: 'Chris Smith', email: 'chris@ledger.app', password: 'Password@123!' },
   {
     name: 'Alice Rivera',
     email: 'alice@ledger.app',

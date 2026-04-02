@@ -1,4 +1,5 @@
 import { BankAccount } from '@/core/modules/banking/domain';
+
 import { BankAccountDTO } from '../banking.dto';
 
 const BankAccountMapper = {

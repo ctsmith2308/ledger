@@ -1,4 +1,5 @@
 import { TransactionModel } from '@generated-prisma/models/Transaction';
+
 import { Transaction } from '@/core/modules/transactions/domain/aggregates';
 
 const TransactionPrismaMapper = {

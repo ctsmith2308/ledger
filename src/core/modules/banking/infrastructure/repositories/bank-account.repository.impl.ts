@@ -1,8 +1,10 @@
 import { PrismaService } from '@/core/shared/infrastructure';
+
 import {
   IBankAccountRepository,
   BankAccount,
 } from '@/core/modules/banking/domain';
+
 import { BankAccountPrismaMapper } from '../mappers/bank-account-prisma.mapper';
 
 class BankAccountRepository implements IBankAccountRepository {

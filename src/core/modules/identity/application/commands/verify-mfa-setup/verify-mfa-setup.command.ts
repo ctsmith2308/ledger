@@ -1,4 +1,5 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
+
 import { User } from '@/core/modules/identity/domain';
 
 type VerifyMfaSetupResponse = Result<User, DomainException>;

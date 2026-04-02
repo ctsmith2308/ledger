@@ -1,4 +1,5 @@
 import { Command, DomainException, Result } from '@/core/shared/domain';
+
 import { PlaidItem } from '@/core/modules/banking/domain';
 
 type ExchangePublicTokenResponse = Result<PlaidItem, DomainException>;
@@ -12,7 +13,4 @@ class ExchangePublicTokenCommand extends Command<ExchangePublicTokenResponse> {
   }
 }
 
-export {
-  ExchangePublicTokenCommand,
-  type ExchangePublicTokenResponse,
-};
+export { ExchangePublicTokenCommand, type ExchangePublicTokenResponse };

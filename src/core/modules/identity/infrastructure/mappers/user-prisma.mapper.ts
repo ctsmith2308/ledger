@@ -1,6 +1,13 @@
 import { UserModel } from '@generated-prisma/models/User';
+
 import { User } from '@/core/modules/identity/domain/aggregates';
-import { UserId, Email, Password, UserTier } from '@/core/modules/identity/domain';
+
+import {
+  UserId,
+  Email,
+  Password,
+  UserTier,
+} from '@/core/modules/identity/domain';
 
 const UserPrismaMapper = {
   toDomain(raw: UserModel): User {

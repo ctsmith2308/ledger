@@ -1,4 +1,10 @@
-import { IHandler, IEventBus, Result, ValidationException } from '@/core/shared/domain';
+import {
+  IHandler,
+  IEventBus,
+  Result,
+  ValidationException,
+} from '@/core/shared/domain';
+
 import {
   IPasswordHasher,
   IIdGenerator,
@@ -33,7 +39,9 @@ class RegisterUserHandler implements IHandler<
   async execute(command: RegisterUserCommand): Promise<RegisterUserResponse> {
     const firstNameResult = FirstName.create(command.firstName);
     if (firstNameResult.isFailure)
-      return Result.fail(new ValidationException(firstNameResult.error.message));
+      return Result.fail(
+        new ValidationException(firstNameResult.error.message),
+      );
     const firstName = firstNameResult.value;
 
     const lastNameResult = LastName.create(command.lastName);

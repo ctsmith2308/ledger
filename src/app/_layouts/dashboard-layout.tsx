@@ -25,7 +25,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DialogContent
-          className="fixed inset-y-0 left-0 top-0 h-full w-72 max-w-none translate-x-0 translate-y-0rounded-none rounded-r-xl pt-4 sm:max-w-none"
+          className="fixed inset-y-0 left-0 top-0 h-full w-72 max-w-none translate-x-0 translate-y-0 rounded-none rounded-r-xl pt-4 sm:max-w-none"
           showCloseButton={false}
         >
           <NavSidebar onNavigate={() => setDrawerOpen(false)} />
