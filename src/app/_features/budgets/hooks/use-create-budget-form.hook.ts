@@ -12,7 +12,7 @@ import { type CreateBudgetInput } from '@/app/_entities/budgets/schema';
 
 import { createBudgetFormSchema } from '../schema/create-budget-form.schema';
 
-const useCreateBudgetForm = () => {
+const useCreateBudgetForm = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -20,6 +20,7 @@ const useCreateBudgetForm = () => {
       handleActionResponse(createBudgetAction(input)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.budgetOverview });
+      onSuccess?.();
     },
   });
 

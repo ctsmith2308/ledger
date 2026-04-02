@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Plus } from 'lucide-react';
 
 import { FEATURE_KEYS, TRANSACTION_CATEGORY_LIST } from '@/core/shared/domain';
@@ -27,13 +29,11 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import {
-  useCreateBudgetForm,
-  type CreateBudgetFormApi,
-} from '../hooks';
+import { useCreateBudgetForm, type CreateBudgetFormApi } from '../hooks';
 
 function CreateBudgetButton() {
-  const { form, formId, isPending } = useCreateBudgetForm();
+  const [open, setOpen] = useState(false);
+  const { form, formId, isPending } = useCreateBudgetForm(() => setOpen(false));
   const { isDisabled } = useFeatureFlags();
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -42,8 +42,12 @@ function CreateBudgetButton() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger render={<Button size="sm" disabled={isDisabled(FEATURE_KEYS.BUDGET_WRITE)} />}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <Button size="sm" disabled={isDisabled(FEATURE_KEYS.BUDGET_WRITE)} />
+        }
+      >
         <Plus className="size-4" />
         New budget
       </DialogTrigger>

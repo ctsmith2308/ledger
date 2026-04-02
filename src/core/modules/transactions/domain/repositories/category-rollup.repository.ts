@@ -17,6 +17,7 @@ interface ICategoryRollupRepository {
     userId: string,
     period: string,
   ): Promise<CategoryRollupRecord[]>;
+  findDistinctPeriodsByUser(userId: string): Promise<string[]>;
 }
 
 export { type ICategoryRollupRepository, type CategoryRollupRecord };

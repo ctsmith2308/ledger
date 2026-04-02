@@ -1,6 +1,7 @@
 const ROUTES = {
   home: '/',
   overview: '/overview',
+  spendingHabits: '/spending-habits',
   transactions: '/transactions',
   budgets: '/budgets',
   accounts: '/accounts',

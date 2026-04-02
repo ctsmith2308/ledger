@@ -4,8 +4,9 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard,
-  ArrowLeftRight,
+  TrendingUp,
   PiggyBank,
+  ArrowLeftRight,
   Landmark,
 } from 'lucide-react';
 
@@ -15,8 +16,9 @@ import { LogoutButton } from '@/app/_features/auth';
 
 const navItems = [
   { href: ROUTES.overview, label: 'Overview', icon: LayoutDashboard },
-  { href: ROUTES.transactions, label: 'Transactions', icon: ArrowLeftRight },
+  { href: ROUTES.spendingHabits, label: 'Spending Habits', icon: TrendingUp },
   { href: ROUTES.budgets, label: 'Budgets', icon: PiggyBank },
+  { href: ROUTES.transactions, label: 'Transactions', icon: ArrowLeftRight },
   { href: ROUTES.accounts, label: 'Accounts', icon: Landmark },
 ];
 

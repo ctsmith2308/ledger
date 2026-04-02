@@ -43,7 +43,7 @@ function MfaSettingsCard({ mfaEnabled }: MfaSettingsCardProps) {
         <CardDescription>
           {mfaEnabled
             ? 'Your account is protected with two-factor authentication.'
-            : 'Add an extra layer of security to your account.'}
+            : 'Add an extra layer of security to your account. Compatible with Google Authenticator, Authy, 1Password, Bitwarden, Microsoft Authenticator, and 2FAS.'}
         </CardDescription>
       </CardHeader>
 

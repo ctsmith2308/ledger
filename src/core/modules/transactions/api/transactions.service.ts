@@ -4,16 +4,19 @@ import {
   SyncTransactionsCommand,
   GetTransactionsQuery,
   GetSpendingByCategoryQuery,
+  GetSpendingPeriodsQuery,
 } from '../application';
 
 import {
   SpendingByCategoryMapper,
+  SpendingPeriodsMapper,
   SyncResultMapper,
   TransactionMapper,
 } from './mappers';
 
 import {
   type SpendingByCategoryDTO,
+  type SpendingPeriodsDTO,
   type SyncResultDTO,
   type TransactionDTO,
 } from './transactions.dto';
@@ -46,6 +49,14 @@ class TransactionsService {
     );
 
     return SpendingByCategoryMapper.toDTOList(result.getValueOrThrow());
+  }
+
+  async getSpendingPeriods(userId: string): Promise<SpendingPeriodsDTO> {
+    const result = await this.queryBus.dispatch(
+      new GetSpendingPeriodsQuery(userId),
+    );
+
+    return SpendingPeriodsMapper.toDTO(result.getValueOrThrow());
   }
 }
 

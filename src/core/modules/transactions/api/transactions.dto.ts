@@ -22,4 +22,13 @@ type SpendingByCategoryDTO = {
   total: number;
 };
 
-export type { TransactionDTO, SyncResultDTO, SpendingByCategoryDTO };
+type SpendingPeriodsDTO = {
+  periods: string[];
+};
+
+export type {
+  TransactionDTO,
+  SyncResultDTO,
+  SpendingByCategoryDTO,
+  SpendingPeriodsDTO,
+};

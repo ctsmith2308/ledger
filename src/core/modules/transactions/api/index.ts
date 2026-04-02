@@ -18,6 +18,8 @@ import {
   GetTransactionsHandler,
   GetSpendingByCategoryQuery,
   GetSpendingByCategoryHandler,
+  GetSpendingPeriodsQuery,
+  GetSpendingPeriodsHandler,
   createUpdateCategoryRollupHandler,
 } from '../application';
 
@@ -65,6 +67,11 @@ class TransactionsModule {
     queryBus.register(
       GetSpendingByCategoryQuery,
       new GetSpendingByCategoryHandler(repos.categoryRollupRepository),
+    );
+
+    queryBus.register(
+      GetSpendingPeriodsQuery,
+      new GetSpendingPeriodsHandler(repos.categoryRollupRepository),
     );
 
     return new TransactionsService(commandBus, queryBus);

@@ -66,9 +66,19 @@ async function OverviewPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold text-foreground">
-            Monthly Spending
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">
+              Monthly Spending
+            </h2>
+
+            <Link
+              href={ROUTES.spendingHabits}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              View all
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
 
           <SpendingDoughnut data={hasAccounts ? monthlyByCategory : []} />
         </div>

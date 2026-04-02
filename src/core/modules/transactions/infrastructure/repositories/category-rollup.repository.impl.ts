@@ -49,6 +49,16 @@ class CategoryRollupRepository implements ICategoryRollupRepository {
       transactionCount: r.transactionCount,
     }));
   }
+  async findDistinctPeriodsByUser(userId: string): Promise<string[]> {
+    const records = await this.prisma.categoryRollup.findMany({
+      where: { userId },
+      select: { period: true },
+      distinct: ['period'],
+      orderBy: { period: 'desc' },
+    });
+
+    return records.map((r) => r.period);
+  }
 }
 
 export { CategoryRollupRepository };
