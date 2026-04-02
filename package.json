@@ -19,6 +19,7 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "prisma:seed:demo": "npx tsx prisma/seed-demo.ts",
     "prisma:studio": "prisma studio",
