@@ -89,44 +89,54 @@ async function seedDemoUser(userId: string) {
   }
 
   console.log('  Waiting for sandbox transactions to populate...');
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
   let cursor: string | undefined;
   let hasMore = true;
   let totalAdded = 0;
+  let retries = 0;
+  const MAX_RETRIES = 3;
 
   while (hasMore) {
-    const syncResponse = await plaidApi.transactionsSync({
-      access_token: accessToken,
-      cursor: cursor || undefined,
-      options: { include_personal_finance_category: true },
-    });
-
-    const data = syncResponse.data;
-
-    for (const txn of data.added) {
-      await prisma.transaction.upsert({
-        where: { id: txn.transaction_id },
-        update: {},
-        create: {
-          id: txn.transaction_id,
-          accountId: txn.account_id,
-          userId,
-          amount: txn.amount,
-          date: new Date(txn.date),
-          name: txn.name,
-          merchantName: txn.merchant_name ?? null,
-          category: txn.personal_finance_category?.primary ?? null,
-          detailedCategory: txn.personal_finance_category?.detailed ?? null,
-          pending: txn.pending,
-          paymentChannel: txn.payment_channel ?? null,
-        },
+    try {
+      const syncResponse = await plaidApi.transactionsSync({
+        access_token: accessToken,
+        cursor: cursor || undefined,
+        options: { include_personal_finance_category: true },
       });
-    }
 
-    totalAdded += data.added.length;
-    cursor = data.next_cursor;
-    hasMore = data.has_more;
+      const data = syncResponse.data;
+      retries = 0;
+
+      for (const txn of data.added) {
+        await prisma.transaction.upsert({
+          where: { id: txn.transaction_id },
+          update: {},
+          create: {
+            id: txn.transaction_id,
+            accountId: txn.account_id,
+            userId,
+            amount: txn.amount,
+            date: new Date(txn.date),
+            name: txn.name,
+            merchantName: txn.merchant_name ?? null,
+            category: txn.personal_finance_category?.primary ?? null,
+            detailedCategory: txn.personal_finance_category?.detailed ?? null,
+            pending: txn.pending,
+            paymentChannel: txn.payment_channel ?? null,
+          },
+        });
+      }
+
+      totalAdded += data.added.length;
+      cursor = data.next_cursor;
+      hasMore = data.has_more;
+    } catch (error) {
+      retries++;
+      if (retries > MAX_RETRIES) throw error;
+      console.log(`  Sync failed, retrying (${retries}/${MAX_RETRIES})...`);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
   }
 
   await prisma.plaidItem.update({
@@ -139,9 +149,7 @@ async function seedDemoUser(userId: string) {
 }
 
 async function main() {
-  for (const userId of DEMO_USERS) {
-    await seedDemoUser(userId);
-  }
+  await Promise.all(DEMO_USERS.map(seedDemoUser));
 
   console.log('\nDemo seed complete.');
 }
