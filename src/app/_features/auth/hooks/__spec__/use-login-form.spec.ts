@@ -6,6 +6,11 @@ let mockIsPending = false;
 let onSuccessCallback: (() => void) | null = null;
 let mutationFn: ((input: unknown) => unknown) | null = null;
 
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  return { ...actual, useState: (init: unknown) => [init, vi.fn()] };
+});
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
 }));

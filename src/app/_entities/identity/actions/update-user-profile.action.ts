@@ -1,6 +1,7 @@
 'use server';
 
 import { identityService } from '@/core/modules/identity';
+import { FEATURE_KEYS } from '@/core/shared/domain';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -11,7 +12,7 @@ import { updateProfileSchema } from '../schema/update-profile.schema';
 
 const updateUserProfileAction = actionClient
   .use(withAuth)
-  .use(withFeatureFlag)
+  .use(withFeatureFlag(FEATURE_KEYS.ACCOUNT_WRITE))
   .inputSchema(updateProfileSchema)
   .action(async ({ ctx, parsedInput }) => {
     return identityService.updateUserProfile(

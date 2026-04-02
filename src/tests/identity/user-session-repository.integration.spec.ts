@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { prisma } from '../common/setup-db';
-import { UserRepository } from '@/core/modules/identity/infrastructure/persistence/repository/user.repository';
-import { UserSessionRepository } from '@/core/modules/identity/infrastructure/persistence/repository/user-session.repository';
+import { UserRepository, UserSessionRepository } from '@/core/modules/identity/infrastructure';
 import {
   User,
   UserId,
@@ -29,7 +28,6 @@ const _makeSession = (userId: UserId, sessionId?: string) =>
   UserSession.create(
     SessionId.from(sessionId ?? 'b0000000-0000-0000-0000-000000000001'),
     userId,
-    UserTier.from('TRIAL'),
   );
 
 describe('UserSessionRepository', () => {

@@ -1,6 +1,8 @@
 import {
   IHandler,
   IEventBus,
+  IFeatureFlagRepository,
+  IFeatureFlagCache,
   InvalidMfaCodeException,
   UserNotFoundException,
   Result,
@@ -25,6 +27,8 @@ class VerifyMfaLoginHandler implements IHandler<
     private readonly userRepository: IUserRepository,
     private readonly eventBus: IEventBus,
     private readonly totpService: ITotpService,
+    private readonly featureFlagRepo: IFeatureFlagRepository,
+    private readonly featureFlagCache: IFeatureFlagCache,
   ) {}
 
   async execute(
@@ -47,6 +51,9 @@ class VerifyMfaLoginHandler implements IHandler<
 
     const events = user.pullDomainEvents();
     await this.eventBus.dispatch(events);
+
+    const features = await this.featureFlagRepo.findEnabledByTier(user.tier.value);
+    await this.featureFlagCache.setFeatures(user.id.value, features);
 
     return Result.ok(user);
   }

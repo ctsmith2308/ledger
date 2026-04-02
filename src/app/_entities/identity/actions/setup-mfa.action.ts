@@ -1,6 +1,7 @@
 'use server';
 
 import { identityService } from '@/core/modules/identity';
+import { FEATURE_KEYS } from '@/core/shared/domain';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -10,7 +11,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 
 const setupMfaAction = actionClient
   .use(withAuth)
-  .use(withFeatureFlag)
+  .use(withFeatureFlag(FEATURE_KEYS.MFA))
   .action(async ({ ctx }) => {
     return identityService.setupMfa(ctx.userId);
   });

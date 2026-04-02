@@ -4,6 +4,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 import argon2id from 'argon2';
 
+import { FEATURE_KEYS } from '../src/core/shared/domain/constants/feature-flag.constants';
+
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
 });
@@ -182,6 +184,31 @@ async function main() {
   );
 
   budgets.forEach((b: unknown) => console.log('Seeded budget:', b));
+
+  // ─── Feature Flags ──────────────────────────────────────────────────
+
+  const features = Object.values(FEATURE_KEYS);
+  const tiers = [
+    { tier: 'DEMO', enabled: false },
+    { tier: 'TRIAL', enabled: true },
+    { tier: 'FULL', enabled: true },
+  ];
+
+  const featureFlagRows = tiers.flatMap(({ tier, enabled }) =>
+    features.map((feature) => ({ tier, feature, enabled })),
+  );
+
+  const flags = await Promise.all(
+    featureFlagRows.map((row) =>
+      prisma.featureFlag.upsert({
+        where: { tier_feature: { tier: row.tier, feature: row.feature } },
+        update: { enabled: row.enabled },
+        create: row,
+      }),
+    ),
+  );
+
+  flags.forEach((f: unknown) => console.log('Seeded feature flag:', f));
 }
 
 main()

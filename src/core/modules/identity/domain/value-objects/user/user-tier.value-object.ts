@@ -2,15 +2,9 @@ import {
   Result,
   ValueObject,
   InvalidTierException,
+  USER_TIERS,
+  type UserTierValue,
 } from '@/core/shared/domain';
-
-const USER_TIERS = {
-  DEMO: 'DEMO',
-  TRIAL: 'TRIAL',
-  FULL: 'FULL',
-} as const;
-
-type UserTierValue = (typeof USER_TIERS)[keyof typeof USER_TIERS];
 
 const VALID_TIERS = new Set<string>(Object.values(USER_TIERS));
 

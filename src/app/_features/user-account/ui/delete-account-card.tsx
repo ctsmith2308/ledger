@@ -1,5 +1,11 @@
 'use client';
 
+import { FEATURE_KEYS } from '@/core/shared/domain';
+
+import { useFeatureFlags } from '@/app/_entities/identity/hooks';
+
+import { DemoFootnote } from '@/app/_widgets';
+
 import {
   Button,
   Card,
@@ -18,15 +24,12 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { useUserTier } from '@/app/_entities/identity/hooks';
-
-import { DemoFootnote } from '@/app/_widgets';
-
 import { useDeleteAccount } from '../hooks';
 
 function DeleteAccountCard() {
   const { deleteAccount, isDeleting } = useDeleteAccount();
-  const { isDemo } = useUserTier();
+  const { isDisabled } = useFeatureFlags();
+  const accountWriteDisabled = isDisabled(FEATURE_KEYS.ACCOUNT_WRITE);
 
   return (
     <Card className="border-red-200 dark:border-red-900">
@@ -44,8 +47,8 @@ function DeleteAccountCard() {
       </CardContent>
 
       <CardFooter className="flex-col items-stretch gap-3">
-        {isDemo ? (
-          <DemoFootnote action="Account deletion" />
+        {accountWriteDisabled ? (
+          <DemoFootnote action="Account deletion" disabled={accountWriteDisabled} />
         ) : (
         <Dialog>
           <DialogTrigger

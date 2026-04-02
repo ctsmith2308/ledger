@@ -392,7 +392,8 @@ export const ModelName = {
   Transaction: 'Transaction',
   CategoryRollup: 'CategoryRollup',
   Budget: 'Budget',
-  DomainEventRecord: 'DomainEventRecord'
+  DomainEventRecord: 'DomainEventRecord',
+  FeatureFlag: 'FeatureFlag'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userSession" | "userProfile" | "plaidItem" | "bankAccount" | "transaction" | "categoryRollup" | "budget" | "domainEventRecord"
+    modelProps: "user" | "userSession" | "userProfile" | "plaidItem" | "bankAccount" | "transaction" | "categoryRollup" | "budget" | "domainEventRecord" | "featureFlag"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1078,6 +1079,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FeatureFlag: {
+      payload: Prisma.$FeatureFlagPayload<ExtArgs>
+      fields: Prisma.FeatureFlagFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FeatureFlagFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FeatureFlagFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>
+        }
+        findFirst: {
+          args: Prisma.FeatureFlagFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FeatureFlagFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>
+        }
+        findMany: {
+          args: Prisma.FeatureFlagFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>[]
+        }
+        create: {
+          args: Prisma.FeatureFlagCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>
+        }
+        createMany: {
+          args: Prisma.FeatureFlagCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FeatureFlagCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>[]
+        }
+        delete: {
+          args: Prisma.FeatureFlagDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>
+        }
+        update: {
+          args: Prisma.FeatureFlagUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>
+        }
+        deleteMany: {
+          args: Prisma.FeatureFlagDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FeatureFlagUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FeatureFlagUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>[]
+        }
+        upsert: {
+          args: Prisma.FeatureFlagUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FeatureFlagPayload>
+        }
+        aggregate: {
+          args: Prisma.FeatureFlagAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFeatureFlag>
+        }
+        groupBy: {
+          args: Prisma.FeatureFlagGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FeatureFlagGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FeatureFlagCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FeatureFlagCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1241,6 +1316,16 @@ export const DomainEventRecordScalarFieldEnum = {
 } as const
 
 export type DomainEventRecordScalarFieldEnum = (typeof DomainEventRecordScalarFieldEnum)[keyof typeof DomainEventRecordScalarFieldEnum]
+
+
+export const FeatureFlagScalarFieldEnum = {
+  id: 'id',
+  tier: 'tier',
+  feature: 'feature',
+  enabled: 'enabled'
+} as const
+
+export type FeatureFlagScalarFieldEnum = (typeof FeatureFlagScalarFieldEnum)[keyof typeof FeatureFlagScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1483,6 +1568,7 @@ export type GlobalOmitConfig = {
   categoryRollup?: Prisma.CategoryRollupOmit
   budget?: Prisma.BudgetOmit
   domainEventRecord?: Prisma.DomainEventRecordOmit
+  featureFlag?: Prisma.FeatureFlagOmit
 }
 
 /* Types for Logging */

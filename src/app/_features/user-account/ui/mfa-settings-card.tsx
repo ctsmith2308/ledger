@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 
+import { FEATURE_KEYS } from '@/core/shared/domain';
+
+import { useFeatureFlags } from '@/app/_entities/identity/hooks';
+
 import {
   Button,
   Card,
@@ -23,14 +27,13 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { useUserTier } from '@/app/_entities/identity/hooks';
-
-import { useConfigureMfa } from '../hooks/use-configure-mfa.hook';
+import { useConfigureMfa, MFA_PROGRESS } from '../hooks/use-configure-mfa.hook';
 
 import { type MfaSettingsCardProps } from './types';
 
 function MfaSettingsCard({ mfaEnabled }: MfaSettingsCardProps) {
-  const { isDemo } = useUserTier();
+  const { isDisabled } = useFeatureFlags();
+  const mfaDisabled = isDisabled(FEATURE_KEYS.MFA);
 
   return (
     <Card>
@@ -46,9 +49,9 @@ function MfaSettingsCard({ mfaEnabled }: MfaSettingsCardProps) {
 
       <CardContent>
         {mfaEnabled ? (
-          <DisableMfaSection disabled={isDemo} />
+          <DisableMfaSection disabled={mfaDisabled} />
         ) : (
-          <EnableMfaSection disabled={isDemo} />
+          <EnableMfaSection disabled={mfaDisabled} />
         )}
       </CardContent>
     </Card>
@@ -118,7 +121,7 @@ function EnableMfaSection({ disabled }: { disabled: boolean }) {
           </div>
         )}
 
-        {mfaProgress === 'showing_qr' && qrCodeDataUrl && (
+        {mfaProgress === MFA_PROGRESS.SHOWING_QR && qrCodeDataUrl && (
           <>
             <div className="flex justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, not optimizable by next/image */}
@@ -162,7 +165,7 @@ function EnableMfaSection({ disabled }: { disabled: boolean }) {
           </>
         )}
 
-        {mfaProgress === 'success' && (
+        {mfaProgress === MFA_PROGRESS.SUCCESS && (
           <div className="flex flex-col items-center gap-4 py-4">
             <p className="text-sm text-muted-foreground">
               Two-factor authentication has been enabled.

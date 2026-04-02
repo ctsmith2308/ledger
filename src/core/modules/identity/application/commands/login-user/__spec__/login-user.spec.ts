@@ -15,6 +15,8 @@ import {
 
 import {
   type IEventBus,
+  type IFeatureFlagRepository,
+  type IFeatureFlagCache,
   InvalidEmailException,
   InvalidPasswordException,
 } from '@/core/shared/domain';
@@ -55,9 +57,25 @@ const _makeHandler = (overrides: {
     ...overrides.hasher,
   };
 
-  const handler = new LoginUserHandler(userRepository, eventBus, hasher);
+  const featureFlagRepo: IFeatureFlagRepository = {
+    findEnabledByTier: vi.fn().mockResolvedValue([]),
+  };
 
-  return { handler, userRepository, eventBus, hasher };
+  const featureFlagCache: IFeatureFlagCache = {
+    getFeatures: vi.fn().mockResolvedValue(null),
+    setFeatures: vi.fn(),
+    invalidate: vi.fn(),
+  };
+
+  const handler = new LoginUserHandler(
+    userRepository,
+    eventBus,
+    hasher,
+    featureFlagRepo,
+    featureFlagCache,
+  );
+
+  return { handler, userRepository, eventBus, hasher, featureFlagRepo, featureFlagCache };
 };
 
 describe('LoginUserHandler', () => {

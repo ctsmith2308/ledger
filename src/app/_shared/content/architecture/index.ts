@@ -9,6 +9,7 @@ import { cqrsReadModel } from './decisions/cqrs-read-model';
 import { eventHandlerOrdering } from './decisions/event-handler-ordering';
 import { durableEventBus } from './decisions/durable-event-bus';
 import { jwtAuth } from './decisions/jwt-auth';
+import { mfa } from './decisions/mfa';
 import { observability } from './decisions/observability';
 
 const decisions: ArchitectureDecision[] = [
@@ -22,6 +23,7 @@ const decisions: ArchitectureDecision[] = [
   eventHandlerOrdering,
   durableEventBus,
   jwtAuth,
+  mfa,
   observability,
 ];
 

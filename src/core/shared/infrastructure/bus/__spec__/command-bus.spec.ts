@@ -13,7 +13,7 @@ vi.mock('@opentelemetry/api', () => ({
   },
 }));
 
-import { CommandBus } from '../command-bus';
+import { CommandBus } from '../command-bus.impl';
 import { Command, Result, DomainException, type IObservabilityService } from '@/core/shared/domain';
 
 class TestException extends DomainException {

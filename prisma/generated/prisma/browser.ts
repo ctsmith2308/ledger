@@ -62,3 +62,8 @@ export type Budget = Prisma.BudgetModel
  * 
  */
 export type DomainEventRecord = Prisma.DomainEventRecordModel
+/**
+ * Model FeatureFlag
+ * 
+ */
+export type FeatureFlag = Prisma.FeatureFlagModel

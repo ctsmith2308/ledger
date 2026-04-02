@@ -13,53 +13,106 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
-  PasswordInput,
   Spinner,
 } from '@/app/_components';
 
-import { useLoginForm, type LoginFormApi } from '../hooks';
+import { useLoginForm, type LoginFormApi, type DemoUser } from '../hooks';
 
 function LoginForm() {
-  const { form, formId, isPending } = useLoginForm();
+  const { form, formId, isPending, selectedUser, selectUser, demoUsers } =
+    useLoginForm();
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     form.handleSubmit();
   };
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
+    <div className="flex w-full max-w-md flex-col gap-6">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">
+          Select a demo account
+        </p>
 
-        <CardDescription>
-          Enter your email below to login to your account
-        </CardDescription>
-      </CardHeader>
+        <div className="grid gap-2">
+          {demoUsers.map((user) => (
+            <UserCard
+              key={user.email}
+              user={user}
+              isSelected={selectedUser?.email === user.email}
+              onSelect={() => selectUser(user)}
+            />
+          ))}
+        </div>
+      </div>
 
-      <CardContent>
-        <form id={formId} onSubmit={handleSubmit}>
-          <FieldGroup>
-            {/** Email Field */}
-            <EmailField form={form} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
 
-            {/** Password Field */}
-            <PasswordField form={form} />
-          </FieldGroup>
-        </form>
-      </CardContent>
+          <CardDescription>
+            Select a user above to autofill credentials
+          </CardDescription>
+        </CardHeader>
 
-      <CardFooter className="flex-col gap-2">
-        <Field>
-          {/** Submit Button */}
-          <Button type="submit" form={formId} disabled={isPending}>
-            {isPending && <Spinner />}
-            Login
-          </Button>
-        </Field>
-      </CardFooter>
-    </Card>
+        <CardContent>
+          <form id={formId} onSubmit={handleSubmit}>
+            <FieldGroup>
+              <EmailField form={form} />
+
+              <PasswordField form={form} />
+            </FieldGroup>
+          </form>
+        </CardContent>
+
+        <CardFooter className="flex-col gap-2">
+          <Field>
+            <Button
+              type="submit"
+              form={formId}
+              disabled={isPending || !selectedUser}
+            >
+              {isPending && <Spinner />}
+              Login
+            </Button>
+          </Field>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+function UserCard({
+  user,
+  isSelected,
+  onSelect,
+}: {
+  user: DemoUser;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+        isSelected
+          ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-950'
+          : 'border-border bg-card hover:border-muted-foreground'
+      }`}
+    >
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900">
+        <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+          {user.name[0]}
+        </span>
+      </div>
+
+      <div>
+        <p className="text-sm font-medium text-foreground">{user.name}</p>
+
+        <p className="text-xs text-muted-foreground">{user.email}</p>
+      </div>
+    </button>
   );
 }
 
@@ -72,10 +125,8 @@ function EmailField({ form }: { form: LoginFormApi }) {
 
         return (
           <Field data-invalid={isInvalid}>
-            {/* Email Label */}
             <FieldLabel htmlFor={field.name}>Email</FieldLabel>
 
-            {/* Email Input */}
             <Input
               id={field.name}
               name={field.name}
@@ -85,9 +136,9 @@ function EmailField({ form }: { form: LoginFormApi }) {
               onChange={(e) => field.handleChange(e.target.value)}
               aria-invalid={isInvalid}
               placeholder="m@example.com"
+              readOnly
             />
 
-            {/* Email Validation Error*/}
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );
@@ -105,25 +156,19 @@ function PasswordField({ form }: { form: LoginFormApi }) {
 
         return (
           <Field data-invalid={isInvalid}>
-            {/* Password Label */}
             <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-            <a
-              href="#"
-              className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
-            </a>
 
-            <PasswordInput
+            <Input
               id={field.name}
               name={field.name}
+              type="password"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
               aria-invalid={isInvalid}
+              readOnly
             />
 
-            {/* Password Validation Error  */}
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         );

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { JwtService } from '@/core/shared/infrastructure/services/jwt.service';
+import { JWT_TYPE } from '@/core/shared/domain';
+import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
@@ -11,7 +12,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  const result = await JwtService.verify(token, 'access');
+  const result = await JwtService.verify(token, JWT_TYPE.ACCESS);
 
   if (result.isFailure) {
     const response = NextResponse.redirect(new URL('/login', request.url));

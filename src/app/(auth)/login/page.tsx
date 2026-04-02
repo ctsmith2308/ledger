@@ -1,5 +1,5 @@
-import { DemoLoginForm } from '@/app/_features/auth';
+import { LoginForm } from '@/app/_features/auth';
 
 export default function LoginPage() {
-  return <DemoLoginForm />;
+  return <LoginForm />;
 }

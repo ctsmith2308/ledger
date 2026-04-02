@@ -10,7 +10,9 @@ import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 
-import { PageContainer, PageHeader, DemoFootnote } from '@/app/_widgets';
+import { PageContainer, PageHeader } from '@/app/_widgets';
+
+import { BudgetDemoFootnote } from './_components/budget-demo-footnote';
 
 const loadBudgetOverview = async () => {
   const session = await loadSession();
@@ -33,7 +35,7 @@ async function BudgetsPage() {
         >
           <CreateBudgetButton />
         </PageHeader>
-        <DemoFootnote action="Budget management" />
+        <BudgetDemoFootnote />
 
         {overview.length > 0 ? (
           <BudgetList />

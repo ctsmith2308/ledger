@@ -4,9 +4,12 @@ import { z } from 'zod';
 
 import { budgetsService } from '@/core/modules/budgets';
 
+import { FEATURE_KEYS } from '@/core/shared/domain';
+
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
 import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-auth';
+
 import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/with-feature-flag';
 
 const deleteBudgetSchema = z.object({
@@ -15,13 +18,10 @@ const deleteBudgetSchema = z.object({
 
 const deleteBudgetAction = actionClient
   .use(withAuth)
-  .use(withFeatureFlag)
+  .use(withFeatureFlag(FEATURE_KEYS.BUDGET_WRITE))
   .inputSchema(deleteBudgetSchema)
   .action(async ({ ctx, parsedInput }) => {
-    return budgetsService.deleteBudget(
-      ctx.userId,
-      parsedInput.budgetId,
-    );
+    return budgetsService.deleteBudget(ctx.userId, parsedInput.budgetId);
   });
 
 export { deleteBudgetAction };

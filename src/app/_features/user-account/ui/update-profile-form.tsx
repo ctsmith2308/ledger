@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 
+import { FEATURE_KEYS } from '@/core/shared/domain';
+
+import { useFeatureFlags } from '@/app/_entities/identity/hooks';
+
+import { DemoFootnote } from '@/app/_widgets';
+
 import {
   Button,
   Card,
@@ -26,10 +32,6 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { useUserTier } from '@/app/_entities/identity/hooks';
-
-import { DemoFootnote } from '@/app/_widgets';
-
 import {
   useUpdateProfileForm,
   type UpdateProfileFormApi,
@@ -42,7 +44,8 @@ function UpdateProfileForm({
 }) {
   const { form, formId, isPending, onConfirm } = useUpdateProfileForm(initial);
   const [editOpen, setEditOpen] = useState(false);
-  const { isDemo } = useUserTier();
+  const { isDisabled } = useFeatureFlags();
+  const accountWriteDisabled = isDisabled(FEATURE_KEYS.ACCOUNT_WRITE);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -65,7 +68,7 @@ function UpdateProfileForm({
 
           <CardAction>
             <Dialog open={editOpen} onOpenChange={(value) => setEditOpen(value)}>
-              <DialogTrigger render={<Button variant="outline" size="sm" disabled={isDemo} />}>
+              <DialogTrigger render={<Button variant="outline" size="sm" disabled={accountWriteDisabled} />}>
                 <Pencil className="size-3" />
                 Edit
               </DialogTrigger>
@@ -119,7 +122,7 @@ function UpdateProfileForm({
         </CardContent>
       </Card>
 
-      <DemoFootnote action="Profile editing" />
+      <DemoFootnote action="Profile editing" disabled={accountWriteDisabled} />
 
       {/* Confirmation dialog */}
       <Dialog open={confirmOpen} onOpenChange={(value) => setConfirmOpen(value)}>

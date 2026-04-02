@@ -4,6 +4,8 @@ import {
   eventBus,
   prisma,
   JwtService,
+  featureFlagRepo,
+  featureFlagCache,
 } from '@/core/shared/infrastructure';
 
 import {
@@ -77,6 +79,8 @@ class IdentityModule {
         repos.userRepository,
         services.eventBus,
         services.passwordHasher,
+        featureFlagRepo,
+        featureFlagCache,
       ),
     );
 
@@ -128,6 +132,8 @@ class IdentityModule {
         repos.userRepository,
         services.eventBus,
         TotpService,
+        featureFlagRepo,
+        featureFlagCache,
       ),
     );
 

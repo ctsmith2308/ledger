@@ -1,6 +1,7 @@
 'use server';
 
 import { identityService } from '@/core/modules/identity';
+import { FEATURE_KEYS } from '@/core/shared/domain';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -12,7 +13,7 @@ import { verifyMfaSetupSchema } from '../schema/verify-mfa.schema';
 
 const verifyMfaSetupAction = actionClient
   .use(withAuth)
-  .use(withFeatureFlag)
+  .use(withFeatureFlag(FEATURE_KEYS.MFA))
   .inputSchema(verifyMfaSetupSchema)
   .action(async ({ ctx, parsedInput }) => {
     await identityService.verifyMfaSetup(ctx.userId, parsedInput.totpCode);

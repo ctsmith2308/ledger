@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { Github, Linkedin } from 'lucide-react';
 
-import { Button } from '@/app/_components';
 import { ROUTES } from '@/app/_shared/routes';
 
-import { MenuBar } from '@/app/_components';
 import { ThemeToggle } from '@/app/_features/theme/ui/theme-toggle';
+
+import { Button, MenuBar } from '@/app/_components';
 
 function LandingMenuBar() {
   return (

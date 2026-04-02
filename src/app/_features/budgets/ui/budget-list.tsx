@@ -1,12 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-
 import Link from 'next/link';
-
 import { ArrowRight, Pencil, Trash2 } from 'lucide-react';
 
+import { type BudgetOverviewItemDTO } from '@/core/modules/budgets';
+import { FEATURE_KEYS } from '@/core/shared/domain';
+
 import { ROUTES } from '@/app/_shared/routes';
+import { formatCategory } from '@/app/_shared/lib/formatters/format-category';
+
+import { useFeatureFlags } from '@/app/_entities/identity/hooks';
+import { useBudgetOverview } from '@/app/_entities/budgets/hooks/use-budget-overview.hook';
+
+import { TransactionList } from '@/app/_features/transactions';
 
 import {
   Accordion,
@@ -26,28 +33,20 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import { type BudgetOverviewItemDTO } from '@/core/modules/budgets';
-
-import { useUserTier } from '@/app/_entities/identity/hooks';
-
-import { useBudgetOverview } from '@/app/_entities/budgets/hooks/use-budget-overview.hook';
-
-import { formatCategory } from '@/app/_shared/lib/formatters/format-category';
-
-import { TransactionList } from '@/app/_features/transactions';
-
 import { useDeleteBudget, useUpdateBudget } from '../hooks';
 
 function BudgetList() {
   const { data: overview } = useBudgetOverview();
-  const { isDemo } = useUserTier();
+  const { isDisabled } = useFeatureFlags();
 
   if (!overview) return null;
+
+  const budgetWriteDisabled = isDisabled(FEATURE_KEYS.BUDGET_WRITE);
 
   return (
     <Accordion type="single" collapsible className="space-y-3">
       {overview.map((item) => (
-        <BudgetRow key={item.id} item={item} isDemo={isDemo} />
+        <BudgetRow key={item.id} item={item} isDemo={budgetWriteDisabled} />
       ))}
     </Accordion>
   );

@@ -59,7 +59,8 @@ export const ModelName = {
   Transaction: 'Transaction',
   CategoryRollup: 'CategoryRollup',
   Budget: 'Budget',
-  DomainEventRecord: 'DomainEventRecord'
+  DomainEventRecord: 'DomainEventRecord',
+  FeatureFlag: 'FeatureFlag'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -202,6 +203,16 @@ export const DomainEventRecordScalarFieldEnum = {
 } as const
 
 export type DomainEventRecordScalarFieldEnum = (typeof DomainEventRecordScalarFieldEnum)[keyof typeof DomainEventRecordScalarFieldEnum]
+
+
+export const FeatureFlagScalarFieldEnum = {
+  id: 'id',
+  tier: 'tier',
+  feature: 'feature',
+  enabled: 'enabled'
+} as const
+
+export type FeatureFlagScalarFieldEnum = (typeof FeatureFlagScalarFieldEnum)[keyof typeof FeatureFlagScalarFieldEnum]
 
 
 export const SortOrder = {

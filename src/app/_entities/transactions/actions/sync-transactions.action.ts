@@ -1,6 +1,7 @@
 'use server';
 
 import { transactionsService } from '@/core/modules/transactions';
+import { FEATURE_KEYS } from '@/core/shared/domain';
 
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
@@ -9,7 +10,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 
 const syncTransactionsAction = actionClient
   .use(withAuth)
-  .use(withFeatureFlag)
+  .use(withFeatureFlag(FEATURE_KEYS.PLAID_CONNECT))
   .action(async ({ ctx }) => {
     return transactionsService.syncTransactions(ctx.userId);
   });

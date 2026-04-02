@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { prisma } from '../common/setup-db';
-import { UserRepository } from '@/core/modules/identity/infrastructure/persistence/repository/user.repository';
+import { UserRepository } from '@/core/modules/identity/infrastructure';
 import {
   User,
   UserId,

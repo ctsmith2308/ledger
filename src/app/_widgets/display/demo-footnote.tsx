@@ -1,13 +1,13 @@
-'use client';
-
 import { Info } from 'lucide-react';
 
-import { useUserTier } from '@/app/_entities/identity/hooks';
-
-function DemoFootnote({ action }: { action: string }) {
-  const { isDemo } = useUserTier();
-
-  if (!isDemo) return null;
+function DemoFootnote({
+  action,
+  disabled,
+}: {
+  action: string;
+  disabled: boolean;
+}) {
+  if (!disabled) return null;
 
   return (
     <div className="flex items-start gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">

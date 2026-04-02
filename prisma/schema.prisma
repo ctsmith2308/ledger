@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["identity", "banking", "transactions", "transactions_read", "budgets", "events"]
+  schemas  = ["identity", "banking", "transactions", "transactions_read", "budgets", "events", "shared"]
 }
 
 model User {
@@ -167,5 +167,18 @@ model DomainEventRecord {
   @@index([createdAt])
   @@schema("events")
   @@map("domain_events")
+}
+
+// ─── Shared ─────────────────────────────────────────────────────────
+
+model FeatureFlag {
+  id      String  @id @default(uuid())
+  tier    String
+  feature String
+  enabled Boolean @default(true)
+
+  @@unique([tier, feature])
+  @@schema("shared")
+  @@map("feature_flags")
 }
 

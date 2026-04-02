@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { budgetsService } from '@/core/modules/budgets';
 
-import { JwtService } from '@/core/shared/infrastructure/services/jwt.service';
+import { JWT_TYPE } from '@/core/shared/domain';
 
-import { toErrorResponse } from '@/core/shared/infrastructure';
+import { JwtService, toErrorResponse } from '@/core/shared/infrastructure';
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
@@ -15,7 +15,7 @@ async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const jwtResult = await JwtService.verify(token);
+  const jwtResult = await JwtService.verify(token, JWT_TYPE.ACCESS);
 
   if (jwtResult.isFailure) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,7 +23,7 @@ async function GET(request: NextRequest) {
 
   try {
     const data = await budgetsService.getBudgetOverview(
-      jwtResult.value.userId,
+      jwtResult.value,
       new Date(),
     );
 

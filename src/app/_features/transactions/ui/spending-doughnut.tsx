@@ -1,7 +1,6 @@
 'use client';
 
 import { Doughnut } from 'react-chartjs-2';
-
 import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
 
 import { type CategorySpending } from '@/app/_entities/transactions/lib';

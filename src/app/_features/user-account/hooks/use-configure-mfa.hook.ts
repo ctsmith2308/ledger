@@ -11,11 +11,17 @@ import {
   disableMfaAction,
 } from '@/app/_entities/identity/actions';
 
-type MfaProgress = 'idle' | 'showing_qr' | 'success';
+const MFA_PROGRESS = {
+  IDLE: 'idle',
+  SHOWING_QR: 'showing_qr',
+  SUCCESS: 'success',
+} as const;
+
+type MfaProgress = (typeof MFA_PROGRESS)[keyof typeof MFA_PROGRESS];
 
 const useConfigureMfa = () => {
   const router = useRouter();
-  const [mfaProgress, setStep] = useState<MfaProgress>('idle');
+  const [mfaProgress, setMfaProgress] = useState<MfaProgress>(MFA_PROGRESS.IDLE);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
 
   const setupMutation = useMutation({
@@ -23,7 +29,7 @@ const useConfigureMfa = () => {
     onSuccess: (result) => {
       if (result?.qrCodeDataUrl) {
         setQrCodeDataUrl(result.qrCodeDataUrl);
-        setStep('showing_qr');
+        setMfaProgress(MFA_PROGRESS.SHOWING_QR);
       }
     },
   });
@@ -32,7 +38,7 @@ const useConfigureMfa = () => {
     mutationFn: (input: { totpCode: string }) =>
       handleActionResponse(verifyMfaSetupAction(input)),
     onSuccess: () => {
-      setStep('success');
+      setMfaProgress(MFA_PROGRESS.SUCCESS);
     },
   });
 
@@ -49,7 +55,7 @@ const useConfigureMfa = () => {
   });
 
   const reset = () => {
-    setStep('idle');
+    setMfaProgress(MFA_PROGRESS.IDLE);
     setQrCodeDataUrl(null);
     form.reset();
   };
@@ -69,4 +75,4 @@ const useConfigureMfa = () => {
   };
 };
 
-export { useConfigureMfa };
+export { useConfigureMfa, MFA_PROGRESS };

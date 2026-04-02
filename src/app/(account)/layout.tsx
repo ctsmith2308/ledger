@@ -2,6 +2,8 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 import { getQueryClient } from '@/app/_shared/lib/query';
 
+import { featureFlagCache } from '@/core/shared/infrastructure';
+
 import { loadSession } from '@/app/_shared/lib/session/session.service';
 import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
@@ -15,7 +17,10 @@ export default async function AccountLayout({
   const queryClient = getQueryClient();
   const session = await loadSession();
 
+  const features = await featureFlagCache.getFeatures(session.userId) ?? [];
+
   queryClient.setQueryData(queryKeys.session, session);
+  queryClient.setQueryData(queryKeys.featureFlags, features);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

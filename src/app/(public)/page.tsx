@@ -1,10 +1,13 @@
 import Link from 'next/link';
-import { ROUTES } from '@/app/_shared/routes';
 import { ExternalLink, Github, PlayCircle, ArrowRight } from 'lucide-react';
-import { Button } from '@/app/_components';
-import { ContentCard } from '@/app/_widgets';
+
+import { ROUTES } from '@/app/_shared/routes';
 import { decisions } from '@/app/_shared/content/architecture';
 import { caseStudies } from '@/app/_shared/content/case-studies';
+
+import { ContentCard } from '@/app/_widgets';
+
+import { Button } from '@/app/_components';
 
 export default function Home() {
   return (

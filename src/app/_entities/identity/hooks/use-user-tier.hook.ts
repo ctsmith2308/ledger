@@ -1,6 +1,6 @@
 'use client';
 
-// TODO: Replace with useFeatureFlag when feature_flags table lands
+/** @deprecated Use useFeatureFlags() instead */
 const useUserTier = () => {
   return { tier: null, isDemo: false };
 };

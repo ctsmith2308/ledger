@@ -1,4 +1,4 @@
-import { type IJwtService } from '@/core/shared/domain';
+import { type IJwtService, JWT_TYPE } from '@/core/shared/domain';
 import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 
 import {
@@ -56,7 +56,7 @@ class IdentityService {
     const loginResult = result.getValueOrThrow();
     const userId = loginResult.user.id.value;
     const isSuccess = loginResult.type === 'SUCCESS';
-    const purpose = isSuccess ? 'access' : 'mfa_challenge';
+    const purpose = isSuccess ? JWT_TYPE.ACCESS : JWT_TYPE.MFA_CHALLENGE;
     const ttl = isSuccess ? '15m' : '5m';
 
     const tokenResult = await this.jwtService.sign(userId, purpose, ttl);
@@ -84,7 +84,7 @@ class IdentityService {
   }
 
   async verifyMfaLogin(challengeToken: string, totpCode: string) {
-    const verifyResult = await this.jwtService.verify(challengeToken, 'mfa_challenge');
+    const verifyResult = await this.jwtService.verify(challengeToken, JWT_TYPE.MFA_CHALLENGE);
     const userId = verifyResult.getValueOrThrow();
 
     const result = await this.commandBus.dispatch(
@@ -92,7 +92,7 @@ class IdentityService {
     );
 
     const user = result.getValueOrThrow();
-    const tokenResult = await this.jwtService.sign(user.id.value, 'access', '15m');
+    const tokenResult = await this.jwtService.sign(user.id.value, JWT_TYPE.ACCESS, '15m');
 
     return { accessToken: tokenResult.getValueOrThrow() };
   }
