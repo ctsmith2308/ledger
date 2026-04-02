@@ -14,14 +14,14 @@ class QueryBus {
   constructor(private readonly observability: IObservabilityService) {}
 
   register<T extends AnyQuery>(
-    QueryClass: { name: string; prototype: T },
+    QueryClass: { type: string; prototype: T },
     handler: IHandler<T, T['_response']>,
   ): void {
-    this._handlers.set(QueryClass.name, handler as IHandler<AnyQuery, unknown>);
+    this._handlers.set(QueryClass.type, handler as IHandler<AnyQuery, unknown>);
   }
 
   async dispatch<T extends AnyQuery>(query: T): Promise<T['_response']> {
-    const key = query.constructor.name;
+    const key = (query.constructor as unknown as { type: string }).type;
 
     const handler = this._handlers.get(key);
 

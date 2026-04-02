@@ -8,6 +8,8 @@ type LoginResult = LoginSuccess | MfaRequired;
 type LoginUserResponse = Result<LoginResult, DomainException>;
 
 class LoginUserCommand extends Command<LoginUserResponse> {
+  static readonly type = 'LoginUserCommand';
+
   constructor(
     readonly email: string,
     readonly password: string,

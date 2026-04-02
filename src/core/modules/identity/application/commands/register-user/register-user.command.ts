@@ -9,6 +9,8 @@ type RegisterUserResult =
 type RegisterUserResponse = Result<RegisterUserResult, DomainException>;
 
 class RegisterUserCommand extends Command<RegisterUserResponse> {
+  static readonly type = 'RegisterUserCommand';
+
   constructor(
     readonly firstName: string,
     readonly lastName: string,

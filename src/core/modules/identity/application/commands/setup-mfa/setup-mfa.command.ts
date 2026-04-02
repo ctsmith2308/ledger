@@ -4,6 +4,8 @@ type SetupMfaResult = { qrCodeDataUrl: string };
 type SetupMfaResponse = Result<SetupMfaResult, DomainException>;
 
 class SetupMfaCommand extends Command<SetupMfaResponse> {
+  static readonly type = 'SetupMfaCommand';
+
   constructor(readonly userId: string) {
     super();
   }

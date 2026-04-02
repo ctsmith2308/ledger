@@ -5,6 +5,8 @@ import { User } from '@/core/modules/identity/domain';
 type VerifyMfaSetupResponse = Result<User, DomainException>;
 
 class VerifyMfaSetupCommand extends Command<VerifyMfaSetupResponse> {
+  static readonly type = 'VerifyMfaSetupCommand';
+
   constructor(
     readonly userId: string,
     readonly totpCode: string,

@@ -12,6 +12,8 @@ type SyncTransactionsResponse = Result<
 >;
 
 class SyncTransactionsCommand extends Command<SyncTransactionsResponse> {
+  static readonly type = 'SyncTransactionsCommand';
+
   constructor(readonly userId: string) {
     super();
   }

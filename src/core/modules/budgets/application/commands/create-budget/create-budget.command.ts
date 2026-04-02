@@ -5,6 +5,8 @@ import { Budget } from '@/core/modules/budgets/domain';
 type CreateBudgetResponse = Result<Budget, DomainException>;
 
 class CreateBudgetCommand extends Command<CreateBudgetResponse> {
+  static readonly type = 'CreateBudgetCommand';
+
   constructor(
     readonly userId: string,
     readonly category: string,

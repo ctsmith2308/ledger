@@ -11,6 +11,8 @@ type GetUserAccountData = {
 type GetUserAccountResponse = Result<GetUserAccountData, DomainException>;
 
 class GetUserAccountQuery extends Query<GetUserAccountResponse> {
+  static readonly type = 'GetUserAccountQuery';
+
   constructor(readonly userId: string) {
     super();
   }

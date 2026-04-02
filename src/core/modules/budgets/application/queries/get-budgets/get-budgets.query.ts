@@ -5,6 +5,8 @@ import { Budget } from '@/core/modules/budgets/domain';
 type GetBudgetsResponse = Result<Budget[], DomainException>;
 
 class GetBudgetsQuery extends Query<GetBudgetsResponse> {
+  static readonly type = 'GetBudgetsQuery';
+
   constructor(readonly userId: string) {
     super();
   }

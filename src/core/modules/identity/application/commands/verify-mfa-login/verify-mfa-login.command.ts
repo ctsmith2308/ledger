@@ -7,6 +7,8 @@ type MfaLoginResult = { type: 'SUCCESS'; user: User };
 type VerifyMfaLoginResponse = Result<MfaLoginResult, DomainException>;
 
 class VerifyMfaLoginCommand extends Command<VerifyMfaLoginResponse> {
+  static readonly type = 'VerifyMfaLoginCommand';
+
   constructor(
     readonly userId: string,
     readonly totpCode: string,

@@ -25,6 +25,8 @@ class TestException extends DomainException {
 type TestResponse = Result<string, DomainException>;
 
 class TestCommand extends Command<TestResponse> {
+  static readonly type = 'TestCommand';
+
   constructor(readonly value: string) {
     super();
   }

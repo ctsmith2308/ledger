@@ -11,6 +11,8 @@ type GetSpendingByCategoryResponse = Result<
 >;
 
 class GetSpendingByCategoryQuery extends Query<GetSpendingByCategoryResponse> {
+  static readonly type = 'GetSpendingByCategoryQuery';
+
   constructor(
     readonly userId: string,
     readonly month: Date,

@@ -25,6 +25,8 @@ class TestException extends DomainException {
 type TestResponse = Result<string, DomainException>;
 
 class TestQuery extends Query<TestResponse> {
+  static readonly type = 'TestQuery';
+
   constructor(readonly id: string) {
     super();
   }

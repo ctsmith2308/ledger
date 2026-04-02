@@ -5,6 +5,8 @@ import { PlaidItem } from '@/core/modules/banking/domain';
 type ExchangePublicTokenResponse = Result<PlaidItem, DomainException>;
 
 class ExchangePublicTokenCommand extends Command<ExchangePublicTokenResponse> {
+  static readonly type = 'ExchangePublicTokenCommand';
+
   constructor(
     readonly userId: string,
     readonly publicToken: string,

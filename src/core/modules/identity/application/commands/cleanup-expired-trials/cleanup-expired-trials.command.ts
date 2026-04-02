@@ -7,7 +7,9 @@ type CleanupResult = {
 
 type CleanupExpiredTrialsResponse = Result<CleanupResult, DomainException>;
 
-class CleanupExpiredTrialsCommand extends Command<CleanupExpiredTrialsResponse> {}
+class CleanupExpiredTrialsCommand extends Command<CleanupExpiredTrialsResponse> {
+  static readonly type = 'CleanupExpiredTrialsCommand';
+}
 
 export {
   CleanupExpiredTrialsCommand,

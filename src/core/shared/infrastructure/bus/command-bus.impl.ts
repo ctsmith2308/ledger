@@ -14,17 +14,17 @@ class CommandBus {
   constructor(private readonly observability: IObservabilityService) {}
 
   register<T extends AnyCommand>(
-    CommandClass: { name: string; prototype: T },
+    CommandClass: { type: string; prototype: T },
     handler: IHandler<T, T['_response']>,
   ): void {
     this._handlers.set(
-      CommandClass.name,
+      CommandClass.type,
       handler as IHandler<AnyCommand, unknown>,
     );
   }
 
   async dispatch<T extends AnyCommand>(command: T): Promise<T['_response']> {
-    const key = command.constructor.name;
+    const key = (command.constructor as unknown as { type: string }).type;
 
     const handler = this._handlers.get(key);
 

@@ -16,6 +16,8 @@ type GetBudgetOverviewResponse = Result<
 >;
 
 class GetBudgetOverviewQuery extends Query<GetBudgetOverviewResponse> {
+  static readonly type = 'GetBudgetOverviewQuery';
+
   constructor(
     readonly userId: string,
     readonly month: Date,

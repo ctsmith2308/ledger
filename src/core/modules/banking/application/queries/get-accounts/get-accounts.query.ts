@@ -4,6 +4,8 @@ import { BankAccount } from '@/core/modules/banking/domain';
 type GetAccountsResponse = Result<BankAccount[], DomainException>;
 
 class GetAccountsQuery extends Query<GetAccountsResponse> {
+  static readonly type = 'GetAccountsQuery';
+
   constructor(readonly userId: string) {
     super();
   }

@@ -5,6 +5,8 @@ import { Transaction } from '@/core/modules/transactions/domain';
 type GetTransactionsResponse = Result<Transaction[], DomainException>;
 
 class GetTransactionsQuery extends Query<GetTransactionsResponse> {
+  static readonly type = 'GetTransactionsQuery';
+
   constructor(readonly userId: string) {
     super();
   }
