@@ -1,8 +1,6 @@
 import {
   IHandler,
   IFeatureFlagRepository,
-  IFeatureFlagCache,
-  FeatureFlagCacheException,
   Result,
   UserNotFoundException,
 } from '@/core/shared/domain';
@@ -26,7 +24,6 @@ class GetUserAccountHandler implements IHandler<
     private readonly userRepository: IUserRepository,
     private readonly userProfileRepository: IUserProfileRepository,
     private readonly featureFlagRepo: IFeatureFlagRepository,
-    private readonly featureFlagCache: IFeatureFlagCache,
   ) {}
 
   async execute(query: GetUserAccountQuery): Promise<GetUserAccountResponse> {
@@ -41,23 +38,9 @@ class GetUserAccountHandler implements IHandler<
 
     if (!user || !profile) return Result.fail(new UserNotFoundException());
 
-    let features: string[] | null = null;
-
-    try {
-      features = await this.featureFlagCache.getFeatures(userId.value);
-    } catch (error) {
-      if (!(error instanceof FeatureFlagCacheException)) throw error;
-    }
-
-    if (!features) {
-      features = await this.featureFlagRepo.findEnabledByTier(user.tier.value);
-
-      try {
-        await this.featureFlagCache.setFeatures(userId.value, features);
-      } catch (error) {
-        if (!(error instanceof FeatureFlagCacheException)) throw error;
-      }
-    }
+    const features = await this.featureFlagRepo.findEnabledByTier(
+      user.tier.value,
+    );
 
     return Result.ok({ user, profile, features });
   }

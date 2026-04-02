@@ -5,7 +5,6 @@ import {
   prisma,
   JwtService,
   featureFlagRepo,
-  featureFlagCache,
 } from '@/core/shared/infrastructure';
 
 import {
@@ -145,7 +144,6 @@ class IdentityModule {
         repos.userRepository,
         repos.userProfileRepository,
         featureFlagRepo,
-        featureFlagCache,
       ),
     );
 

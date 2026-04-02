@@ -11,6 +11,7 @@ import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-aut
 import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/with-feature-flag';
 
 const setupMfaAction = actionClient
+  .metadata({ actionName: 'setupMfa' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.MFA))
   .action(async ({ ctx }) => {

@@ -13,6 +13,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 import { updateProfileSchema } from '../schema/update-profile.schema';
 
 const updateUserProfileAction = actionClient
+  .metadata({ actionName: 'updateUserProfile' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.ACCOUNT_WRITE))
   .inputSchema(updateProfileSchema)

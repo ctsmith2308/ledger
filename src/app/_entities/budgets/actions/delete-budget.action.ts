@@ -17,6 +17,7 @@ const deleteBudgetSchema = z.object({
 });
 
 const deleteBudgetAction = actionClient
+  .metadata({ actionName: 'deleteBudget' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.BUDGET_WRITE))
   .inputSchema(deleteBudgetSchema)

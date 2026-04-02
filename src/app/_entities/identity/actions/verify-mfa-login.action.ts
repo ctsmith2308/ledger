@@ -13,6 +13,7 @@ import { setCookie } from '@/app/_shared/lib/session/session.service';
 import { verifyMfaLoginSchema } from '../schema/verify-mfa.schema';
 
 const verifyMfaLoginAction = actionClient
+  .metadata({ actionName: 'verifyMfaLogin' })
   .use(withRateLimit)
   .use(withMfaChallenge)
   .inputSchema(verifyMfaLoginSchema)

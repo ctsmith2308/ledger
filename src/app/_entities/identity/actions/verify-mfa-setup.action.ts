@@ -13,6 +13,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 import { verifyMfaSetupSchema } from '../schema/verify-mfa.schema';
 
 const verifyMfaSetupAction = actionClient
+  .metadata({ actionName: 'verifyMfaSetup' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.MFA))
   .inputSchema(verifyMfaSetupSchema)

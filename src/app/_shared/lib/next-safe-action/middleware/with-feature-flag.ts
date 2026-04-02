@@ -29,6 +29,8 @@ const withFeatureFlag = (feature: string) =>
         const account = await identityService.getUserAccount(userId);
 
         features = account.features;
+
+        await featureFlagCache.setFeatures(userId, features);
       } else {
         span.addEvent('cache_hit');
       }

@@ -18,7 +18,6 @@ import {
 
 import {
   type IFeatureFlagRepository,
-  type IFeatureFlagCache,
   UserNotFoundException,
 } from '@/core/shared/domain';
 
@@ -44,7 +43,6 @@ const _makeHandler = (
     userRepository?: Partial<IUserRepository>;
     userProfileRepository?: Partial<IUserProfileRepository>;
     featureFlagRepo?: Partial<IFeatureFlagRepository>;
-    featureFlagCache?: Partial<IFeatureFlagCache>;
   } = {},
 ) => {
   const userRepository: IUserRepository = {
@@ -69,18 +67,10 @@ const _makeHandler = (
     ...overrides.featureFlagRepo,
   };
 
-  const featureFlagCache: IFeatureFlagCache = {
-    getFeatures: vi.fn().mockResolvedValue(null),
-    setFeatures: vi.fn(),
-    invalidate: vi.fn(),
-    ...overrides.featureFlagCache,
-  };
-
   const handler = new GetUserAccountHandler(
     userRepository,
     userProfileRepository,
     featureFlagRepo,
-    featureFlagCache,
   );
 
   return {
@@ -88,7 +78,6 @@ const _makeHandler = (
     userRepository,
     userProfileRepository,
     featureFlagRepo,
-    featureFlagCache,
   };
 };
 
@@ -116,38 +105,14 @@ describe('GetUserAccountHandler', () => {
       expect(userRepository.findById).toHaveBeenCalledTimes(1);
       expect(userProfileRepository.findById).toHaveBeenCalledTimes(1);
     });
-  });
 
-  describe('cache hit path', () => {
-    it('returns cached features without querying the repo', async () => {
-      const { handler, featureFlagRepo, featureFlagCache } = _makeHandler({
-        featureFlagCache: {
-          getFeatures: vi.fn().mockResolvedValue(['PLAID_CONNECT']),
-          setFeatures: vi.fn(),
-          invalidate: vi.fn(),
-        },
-      });
-
-      const result = await handler.execute(validQuery);
-
-      expect(result.value.features).toEqual(['PLAID_CONNECT']);
-      expect(featureFlagRepo.findEnabledByTier).not.toHaveBeenCalled();
-      expect(featureFlagCache.setFeatures).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('cache miss path', () => {
-    it('queries the repo and caches the result', async () => {
-      const { handler, featureFlagRepo, featureFlagCache } = _makeHandler();
+    it('queries features by user tier', async () => {
+      const { handler, featureFlagRepo } = _makeHandler();
 
       await handler.execute(validQuery);
 
       expect(featureFlagRepo.findEnabledByTier).toHaveBeenCalledWith(
         'TRIAL',
-      );
-      expect(featureFlagCache.setFeatures).toHaveBeenCalledWith(
-        'user-12345',
-        ['BUDGET_WRITE', 'MFA'],
       );
     });
   });

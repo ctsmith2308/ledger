@@ -9,6 +9,7 @@ import { withRateLimit } from '@/app/_shared/lib/next-safe-action/middleware/wit
 import { registerUserSchema } from '../schema/register.schema';
 
 const registerAction = actionClient
+  .metadata({ actionName: 'registerUser' })
   .use(withRateLimit)
   .inputSchema(registerUserSchema)
   .action(async ({ parsedInput }) => {

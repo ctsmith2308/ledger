@@ -13,6 +13,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 import { exchangePublicTokenSchema } from '../schema/exchange-public-token.schema';
 
 const exchangePublicTokenAction = actionClient
+  .metadata({ actionName: 'exchangePublicToken' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.PLAID_CONNECT))
   .inputSchema(exchangePublicTokenSchema)

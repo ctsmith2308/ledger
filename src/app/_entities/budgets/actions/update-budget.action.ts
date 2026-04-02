@@ -13,6 +13,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 import { updateBudgetSchema } from '../schema/update-budget.schema';
 
 const updateBudgetAction = actionClient
+  .metadata({ actionName: 'updateBudget' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.BUDGET_WRITE))
   .inputSchema(updateBudgetSchema)

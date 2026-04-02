@@ -11,6 +11,7 @@ import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-aut
 import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/with-feature-flag';
 
 const createLinkTokenAction = actionClient
+  .metadata({ actionName: 'createLinkToken' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.PLAID_CONNECT))
   .action(async ({ ctx }) => {

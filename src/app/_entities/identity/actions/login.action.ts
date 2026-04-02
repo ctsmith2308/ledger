@@ -11,6 +11,7 @@ import { setCookie } from '@/app/_shared/lib/session/session.service';
 import { loginUserSchema } from '../schema/login.schema';
 
 const loginAction = actionClient
+  .metadata({ actionName: 'loginUser' })
   .use(withRateLimit)
   .inputSchema(loginUserSchema)
   .action(async ({ parsedInput }) => {

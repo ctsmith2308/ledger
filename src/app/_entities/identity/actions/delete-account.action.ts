@@ -13,6 +13,7 @@ import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/w
 import { deleteCookie } from '@/app/_shared/lib/session/session.service';
 
 const deleteAccountAction = actionClient
+  .metadata({ actionName: 'deleteAccount' })
   .use(withAuth)
   .use(withFeatureFlag(FEATURE_KEYS.ACCOUNT_WRITE))
   .action(async ({ ctx }) => {
