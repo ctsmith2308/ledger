@@ -1,3 +1,5 @@
+import { trace, SpanStatusCode } from '@opentelemetry/api';
+
 import { type Client } from '@upstash/qstash';
 
 import {
@@ -12,6 +14,7 @@ import { logger } from '../utils';
 
 import { serializeEvent, deserializeEvent } from './event-serialization.util';
 
+const tracer = trace.getTracer('ledger');
 const MAX_ATTEMPTS = 3;
 
 class EventBus implements IEventBus {
@@ -33,71 +36,115 @@ class EventBus implements IEventBus {
 
   async dispatch(events: DomainEvent[]): Promise<void> {
     for (const event of events) {
-      const record = await this._persist(event);
-      const handlers = this._handlers.get(event.eventType) ?? [];
+      await tracer.startActiveSpan(
+        `event.dispatch.${event.eventType}`,
+        async (span) => {
+          span.setAttribute('event.type', event.eventType);
+          span.setAttribute('event.aggregateId', event.aggregateId);
 
-      if (handlers.length > 0) {
-        await this._publish(event, record.id);
-      } else {
-        await this.prisma.domainEventRecord.update({
-          where: { id: record.id },
-          data: { status: 'processed', processedAt: new Date() },
-        });
-      }
+          const record = await this._persist(event);
+          span.setAttribute('event.recordId', record.id);
+
+          const handlers = this._handlers.get(event.eventType) ?? [];
+
+          if (handlers.length > 0) {
+            try {
+              await this._publish(event, record.id);
+              span.addEvent('qstash_published');
+            } catch (err: unknown) {
+              const message =
+                err instanceof Error ? err.message : 'QStash publish failed';
+              span.addEvent('qstash_publish_failed', { error: message });
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message,
+              });
+              logger.error(
+                `QStash publish failed for ${event.eventType} [${record.id}] — ${message}`,
+              );
+            }
+          } else {
+            await this.prisma.domainEventRecord.update({
+              where: { id: record.id },
+              data: { status: 'processed', processedAt: new Date() },
+            });
+            span.addEvent('audit_only');
+          }
+
+          span.end();
+        },
+      );
     }
   }
 
   async process(event: DomainEvent, recordId: string): Promise<void> {
-    const existing = await this.prisma.domainEventRecord.findUnique({
-      where: { id: recordId },
-      select: { status: true },
-    });
+    return tracer.startActiveSpan(
+      `event.process.${event.eventType}`,
+      async (span) => {
+        span.setAttribute('event.type', event.eventType);
+        span.setAttribute('event.recordId', recordId);
 
-    if (existing?.status === 'processed') {
-      logger.debug(
-        `Event already processed, skipping: ${event.eventType} [${recordId}]`,
-      );
-      return;
-    }
+        const existing = await this.prisma.domainEventRecord.findUnique({
+          where: { id: recordId },
+          select: { status: true },
+        });
 
-    const handlers = this._handlers.get(event.eventType) ?? [];
+        if (existing?.status === 'processed') {
+          span.addEvent('duplicate_skipped');
+          span.end();
+          return;
+        }
 
-    if (!handlers.length) {
-      await this.prisma.domainEventRecord.update({
-        where: { id: recordId },
-        data: { status: 'processed', processedAt: new Date() },
-      });
-      return;
-    }
+        const handlers = this._handlers.get(event.eventType) ?? [];
 
-    try {
-      for (const handler of handlers) {
-        await handler(event);
-      }
+        if (!handlers.length) {
+          await this.prisma.domainEventRecord.update({
+            where: { id: recordId },
+            data: { status: 'processed', processedAt: new Date() },
+          });
+          span.addEvent('no_handlers');
+          span.end();
+          return;
+        }
 
-      await this.prisma.domainEventRecord.update({
-        where: { id: recordId },
-        data: { status: 'processed', processedAt: new Date() },
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Unknown handler error';
+        try {
+          for (const handler of handlers) {
+            await handler(event);
+          }
 
-      await this.prisma.domainEventRecord.update({
-        where: { id: recordId },
-        data: {
-          status: 'failed',
-          attempts: { increment: 1 },
-          error: message,
-        },
-      });
+          await this.prisma.domainEventRecord.update({
+            where: { id: recordId },
+            data: { status: 'processed', processedAt: new Date() },
+          });
 
-      logger.error(
-        `Event handler failed: ${event.eventType} [${recordId}] — ${message}`,
-      );
+          span.addEvent('handlers_completed', {
+            handlerCount: handlers.length,
+          });
+          span.end();
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : 'Unknown handler error';
 
-      throw err;
-    }
+          await this.prisma.domainEventRecord.update({
+            where: { id: recordId },
+            data: {
+              status: 'failed',
+              attempts: { increment: 1 },
+              error: message,
+            },
+          });
+
+          span.setStatus({ code: SpanStatusCode.ERROR, message });
+          span.end();
+
+          logger.error(
+            `Event handler failed: ${event.eventType} [${recordId}] — ${message}`,
+          );
+
+          throw err;
+        }
+      },
+    );
   }
 
   async replayFailed(): Promise<number> {

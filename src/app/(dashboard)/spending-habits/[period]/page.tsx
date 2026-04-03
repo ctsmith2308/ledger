@@ -1,6 +1,12 @@
+import Link from 'next/link';
+
 import { notFound } from 'next/navigation';
 
+import { ArrowLeft } from 'lucide-react';
+
 import { transactionsService } from '@/core/modules/transactions';
+
+import { ROUTES } from '@/app/_shared/routes';
 
 import { loadSession } from '@/app/_shared/lib/session/session.service';
 
@@ -52,6 +58,14 @@ async function SpendingPeriodPage({
 
   return (
     <PageContainer>
+      <Link
+        href={ROUTES.spendingHabits}
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" />
+        Monthly History
+      </Link>
+
       <PageHeader
         title={title}
         description={`Spending breakdown for ${title}.`}
