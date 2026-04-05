@@ -11,6 +11,7 @@ const IdentityEvents = {
 
 const BankingEvents = {
   BANK_ACCOUNT_LINKED: 'banking.bank_account_linked',
+  BANK_ACCOUNT_UNLINKED: 'banking.bank_account_unlinked',
   ACCOUNTS_SYNCED: 'banking.accounts_synced',
 } as const;
 

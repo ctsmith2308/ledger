@@ -101,6 +101,9 @@ class PlaidClientService implements IPlaidClient {
       hasMore: data.has_more,
     };
   }
+  async itemRemove(accessToken: string): Promise<void> {
+    await this.plaidApi.itemRemove({ access_token: accessToken });
+  }
 }
 
 export { PlaidClientService };

@@ -30,6 +30,7 @@ interface IPlaidClient {
     accessToken: string,
     cursor?: string,
   ): Promise<PlaidSyncResult>;
+  itemRemove(accessToken: string): Promise<void>;
 }
 
 export {

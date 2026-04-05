@@ -13,6 +13,7 @@ interface ITransactionRepository {
     limit: number,
   ): Promise<Transaction[]>;
   deleteByIds(ids: string[]): Promise<void>;
+  deleteByAccountIds(accountIds: string[]): Promise<void>;
 }
 
 export { type ITransactionRepository };

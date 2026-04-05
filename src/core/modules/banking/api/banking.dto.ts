@@ -7,6 +7,7 @@ type PlaidItemDTO = {
 
 type BankAccountDTO = {
   id: string;
+  plaidItemId: string;
   name: string;
   officialName: string | undefined;
   mask: string | undefined;

@@ -39,6 +39,10 @@ class PlaidItemRepository implements IPlaidItemRepository {
       data: { cursor },
     });
   }
+
+  async deleteById(id: string): Promise<void> {
+    await this.prisma.plaidItem.delete({ where: { id } });
+  }
 }
 
 export { PlaidItemRepository };

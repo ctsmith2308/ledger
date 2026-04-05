@@ -3,7 +3,9 @@ import { CommandBus, QueryBus } from '@/core/shared/infrastructure';
 import {
   CreateLinkTokenCommand,
   ExchangePublicTokenCommand,
+  UnlinkBankCommand,
   GetAccountsQuery,
+  GetConnectionsQuery,
 } from '../application';
 
 import {
@@ -44,6 +46,22 @@ class BankingService {
     const result = await this.queryBus.dispatch(new GetAccountsQuery(userId));
 
     return BankAccountMapper.toDTOList(result.getValueOrThrow());
+  }
+
+  async getConnections(userId: string): Promise<PlaidItemDTO[]> {
+    const result = await this.queryBus.dispatch(
+      new GetConnectionsQuery(userId),
+    );
+
+    return result.getValueOrThrow().map(PlaidItemMapper.toDTO);
+  }
+
+  async unlinkBank(userId: string, plaidItemId: string): Promise<void> {
+    const result = await this.commandBus.dispatch(
+      new UnlinkBankCommand(userId, plaidItemId),
+    );
+
+    result.getValueOrThrow();
   }
 }
 

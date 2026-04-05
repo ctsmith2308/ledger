@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 import { UnauthorizedException, JWT_TYPE } from '@/core/shared/domain';
 
-import { JwtService } from '@/core/shared/infrastructure';
+import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
 
 type ResolveCookies = typeof cookies;
 

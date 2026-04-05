@@ -10,9 +10,15 @@ import {
   CreateLinkTokenHandler,
   ExchangePublicTokenCommand,
   ExchangePublicTokenHandler,
+  UnlinkBankCommand,
+  UnlinkBankHandler,
   GetAccountsQuery,
   GetAccountsHandler,
+  GetConnectionsQuery,
+  GetConnectionsHandler,
 } from '../application';
+
+import { TransactionRepository } from '@/core/modules/transactions/infrastructure';
 
 import {
   PlaidItemRepository,
@@ -52,9 +58,25 @@ class BankingModule {
       ),
     );
 
+    commandBus.register(
+      UnlinkBankCommand,
+      new UnlinkBankHandler(
+        plaidClient,
+        repos.plaidItemRepository,
+        repos.bankAccountRepository,
+        new TransactionRepository(prisma),
+        services.eventBus,
+      ),
+    );
+
     queryBus.register(
       GetAccountsQuery,
       new GetAccountsHandler(repos.bankAccountRepository),
+    );
+
+    queryBus.register(
+      GetConnectionsQuery,
+      new GetConnectionsHandler(repos.plaidItemRepository),
     );
 
     return new BankingService(commandBus, queryBus);

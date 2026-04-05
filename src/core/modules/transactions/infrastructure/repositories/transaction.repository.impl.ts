@@ -85,6 +85,12 @@ class TransactionRepository implements ITransactionRepository {
       where: { id: { in: ids } },
     });
   }
+
+  async deleteByAccountIds(accountIds: string[]): Promise<void> {
+    await this.prisma.transaction.deleteMany({
+      where: { accountId: { in: accountIds } },
+    });
+  }
 }
 
 export { TransactionRepository };

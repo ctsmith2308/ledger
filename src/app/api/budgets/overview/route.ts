@@ -4,7 +4,8 @@ import { budgetsService } from '@/core/modules/budgets';
 
 import { JWT_TYPE } from '@/core/shared/domain';
 
-import { JwtService, toErrorResponse } from '@/core/shared/infrastructure';
+import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
+import { toErrorResponse } from '@/core/shared/infrastructure';
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
