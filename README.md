@@ -10,7 +10,7 @@ A portfolio project built to production-grade standards -- not to compete with M
 
 | | |
 |---|---|
-| **Live demo** | [ledger.vercel.app](#) |
+| **Live demo** | [ledger-production.up.railway.app](https://ledger-production.up.railway.app/) |
 | **Architecture doc** | [docs/architecture.md](./docs/architecture.md) |
 | **Case studies** | [tRPC vs server actions](./docs/architecture.md#trpc-vs-server-actions) -- [Nuxt to Next.js](./docs/architecture.md#nuxt-to-nextjs) |
 | **Source** | [github.com/ctsmith2308/ledger](https://github.com/ctsmith2308/ledger) |
@@ -60,13 +60,22 @@ Fill in the required values in `.env`:
 | `POSTGRES_USER` | Postgres username used by Docker Compose |
 | `POSTGRES_PASSWORD` | Postgres password used by Docker Compose |
 | `POSTGRES_DB` | Postgres database name (default: `ledger`) |
-| `SESSION_COOKIE_NAME` | Cookie name for session token (default: `auth_session`) |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL (feature flag cache, rate limiting) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
+| `QSTASH_URL` | QStash URL for durable event bus delivery |
+| `QSTASH_TOKEN` | QStash authentication token |
+| `QSTASH_CURRENT_SIGNING_KEY` | QStash webhook signature verification (current key) |
+| `QSTASH_NEXT_SIGNING_KEY` | QStash webhook signature verification (next rotation key) |
+| `APP_URL` | Application base URL (default: `http://localhost:3000`) |
 | `PLAID_CLIENT_ID` | Plaid sandbox client ID |
 | `PLAID_SECRET` | Plaid sandbox secret |
+| `PLAID_ENV` | Plaid environment (`sandbox`, `development`, or `production`) |
+| `SESSION_DURATION_SECONDS` | Session expiry duration in seconds |
+| `GRAFANA_TOKEN` | Grafana Cloud API token (optional, for traces) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Grafana Cloud OTLP endpoint (optional, for traces) |
 | `OTEL_EXPORTER_OTLP_HEADERS` | Grafana Cloud auth header (optional, for traces) |
+| `CRON_SECRET` | Shared secret for authenticating cron job requests |
+| `TRIAL_TTL_HOURS` | Hours before trial accounts expire (default: `48`) |
 
 Each collaborator runs their own local Docker container and database -- there is no shared development database. Copy `.env.example`, fill in your own values, and Docker Compose will provision the database from them.
 
@@ -79,8 +88,10 @@ Each collaborator runs their own local Docker container and database -- there is
 Docker must be running before migrations or the dev server. PostgreSQL must be healthy before Prisma can connect.
 
 ```bash
-docker compose up postgres redis -d
+docker compose up postgres -d
 ```
+
+> Redis is provided by Upstash (remote) -- no local Redis container is needed.
 
 ### 4. Run migrations and seed
 
@@ -136,7 +147,7 @@ docker compose up --build
 Run only infrastructure (for local Next.js dev):
 
 ```bash
-docker compose up postgres redis -d
+docker compose up postgres -d
 ```
 
 Stop and remove containers:

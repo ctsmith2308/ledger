@@ -7,12 +7,12 @@ import { observabilityGrafanaVsNewrelic } from './studies/observability-grafana-
 import { tanstackQuerySafeAction } from './studies/tanstack-query-safe-action';
 
 const caseStudies: CaseStudy[] = [
-  trpcVsServerActions,
   nestjsOverhead,
-  nuxtToNextjs,
+  trpcVsServerActions,
   domainEventOwnership,
-  observabilityGrafanaVsNewrelic,
+  nuxtToNextjs,
   tanstackQuerySafeAction,
+  observabilityGrafanaVsNewrelic,
 ];
 
 const getCaseStudy = (slug: string): CaseStudy | undefined =>

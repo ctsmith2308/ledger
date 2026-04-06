@@ -11,20 +11,22 @@ import { durableEventBus } from './decisions/durable-event-bus';
 import { jwtAuth } from './decisions/jwt-auth';
 import { mfa } from './decisions/mfa';
 import { observability } from './decisions/observability';
+import { healthChecks } from './decisions/health-checks';
 
 const decisions: ArchitectureDecision[] = [
-  cqrsCommandBus,
   modularMonolith,
-  domainDrivenDesign,
-  eventBus,
-  serverActions,
-  fsdFrontend,
-  cqrsReadModel,
-  eventHandlerOrdering,
+  cqrsCommandBus,
   durableEventBus,
+  domainDrivenDesign,
+  cqrsReadModel,
+  eventBus,
+  eventHandlerOrdering,
+  serverActions,
   jwtAuth,
   mfa,
+  fsdFrontend,
   observability,
+  healthChecks,
 ];
 
 const getDecision = (slug: string): ArchitectureDecision | undefined =>
