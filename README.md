@@ -12,7 +12,7 @@ A portfolio project built to production-grade standards -- not to compete with M
 |---|---|
 | **Live demo** | [ledger-production.up.railway.app](https://ledger-production.up.railway.app/) |
 | **Architecture doc** | [docs/architecture.md](./docs/architecture.md) |
-| **Case studies** | [tRPC vs server actions](./docs/architecture.md#trpc-vs-server-actions) -- [Nuxt to Next.js](./docs/architecture.md#nuxt-to-nextjs) |
+| **Case studies** | [Server actions as transport](https://ledger-production.up.railway.app/case-studies/trpc-vs-server-actions) -- [Nuxt to Next.js](https://ledger-production.up.railway.app/case-studies/nuxt-to-nextjs) |
 | **Source** | [github.com/ctsmith2308/ledger](https://github.com/ctsmith2308/ledger) |
 
 ---
@@ -135,10 +135,13 @@ App runs at [http://localhost:3000](http://localhost:3000).
 | `npm run prisma:seed:demo` | Seed Plaid sandbox data |
 | `npm run prisma:reset` | Reset database and run migrations |
 | `npm run prisma:reset:full` | Reset + migrate + seed + seed demo |
+| `npm run prisma:migrate:deploy` | Deploy migrations (non-interactive, for CI/CD) |
+| `npm run test:e2e` | Run Playwright end-to-end tests |
+| `npm run test:e2e:ui` | Run Playwright e2e tests with UI |
 
 ## Docker
 
-Run the full stack (app + postgres + redis):
+Run the full stack (app + postgres):
 
 ```bash
 docker compose up --build
