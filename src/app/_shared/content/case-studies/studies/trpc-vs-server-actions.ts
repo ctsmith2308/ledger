@@ -2,7 +2,7 @@ import { type CaseStudy } from '../types';
 
 const trpcVsServerActions: CaseStudy = {
   slug: 'trpc-vs-server-actions',
-  title: 'tRPC vs Next.js server actions',
+  title: 'Server actions as a transport layer — not a feature',
   subtitle:
     'Why the project moved from tRPC to server actions, and what that decision actually cost.',
   badge: 'Migration',

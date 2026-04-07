@@ -1,11 +1,6 @@
 import { Transaction as PlaidSDKTransaction } from 'plaid';
 
-import {
-  IHandler,
-  IEventBus,
-  Result,
-  DomainEvent,
-} from '@/core/shared/domain';
+import { IHandler, IEventBus, Result, DomainEvent } from '@/core/shared/domain';
 
 import {
   ITransactionRepository,

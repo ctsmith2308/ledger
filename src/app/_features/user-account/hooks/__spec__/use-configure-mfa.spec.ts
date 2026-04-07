@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockRefresh = vi.fn();
+const mockInvalidateQueries = vi.fn();
 let mockStateValues: Record<string, unknown> = {};
 let mockSetters: Record<string, (val: unknown) => void> = {};
 let stateIndex = 0;
@@ -20,10 +20,6 @@ vi.mock('react', () => ({
   },
 }));
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: mockRefresh }),
-}));
-
 const mockSetupMutate = vi.fn();
 const mockVerifyMutate = vi.fn();
 const mockDisableMutate = vi.fn();
@@ -37,6 +33,7 @@ let mockDisableIsPending = false;
 let mutationIndex = 0;
 
 vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
   useMutation: (opts: { onSuccess?: (...args: never[]) => void }) => {
     const idx = mutationIndex % 3;
     mutationIndex++;
@@ -130,12 +127,14 @@ describe('useConfigureMfa', () => {
     expect(mockStateValues['mfaProgress']).toBe(MFA_PROGRESS.SUCCESS);
   });
 
-  it('disable success refreshes the router', () => {
+  it('disable success invalidates user account query', () => {
     useConfigureMfa();
 
     if (disableOnSuccess) disableOnSuccess();
 
-    expect(mockRefresh).toHaveBeenCalled();
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['user-account'],
+    });
   });
 
   it('reflects enabling pending state', () => {

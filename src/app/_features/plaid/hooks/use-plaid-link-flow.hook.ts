@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 
-import { useMutation } from '@tanstack/react-query';
-
-import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { usePlaidLink } from 'react-plaid-link';
 
 import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import {
   createLinkTokenAction,
@@ -18,7 +17,7 @@ import { type ExchangePublicTokenInput } from '@/app/_entities/banking/schema';
 import { syncTransactionsAction } from '@/app/_entities/transactions/actions';
 
 const usePlaidLinkFlow = () => {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [linkToken, setLinkToken] = useState<string | null>(null);
 
   const createToken = useMutation({
@@ -33,7 +32,8 @@ const usePlaidLinkFlow = () => {
       handleActionResponse(exchangePublicTokenAction(input)),
     onSuccess: async () => {
       await handleActionResponse(syncTransactionsAction());
-      router.refresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts });
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions });
     },
   });
 

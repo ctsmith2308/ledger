@@ -13,6 +13,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  PasswordInput,
   Spinner,
 } from '@/app/_components';
 
@@ -157,10 +158,9 @@ function PasswordField({ form }: { form: LoginFormApi }) {
           <Field data-invalid={isInvalid}>
             <FieldLabel htmlFor={field.name}>Password</FieldLabel>
 
-            <Input
+            <PasswordInput
               id={field.name}
               name={field.name}
-              type="password"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}

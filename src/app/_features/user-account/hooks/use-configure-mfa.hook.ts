@@ -1,12 +1,11 @@
 import { useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { useForm } from '@tanstack/react-form';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import {
   setupMfaAction,
@@ -23,7 +22,7 @@ const MFA_PROGRESS = {
 type MfaProgress = (typeof MFA_PROGRESS)[keyof typeof MFA_PROGRESS];
 
 const useConfigureMfa = () => {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [mfaProgress, setMfaProgress] = useState<MfaProgress>(
     MFA_PROGRESS.IDLE,
   );
@@ -50,7 +49,7 @@ const useConfigureMfa = () => {
   const disableMutation = useMutation({
     mutationFn: () => handleActionResponse(disableMfaAction()),
     onSuccess: () => {
-      router.refresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.userAccount });
     },
   });
 
