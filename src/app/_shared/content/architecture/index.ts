@@ -10,6 +10,7 @@ import { eventHandlerOrdering } from './decisions/event-handler-ordering';
 import { durableEventBus } from './decisions/durable-event-bus';
 import { jwtAuth } from './decisions/jwt-auth';
 import { mfa } from './decisions/mfa';
+import { featureFlags } from './decisions/feature-flags';
 import { observability } from './decisions/observability';
 import { healthChecks } from './decisions/health-checks';
 
@@ -24,6 +25,7 @@ const decisions: ArchitectureDecision[] = [
   serverActions,
   jwtAuth,
   mfa,
+  featureFlags,
   fsdFrontend,
   observability,
   healthChecks,

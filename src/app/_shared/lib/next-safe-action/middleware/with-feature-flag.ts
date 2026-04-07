@@ -11,8 +11,8 @@ import { identityService } from '@/core/modules/identity';
 const tracer = trace.getTracer('ledger');
 
 const withFeatureFlag = (feature: string) =>
-  createMiddleware().define(async ({ ctx, next }) => {
-    const { userId } = ctx as { userId: string };
+  createMiddleware<{ ctx: { userId: string } }>().define(async ({ ctx, next }) => {
+    const { userId } = ctx;
 
     const span = tracer.startSpan('middleware.withFeatureFlag');
 

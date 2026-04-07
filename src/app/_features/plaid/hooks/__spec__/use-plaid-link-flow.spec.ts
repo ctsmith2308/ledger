@@ -19,6 +19,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
   useMutation: (opts: { mutationFn: (...args: unknown[]) => unknown; onSuccess?: (...args: unknown[]) => unknown }) => {
     onSuccessCallback = opts.onSuccess as typeof onSuccessCallback;
     return { mutate: mockMutate, isPending: mockIsPending };

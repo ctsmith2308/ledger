@@ -2,13 +2,12 @@
 
 import { useRef } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { useForm } from '@tanstack/react-form';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { handleActionResponse } from '@/app/_shared/lib/next-safe-action';
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 import { updateUserProfileAction } from '@/app/_entities/identity/actions';
 
@@ -21,14 +20,14 @@ const useUpdateProfileForm = (initial: {
   firstName: string;
   lastName: string;
 }) => {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const pendingValues = useRef<UpdateProfileInput | null>(null);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: UpdateProfileInput) =>
       handleActionResponse(updateUserProfileAction(input)),
     onSuccess: () => {
-      router.refresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.userAccount });
     },
   });
 
