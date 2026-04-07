@@ -18,11 +18,14 @@ import { PageContainer, PageHeader } from '@/app/_widgets';
 
 const loadSpendingData = async () => {
   const session = await loadSession();
+  console.log('DEBUG session:', session);
 
   const [spendingPeriods, currentMonthSpending] = await Promise.all([
     transactionsService.getSpendingPeriods(session.userId),
     transactionsService.getSpendingByCategory(session.userId, new Date()),
   ]);
+
+  console.log('DEBUG spending:', { spendingPeriods, currentMonthSpending });
 
   return { spendingPeriods, currentMonthSpending };
 };
