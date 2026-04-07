@@ -183,6 +183,7 @@ class EventBus implements IEventBus {
   }
 
   private async _publish(event: DomainEvent, recordId: string): Promise<void> {
+    logger.info(`QStash publishing to: ${this.appUrl}/api/events [${event.eventType}] [${recordId}]`);
     await this.qstash.publishJSON({
       url: `${this.appUrl}/api/events`,
       body: serializeEvent(event),
