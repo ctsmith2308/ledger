@@ -2,24 +2,24 @@ import { type ArchitectureDecision } from '../types';
 
 const healthChecks: ArchitectureDecision = {
   slug: 'health-checks',
-  title: 'Two-tier health checks — shallow for uptime, deep for dependencies',
+  title: 'Two-tier health checks',
   subtitle:
-    'A lightweight probe keeps the orchestrator happy. A scheduled deep check catches silent dependency failures before users do.',
+    'A shallow probe keeps the orchestrator happy. A scheduled deep check catches silent dependency failures before users do.',
   badge: 'Infrastructure',
   context:
-    'Railway restarts services that stop responding, but a running process does not guarantee a working application. The database connection pool can exhaust, Redis credentials can rotate, QStash signing keys can expire, and Plaid sandbox tokens can be revoked — all while the Node process stays alive and returns 200 on static routes. Without dependency-level checks, these failures surface as user-facing errors with no prior signal.',
+    'Railway restarts services that stop responding, but a running process does not guarantee a working application. The database connection pool can exhaust, Redis credentials can rotate, QStash signing keys can expire, and Plaid sandbox tokens can be revoked, all while the Node process stays alive and returns 200 on static routes. Without dependency-level checks, these failures surface as user-facing errors with no prior signal.',
   decision:
-    'Two health check endpoints. A shallow check at /api/health runs SELECT 1 against Postgres and returns 200 or 503. Railway polls this for liveness — fast, no auth, no side effects. A deep check at /api/health/deep runs all four dependency checks in parallel (Postgres, Upstash Redis, QStash, Plaid), returns per-check latency and status, and classifies the overall result as ok, degraded, or unhealthy. The deep endpoint is protected by CRON_SECRET and designed for scheduled runs — nightly or weekly via QStash cron.',
+    'Two health check endpoints. A shallow check at /api/health runs SELECT 1 against Postgres and returns 200 or 503. Railway polls this for liveness. Fast, no auth, no side effects. A deep check at /api/health/deep runs all four dependency checks in parallel (Postgres, Upstash Redis, QStash, Plaid), returns per-check latency and status, and classifies the overall result as ok, degraded, or unhealthy. The deep endpoint is protected by CRON_SECRET and designed for scheduled runs, nightly or weekly via QStash cron.',
   rationale: [
-    'Separating shallow from deep avoids a common anti-pattern: putting dependency checks on the liveness probe. If Plaid is temporarily down, the app is still usable for non-banking features — a shallow check that fails on Plaid would trigger unnecessary restarts.',
-    'Running all dependency checks in parallel with Promise.all keeps the deep check fast. Each check has its own timeout boundary — one slow dependency does not block the others.',
+    'Separating shallow from deep avoids a common anti-pattern: putting dependency checks on the liveness probe. If Plaid is temporarily down, the app is still usable for non-banking features. A shallow check that fails on Plaid would trigger unnecessary restarts.',
+    'Running all dependency checks in parallel with Promise.all keeps the deep check fast. Each check has its own timeout boundary, so one slow dependency does not block the others.',
     'The three-state response (ok, degraded, unhealthy) gives actionable signal. Degraded means some dependencies are down but the app is partially functional. Unhealthy means nothing works. This distinction matters for incident triage.',
-    'CRON_SECRET protection prevents the deep endpoint from being used as an oracle for dependency status by unauthenticated callers. The same secret already protects the cron cleanup job — no new credential to manage.',
+    'CRON_SECRET protection prevents the deep endpoint from being used as an oracle for dependency status by unauthenticated callers. The same secret already protects the cron cleanup job, so there is no new credential to manage.',
   ],
   tradeoffs: [
     {
       pro: 'Shallow check is sub-millisecond and safe to poll every 30 seconds. No risk of rate-limiting external services.',
-      con: 'Shallow check only catches Postgres failures. A Redis or QStash outage will not trigger a Railway restart — by design, but it means those failures depend on the scheduled deep check for detection.',
+      con: 'Shallow check only catches Postgres failures. A Redis or QStash outage will not trigger a Railway restart. By design, but it means those failures depend on the scheduled deep check for detection.',
     },
     {
       pro: 'Deep check validates the full dependency chain in one request. Catches credential rotation, network policy changes, and silent service degradation.',
@@ -32,7 +32,7 @@ const healthChecks: ArchitectureDecision = {
   ],
   codeBlocks: [
     {
-      label: 'Shallow health check — /api/health',
+      label: 'Shallow health check. /api/health',
       code: `async function GET() {
   try {
     await prisma.$queryRaw\`SELECT 1\`;
@@ -47,7 +47,7 @@ const healthChecks: ArchitectureDecision = {
 }`,
     },
     {
-      label: 'Deep health check — parallel dependency validation',
+      label: 'Deep health check. Parallel dependency validation',
       code: `const runCheck = async (
   fn: () => Promise<void>,
 ): Promise<CheckResult> => {
@@ -75,7 +75,7 @@ const [postgres, redis, qstash, plaid] = await Promise.all([
 ]);`,
     },
     {
-      label: 'Three-state classification — ok, degraded, unhealthy',
+      label: 'Three-state classification. ok, degraded, unhealthy',
       code: `const allOk = Object.values(checks)
   .every((c) => c.status === 'ok');
 const allDown = Object.values(checks)

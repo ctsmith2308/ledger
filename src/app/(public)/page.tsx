@@ -32,7 +32,7 @@ export default function Home() {
 
               <p className="max-w-md text-lg leading-relaxed text-muted-foreground">
                 Ledger is a personal finance app built to production-grade
-                standards — not to compete with Mint, but to demonstrate how I
+                standards. Not to compete with Mint, but to demonstrate how I
                 think about systems.
               </p>
 
@@ -76,7 +76,7 @@ export default function Home() {
 
           <p className="mt-5 text-base leading-relaxed text-muted-foreground">
             Mint is dead. The space is crowded. That&apos;s not the point.
-            Personal finance naturally justifies real architecture — bank
+            Personal finance naturally justifies real architecture. Bank
             connectivity requires compliance thinking, budgeting requires domain
             modelling, and multi-account aggregation requires event-driven
             design. The domain earns every pattern in the codebase. A todo app
@@ -86,30 +86,30 @@ export default function Home() {
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             If real users show up, the foundation is ready. Plaid is real. The
             infrastructure is production-grade. Compliance and cost would be the
-            conversation at that point — not the architecture.
+            conversation at that point, not the architecture.
           </p>
         </div>
       </section>
 
-      {/* Architecture decisions */}
+      {/* Case studies */}
       <section
-        id="architecture"
+        id="case-studies"
         className="mx-auto max-w-7xl px-6 py-24 scroll-mt-16"
       >
         <div className="mb-12 flex items-end justify-between gap-4">
           <div className="flex flex-col gap-3">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              The decisions worth talking about
+              Case studies
             </h2>
 
             <p className="max-w-xl text-base text-muted-foreground">
-              Every pattern here has a rationale. These are the answers to the
-              &ldquo;why&rdquo; questions.
+              The pivots, the migrations, and the honest accounting of what was
+              tried before the current approach.
             </p>
           </div>
 
           <Link
-            href={ROUTES.architecture}
+            href={ROUTES.caseStudies}
             className="hidden shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:flex"
           >
             View all
@@ -118,10 +118,10 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {decisions.map(({ title, subtitle, slug, badge }) => (
+          {caseStudies.map(({ slug, badge, title, subtitle }) => (
             <ContentCard
               key={slug}
-              href={`${ROUTES.architecture}/${slug}`}
+              href={`${ROUTES.caseStudies}/${slug}`}
               badge={badge}
               title={title}
               subtitle={subtitle}
@@ -131,35 +131,35 @@ export default function Home() {
 
         <div className="mt-8 flex sm:hidden">
           <Link
-            href={ROUTES.architecture}
+            href={ROUTES.caseStudies}
             className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            View all decisions
+            View all case studies
             <ArrowRight className="size-3.5" />
           </Link>
         </div>
       </section>
 
-      {/* Case studies */}
+      {/* Architecture decisions */}
       <section
-        id="case-studies"
+        id="architecture"
         className="border-t border-border bg-muted scroll-mt-16"
       >
         <div className="mx-auto max-w-7xl px-6 py-24">
           <div className="mb-12 flex items-end justify-between gap-4">
             <div className="flex flex-col gap-3">
               <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                Case studies
+                The decisions worth talking about
               </h2>
 
               <p className="max-w-xl text-base text-muted-foreground">
-                The pivots, the migrations, and the honest accounting of what
-                was tried before the current approach.
+                Every pattern here has a rationale. These are the answers to the
+                &ldquo;why&rdquo; questions.
               </p>
             </div>
 
             <Link
-              href={ROUTES.caseStudies}
+              href={ROUTES.architecture}
               className="hidden shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:flex"
             >
               View all
@@ -168,10 +168,10 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {caseStudies.map(({ slug, badge, title, subtitle }) => (
+            {decisions.map(({ title, subtitle, slug, badge }) => (
               <ContentCard
                 key={slug}
-                href={`${ROUTES.caseStudies}/${slug}`}
+                href={`${ROUTES.architecture}/${slug}`}
                 badge={badge}
                 title={title}
                 subtitle={subtitle}
@@ -181,10 +181,10 @@ export default function Home() {
 
           <div className="mt-8 flex sm:hidden">
             <Link
-              href={ROUTES.caseStudies}
+              href={ROUTES.architecture}
               className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              View all case studies
+              View all decisions
               <ArrowRight className="size-3.5" />
             </Link>
           </div>
@@ -221,7 +221,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
     </>
   );
 }
@@ -229,7 +228,7 @@ export default function Home() {
 function CodePreview() {
   return (
     <div className="hidden items-center justify-center lg:flex">
-      <div className="relative h-[460px] w-full max-w-lg overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 to-zinc-800 shadow-2xl">
+      <div className="relative h-115 w-full max-w-lg overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 to-zinc-800 shadow-2xl">
         <div className="absolute inset-0 p-6">
           <div className="mb-5 flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-red-400/80" />
@@ -242,7 +241,9 @@ function CodePreview() {
           <div className="flex flex-col gap-3 font-mono text-xs">
             <div className="flex gap-2">
               <span className="text-zinc-500">01</span>
-              <span className="text-zinc-500">{'// service signs — handlers never touch JWTs'}</span>
+              <span className="text-zinc-500">
+                {'// service signs, handlers never touch JWTs'}
+              </span>
             </div>
 
             <div className="flex gap-2">
@@ -274,7 +275,7 @@ function CodePreview() {
             <div className="flex gap-2">
               <span className="text-zinc-500">05</span>
               <span className="text-emerald-400">const</span>
-              <span className="text-zinc-200">purpose</span>
+              <span className="text-zinc-200">type</span>
               <span className="text-zinc-400">= isSuccess ?</span>
               <span className="text-yellow-300">{`'access'`}</span>
               <span className="text-zinc-400">:</span>
@@ -293,14 +294,18 @@ function CodePreview() {
 
             <div className="flex gap-2 pl-8">
               <span className="text-zinc-500">07</span>
-              <span className="text-zinc-400">.sign(userId, purpose, ttl);</span>
+              <span className="text-zinc-400">
+                .sign(userId, type, ttl);
+              </span>
             </div>
 
             <div className="mt-4 h-px w-full bg-zinc-700" />
 
             <div className="mt-2 flex gap-2">
               <span className="text-zinc-500">08</span>
-              <span className="text-zinc-500">{'// feature flags cached in Upstash on login'}</span>
+              <span className="text-zinc-500">
+                {'// feature flags cached in Upstash on login'}
+              </span>
             </div>
 
             <div className="flex gap-2">
@@ -314,14 +319,18 @@ function CodePreview() {
 
             <div className="flex gap-2 pl-8">
               <span className="text-zinc-500">10</span>
-              <span className="text-zinc-400">.findEnabledByTier(user.tier);</span>
+              <span className="text-zinc-400">
+                .findEnabledByTier(user.tier);
+              </span>
             </div>
 
             <div className="flex gap-2">
               <span className="text-zinc-500">11</span>
               <span className="text-yellow-300">await</span>
               <span className="text-zinc-200">flagCache</span>
-              <span className="text-zinc-400">.setFeatures(userId, features);</span>
+              <span className="text-zinc-400">
+                .setFeatures(userId, features);
+              </span>
             </div>
           </div>
         </div>

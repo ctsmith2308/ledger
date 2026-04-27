@@ -4,58 +4,61 @@ const fsdFrontend: ArchitectureDecision = {
   slug: 'fsd-frontend',
   title: 'Feature-Sliced Design (lite)',
   subtitle:
-    'The layered model and one-way dependency rules from FSD — without the full specification overhead.',
+    'The layered model and one-way dependency rules from FSD, without the full specification overhead.',
   badge: 'Frontend architecture',
   context:
-    'React projects commonly devolve into a `components/` folder that is half presentational primitives, half feature-specific logic, with hooks importing from components and components importing from hooks that import from other components. There is no rule governing what can import from what, so the answer becomes "anything from anywhere" and the coupling is invisible until it is painful.',
+    'React projects commonly devolve into a `components/` folder that mixes presentational primitives with feature-specific logic. Hooks import from components, components import from hooks that import from other components. Nothing governs what can import from what, so everything imports from everywhere and the coupling only surfaces when it hurts.',
   decision:
-    'Apply a lite variant of Feature-Sliced Design (https://feature-sliced.design/overview). The layer names, one-way dependency rule, and barrel index convention are taken directly from FSD. The full specification — formal slice/segment naming, strict public API enforcement — is not applied. Analogous to DDD-lite: the discipline is real, the ceremony is reduced.',
+    'Apply a lite variant of Feature-Sliced Design (https://feature-sliced.design/overview). The layer names, one-way dependency rule, and barrel index convention come directly from FSD. The full specification (formal slice/segment naming, strict public API enforcement) is not applied. Same idea as DDD-lite: the discipline is real, the ceremony is reduced.',
   rationale: [
-    'The one-way rule is enforced by convention and code review — not a linter today, but the rules are explicit and documented. Adding eslint-plugin-boundaries is a one-sprint addition.',
-    "Each layer has a barrel `index.ts`. Consumers import from the barrel, not from deep internal paths. This means a layer's internal structure can be refactored without touching import paths outside it.",
-    'Feature modules own their complete slice — server actions, hooks, and UI. Adding a feature means adding a folder, not touching shared infrastructure.',
+    'The one-way rule is enforced by convention and code review. Not a linter today, but the rules are explicit and documented. Adding eslint-plugin-boundaries is a one-sprint addition.',
+    "Each layer has a barrel `index.ts`. Consumers import from the barrel, not from deep internal paths. A layer's internal structure can be refactored without touching imports outside it.",
+    'Feature modules own their complete slice: server actions, hooks, and UI. Adding a feature means adding a folder, not touching shared infrastructure.',
     'Primitive components (`_components/`) are stateless and have no feature dependencies. They can be extracted to a shared package with no refactoring.',
   ],
   tradeoffs: [
     {
-      pro: 'Dependency direction is explicit and reviewable — a wrong import is visible in a PR.',
+      pro: 'Dependency direction is explicit and reviewable. A wrong import is visible in a PR.',
       con: 'Without a linter rule, the convention relies on discipline. `eslint-plugin-boundaries` should be added to enforce it automatically.',
     },
     {
-      pro: 'Features are isolated — you can delete an entire feature folder without breaking others.',
-      con: 'The "lite" label means not following the full FSD spec — engineers familiar with FSD may find the deviations inconsistent.',
+      pro: 'Features are isolated. You can delete an entire feature folder without breaking others.',
+      con: 'The "lite" label means not following the full FSD spec. Engineers familiar with FSD may find the deviations inconsistent.',
     },
   ],
   codeBlocks: [
     {
       label: 'Layer structure and dependency direction',
       code: `src/app/
-  _lib/          # base layer — shared utilities, factories, services
-  _components/   # primitive, stateless UI — button, input, card
-  _widgets/      # compositional blocks — header, footer, dashboard-header
-  _providers/    # app-level context — theme, auth
-  _features/     # domain feature modules
-    auth/
-      actions/   # server actions
-      hooks/       # client hooks (useLoginForm, useRegisterForm)
-      ui/        # feature-specific components (LoginForm, RegisterForm)
+  _shared/       # cross-cutting content and config
+  _components/   # primitive, stateless UI. Button, input, card
+  _widgets/      # compositional blocks. Header, footer, dashboard-header
+  _layouts/      # layout shells composed by route segments
+  _providers/    # app-level context. Theme, query client
+  _entities/     # data access grouped by domain. Actions, schemas, loaders
+  _features/     # feature modules. Hooks, UI, feature-specific schemas
 
 # Dependency rule: lower layers never import from higher ones
-# _lib → _components → _widgets → _features → routes`,
+# _shared → _entities → _features → routes`,
     },
     {
-      label: 'Feature module — complete slice in one folder',
-      code: `_features/auth/
+      label: 'Entity + feature split for auth',
+      code: `_entities/identity/
   actions/
-    login.action.ts      # 'use server' — calls commandBus
+    login.action.ts      # 'use server', calls identityService
     register.action.ts
     index.ts
+  schema/
+    login.schema.ts
+    index.ts
+
+_features/auth/
   hooks/
-    use-login-form.hook.ts    # TanStack Form + mutation
+    use-login-form.hook.ts    # TanStack Form + mutation, calls entity action
     use-register-form.hook.ts
     index.ts
   ui/
-    login-form.tsx       # uses hooks, _components only
+    login-form.tsx       # consumes hook, renders _components
     register-form.tsx
     index.ts`,
     },

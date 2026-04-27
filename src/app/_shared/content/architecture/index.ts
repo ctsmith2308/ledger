@@ -15,18 +15,18 @@ import { observability } from './decisions/observability';
 import { healthChecks } from './decisions/health-checks';
 
 const decisions: ArchitectureDecision[] = [
+  fsdFrontend,
+  serverActions,
   modularMonolith,
-  cqrsCommandBus,
-  durableEventBus,
   domainDrivenDesign,
+  cqrsCommandBus,
   cqrsReadModel,
   eventBus,
+  durableEventBus,
   eventHandlerOrdering,
-  serverActions,
   jwtAuth,
   mfa,
   featureFlags,
-  fsdFrontend,
   observability,
   healthChecks,
 ];

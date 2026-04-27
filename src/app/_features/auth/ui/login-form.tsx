@@ -68,11 +68,7 @@ function LoginForm() {
 
         <CardFooter className="flex-col gap-2">
           <Field>
-            <Button
-              type="submit"
-              form={formId}
-              disabled={isPending}
-            >
+            <Button type="submit" form={formId} disabled={isPending}>
               {isPending && <Spinner />}
               Login
             </Button>

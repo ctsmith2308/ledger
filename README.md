@@ -2,9 +2,9 @@
 
 > **License:** This code is published for portfolio review and educational reference only. See [LICENSE](./LICENSE) for terms.
 
-A portfolio project built to production-grade standards -- not to compete with Mint, but to demonstrate how I think about systems. The feature set is a vehicle. The architectural decisions are the point.
+A portfolio project built to production-grade standards. Not to compete with Mint, but to demonstrate how I think about systems. The feature set is a vehicle. The architectural decisions are the point.
 
--> **[Architecture decisions & reasoning](./docs/architecture.md)** -- the full written record: DDD-lite, CQRS command bus, modular monolith, server actions transport, Feature-Sliced Design, MFA, feature flags, observability, and the experiments that didn't make it (NestJS boilerplate, tRPC bridge, Fastify gateway).
+-> **[Architecture decisions & reasoning](./docs/architecture.md)**: DDD-lite, CQRS command bus, modular monolith, server actions transport, Feature-Sliced Design, MFA, feature flags, observability, and the experiments that didn't make it (NestJS boilerplate, tRPC bridge, Fastify gateway).
 
 ---
 
@@ -12,23 +12,23 @@ A portfolio project built to production-grade standards -- not to compete with M
 |---|---|
 | **Live demo** | [ledger-production.up.railway.app](https://ledger-production.up.railway.app/) |
 | **Architecture doc** | [docs/architecture.md](./docs/architecture.md) |
-| **Case studies** | [Server actions as transport](https://ledger-production.up.railway.app/case-studies/trpc-vs-server-actions) -- [Nuxt to Next.js](https://ledger-production.up.railway.app/case-studies/nuxt-to-nextjs) |
+| **Case studies** | [Server actions as transport](https://ledger-production.up.railway.app/case-studies/trpc-vs-server-actions), [Nuxt to Next.js](https://ledger-production.up.railway.app/case-studies/nuxt-to-nextjs) |
 | **Source** | [github.com/ctsmith2308/ledger](https://github.com/ctsmith2308/ledger) |
 
 ---
 
 ## Tech Stack
 
-- **Framework** -- Next.js 16 (App Router)
-- **Language** -- TypeScript (strict, no `any`)
-- **Transport** -- Next.js Server Actions via next-safe-action
-- **Styling** -- Tailwind CSS v4
-- **Database** -- PostgreSQL 16 via Prisma ORM
-- **Cache / Rate Limiting** -- Upstash Redis
-- **Observability** -- OpenTelemetry + Grafana Cloud (traces)
-- **Testing** -- Vitest (unit + integration)
-- **Client State** -- TanStack Query + TanStack Form
-- **Auth** -- jose (JWT signing/verification), otpauth + qrcode (TOTP MFA)
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript (strict, no `any`)
+- **Transport:** Next.js Server Actions via next-safe-action
+- **Styling:** Tailwind CSS v4
+- **Database:** PostgreSQL 16 via Prisma ORM
+- **Cache / Rate Limiting:** Upstash Redis
+- **Observability:** OpenTelemetry + Grafana Cloud (traces)
+- **Testing:** Vitest (unit + integration)
+- **Client State:** TanStack Query + TanStack Form
+- **Auth:** jose (JWT signing/verification), otpauth + qrcode (TOTP MFA)
 
 ## Prerequisites
 
@@ -55,8 +55,8 @@ Fill in the required values in `.env`:
 
 | Variable | Description |
 |---|---|
-| `JWT_SECRET` | Secret used to sign and verify JWT tokens -- must be a long, random string |
-| `DATABASE_URL` | Postgres connection string -- must match `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` below |
+| `JWT_SECRET` | Secret used to sign and verify JWT tokens. Must be a long, random string |
+| `DATABASE_URL` | Postgres connection string. Must match `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` below |
 | `POSTGRES_USER` | Postgres username used by Docker Compose |
 | `POSTGRES_PASSWORD` | Postgres password used by Docker Compose |
 | `POSTGRES_DB` | Postgres database name (default: `ledger`) |
@@ -77,11 +77,11 @@ Fill in the required values in `.env`:
 | `CRON_SECRET` | Shared secret for authenticating cron job requests |
 | `TRIAL_TTL_HOURS` | Hours before trial accounts expire (default: `48`) |
 
-Each collaborator runs their own local Docker container and database -- there is no shared development database. Copy `.env.example`, fill in your own values, and Docker Compose will provision the database from them.
+Each collaborator runs their own local Docker container and database. There is no shared development database. Copy `.env.example`, fill in your own values, and Docker Compose will provision the database from them.
 
-> **`.env.example` is documentation only** -- neither Prisma nor Docker Compose read from it directly. Prisma reads `DATABASE_URL` from `.env`, and Docker Compose reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from `.env`. The example file exists solely to show collaborators what variables are required.
+> **`.env.example` is documentation only.** Neither Prisma nor Docker Compose read from it directly. Prisma reads `DATABASE_URL` from `.env`, and Docker Compose reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from `.env`. The example file exists solely to show collaborators what variables are required.
 
-> **Important:** Only `.env.example` and `.env.test.example` are safe to commit -- they contain no secrets and serve as the reference for collaborators. All other env files (`.env`, `.env.test`) are gitignored and must never be committed. A preflight check enforces this on every push and pull request.
+> **Important:** Only `.env.example` and `.env.test.example` are safe to commit. They contain no secrets and serve as the reference for collaborators. All other env files (`.env`, `.env.test`) are gitignored and must never be committed. A preflight check enforces this on every push and pull request.
 
 ### 3. Start infrastructure
 
@@ -91,7 +91,7 @@ Docker must be running before migrations or the dev server. PostgreSQL must be h
 docker compose up postgres -d
 ```
 
-> Redis is provided by Upstash (remote) -- no local Redis container is needed.
+> Redis is provided by Upstash (remote). No local Redis container is needed.
 
 ### 4. Run migrations and seed
 
@@ -161,11 +161,11 @@ docker compose down --remove-orphans
 
 ## Prisma Gotchas
 
-- **Order matters** -- Docker must be running and PostgreSQL healthy before running any Prisma command. Running `prisma migrate` against a stopped database will fail with a connection error.
-- **Client generation** -- The Prisma client is generated from the schema at `prisma/schema.prisma`. It is not committed to source control. Any time the schema changes, run `npm run prisma:generate` to regenerate it. This happens automatically on `npm install` via the `postinstall` script.
-- **Migration vs generate** -- `prisma migrate dev` applies schema changes to the database and regenerates the client. `prisma generate` only regenerates the client without touching the database. If the schema and database are out of sync, always migrate first.
-- **Test database** -- Integration tests run against a separate database to prevent leaking test data into local development. Configure `.env.test` from `.env.test.example` and run `npm run test:int:setup` before the first integration test run.
-- **Generated client location** -- The client is generated into `node_modules/@prisma/client`. If you see type errors related to Prisma models after a schema change, regenerate the client.
+- **Order matters.** Docker must be running and PostgreSQL healthy before running any Prisma command. Running `prisma migrate` against a stopped database will fail with a connection error.
+- **Client generation.** The Prisma client is generated from the schema at `prisma/schema.prisma`. It is not committed to source control. Any time the schema changes, run `npm run prisma:generate` to regenerate it. This happens automatically on `npm install` via the `postinstall` script.
+- **Migration vs generate.** `prisma migrate dev` applies schema changes to the database and regenerates the client. `prisma generate` only regenerates the client without touching the database. If the schema and database are out of sync, always migrate first.
+- **Test database.** Integration tests run against a separate database to prevent leaking test data into local development. Configure `.env.test` from `.env.test.example` and run `npm run test:int:setup` before the first integration test run.
+- **Generated client location.** The client is generated into `node_modules/@prisma/client`. If you see type errors related to Prisma models after a schema change, regenerate the client.
 
 ## Testing
 
@@ -203,15 +203,15 @@ npm run test:int
 
 The full written record of every decision and experiment lives in **[docs/architecture.md](./docs/architecture.md)**. It covers:
 
-- **CQRS with typed command and query buses** -- phantom types, self-registration, return type inference without explicit generics
-- **Modular monolith** -- domain boundaries enforced at the module level (identity, banking, transactions, budgets), no premature service extraction
-- **Domain-Driven Design (lite)** -- aggregates, value objects, domain events, repository interfaces, and a durable event bus (Postgres-backed, persist-first)
-- **Feature-Sliced Design (lite)** -- one-way dependency rules without the full FSD specification overhead
-- **Server actions via next-safe-action** -- `actionClient` with `.use()` middleware chaining, single catch boundary via `handleServerError`, consistent error shape
-- **TOTP-based MFA** -- two-step login flow with purpose-based JWT signing (`JWT_TYPE.ACCESS`, `JWT_TYPE.MFA_CHALLENGE`)
-- **Feature flags** -- Prisma table with Upstash Redis cache layer, middleware-level gating via `withFeatureFlag`
-- **Observability** -- OpenTelemetry traces to Grafana Cloud, domain events as the audit layer
-- **Experiments that didn't make it** -- NestJS CQRS boilerplate, tRPC bridge, Fastify gateway, and the honest accounting of each
+- **CQRS with typed command and query buses.** Phantom types, Module composition roots, return type inference without explicit generics
+- **Modular monolith.** Domain boundaries enforced at the module level (identity, banking, transactions, budgets), no premature service extraction
+- **Domain-Driven Design (lite).** Aggregates, value objects, domain events, repository interfaces, and a durable event bus (Postgres-backed, persist-first)
+- **Feature-Sliced Design (lite).** One-way dependency rules without the full FSD specification overhead
+- **Server actions via next-safe-action.** `actionClient` with `.use()` middleware chaining, single catch boundary via `handleServerError`, consistent error shape
+- **TOTP-based MFA.** Two-step login flow with type-based JWT signing (`JWT_TYPE.ACCESS`, `JWT_TYPE.MFA_CHALLENGE`)
+- **Feature flags.** Prisma table with Upstash Redis cache layer, middleware-level gating via `withFeatureFlag`
+- **Observability.** OpenTelemetry traces to Grafana Cloud, domain events as the audit layer
+- **Experiments that didn't make it.** NestJS CQRS boilerplate, tRPC bridge, Fastify gateway, and the honest accounting of each
 
 ## Project Structure
 
@@ -234,13 +234,13 @@ src/
         exceptions/          # typed domain exceptions
         services/            # IJwtService, IObservabilityService, IFeatureFlagRepository
       infrastructure/
-        bus/                 # CommandBus, QueryBus, DurableEventBus, InProcessEventBus
+        bus/                 # CommandBus, QueryBus, EventBus, InProcessEventBus
         cache/               # UpstashFeatureFlagCache
         persistence/         # PrismaService, prisma singleton
         repositories/        # FeatureFlagRepository
         services/            # JwtService, IdGenerator, ObservabilityService
         utils/               # toErrorResponse, logger
-  proxy.ts                   # JWT verification -- protects dashboard routes
+  proxy.ts                   # JWT verification, protects dashboard routes
   instrumentation.ts         # OpenTelemetry SDK init
 
   app/
@@ -269,6 +269,6 @@ src/
 prisma/                      # schema, migrations, seed scripts
 ```
 
-Each core module follows the same layered structure. The `api/` directory within each module serves as the composition root -- it wires dependencies, registers handlers on the command/query buses, and exposes the module's service (e.g., `IdentityService`, `BudgetsService`). There are no DI containers; wiring is explicit via static factories and closures.
+Each core module follows the same layered structure. The `api/` directory within each module serves as the composition root. It wires dependencies, registers handlers on the command/query buses, and exposes the module's service (e.g., `IdentityService`, `BudgetsService`). No DI containers. Wiring is explicit via Module classes with static factories.
 
 On the frontend, `_entities/` owns server actions and data access, `_features/` composes entity actions into hooks with TanStack Query, and pages are thin entry points that import from features and components. Dependency flow is one-way: `_shared/lib/` <- `_entities/` <- `_features/` <- pages.

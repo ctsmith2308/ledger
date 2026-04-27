@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { Pencil } from 'lucide-react';
 
 import { FEATURE_KEYS } from '@/core/shared/domain';
@@ -32,10 +33,7 @@ import {
   Spinner,
 } from '@/app/_components';
 
-import {
-  useUpdateProfileForm,
-  type UpdateProfileFormApi,
-} from '../hooks';
+import { useUpdateProfileForm, type UpdateProfileFormApi } from '../hooks';
 
 function UpdateProfileForm({
   initial,
@@ -68,8 +66,19 @@ function UpdateProfileForm({
           <CardTitle>Profile</CardTitle>
 
           <CardAction>
-            <Dialog open={editOpen} onOpenChange={(value) => setEditOpen(value)}>
-              <DialogTrigger render={<Button variant="outline" size="sm" disabled={accountWriteDisabled} />}>
+            <Dialog
+              open={editOpen}
+              onOpenChange={(value) => setEditOpen(value)}
+            >
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={accountWriteDisabled}
+                  />
+                }
+              >
                 <Pencil className="size-3" />
                 Edit
               </DialogTrigger>
@@ -78,9 +87,7 @@ function UpdateProfileForm({
                 <DialogHeader>
                   <DialogTitle>Edit profile</DialogTitle>
 
-                  <DialogDescription>
-                    Update your name below.
-                  </DialogDescription>
+                  <DialogDescription>Update your name below.</DialogDescription>
                 </DialogHeader>
 
                 <form id={formId} onSubmit={handleSubmit}>
@@ -126,7 +133,10 @@ function UpdateProfileForm({
       <DemoFootnote action="Profile editing" disabled={accountWriteDisabled} />
 
       {/* Confirmation dialog */}
-      <Dialog open={confirmOpen} onOpenChange={(value) => setConfirmOpen(value)}>
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(value) => setConfirmOpen(value)}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Confirm changes</DialogTitle>

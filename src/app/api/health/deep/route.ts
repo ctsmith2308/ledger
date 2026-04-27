@@ -35,6 +35,9 @@ const checkPostgres = () => runCheck(async () => {
   await prisma.$queryRaw`SELECT 1`;
 });
 
+// TODO: These checks instantiate new clients instead of reusing shared singletons.
+// A misconfigured singleton could pass the health check while the app is broken.
+// Consider injecting the shared instances (redis, qstash, plaidClient) instead.
 const checkRedis = () => runCheck(async () => {
   const redis = Redis.fromEnv();
   await redis.ping();
