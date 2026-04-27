@@ -2,7 +2,7 @@ import { type CaseStudy } from '../types';
 
 const tanstackQuerySafeAction: CaseStudy = {
   slug: 'tanstack-query-safe-action',
-  title: 'TanStack Query + next-safe-action — server state without the Redux tax',
+  title: 'TanStack Query + next-safe-action',
   subtitle:
     'The server owns the data. The client caches it. Mutations invalidate. No store, no reducers, no sync.',
   badge: 'State Management',
@@ -11,11 +11,11 @@ const tanstackQuerySafeAction: CaseStudy = {
   sections: [
     {
       heading: 'The problem',
-      body: 'Server-rendered pages fetch data on the server. Client components need access to that data — session, budget overview, spending breakdowns — without refetching. Mutations need to update the UI without a full page re-render. The gap between "server fetched the data" and "client component needs it" is the core state management problem.',
+      body: 'Server-rendered pages fetch data on the server. Client components need access to that data (session, budget overview, spending breakdowns) without refetching. Mutations need to update the UI without a full page re-render. The gap between "server fetched the data" and "client component needs it" is the core state management problem.',
     },
     {
       heading: 'Why TanStack Query',
-      body: 'TanStack Query solves server state caching. The server fetches data, hydrates the QueryClient, and client components read from the cache via useQuery. Mutations call server actions via useMutation, then invalidateQueries triggers a background refetch — the UI updates without router.refresh(). The cache is the single source of truth for server data on the client. No manual sync, no store mirroring, no stale state bugs.',
+      body: 'TanStack Query solves server state caching. The server fetches data, hydrates the QueryClient, and client components read from the cache via useQuery. Mutations call server actions via useMutation, then invalidateQueries triggers a background refetch. The UI updates without router.refresh(). The cache is the single source of truth for server data on the client. No manual sync, no store mirroring, no stale state bugs.',
     },
     {
       heading: 'What was eliminated',
@@ -53,15 +53,15 @@ const tanstackQuerySafeAction: CaseStudy = {
     },
     {
       heading: 'next-safe-action for mutations',
-      body: 'Server actions are POST requests. next-safe-action wraps them with middleware chaining (.use(withAuth).use(withFeatureFlag)), input schema validation (.inputSchema()), and a typed error boundary (handleServerError). The handleActionResponse() utility bridges the serialisation gap — it unwraps the safe-action response and throws ActionError on failure, which TanStack Query catches via the global MutationCache onError handler. One toast, one error path, every mutation.',
+      body: 'Server actions are POST requests. next-safe-action wraps them with middleware chaining (.use(withAuth).use(withFeatureFlag)), input schema validation (.inputSchema()), and a typed error boundary (handleServerError). The handleActionResponse() utility bridges the serialisation gap. It unwraps the safe-action response and throws ActionError on failure, which TanStack Query catches via the global MutationCache onError handler. One toast, one error path, every mutation.',
     },
     {
       heading: 'The hydration pattern',
-      body: 'Server components call module services directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key — the data is already there, no fetch needed. This pattern applies to feature flags (useFeatureFlags reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
+      body: 'Server components call module services directly and hydrate the QueryClient via setQueryData. The layout wraps children in HydrationBoundary which serialises the cache to the client. Client components call useQuery with the same query key. The data is already there, no fetch needed. This pattern applies to feature flags (useFeatureFlags reads from hydrated cache) and the budget overview (useBudgetOverview reads from hydrated cache, mutations invalidate and refetch via the route handler).',
     },
     {
       heading: 'When Nanostores would enter',
-      body: 'If the application needed cross-feature client state — a global notification queue, a multi-step wizard shared across routes, or a collaborative editing buffer — Nanostores would be the right tool. Atom-based, no provider needed, each feature owns its atoms. But that need has not materialised. Adding Nanostores preemptively would be architecture for a problem that does not exist.',
+      body: 'If the application needed cross-feature client state (a global notification queue, a multi-step wizard shared across routes, or a collaborative editing buffer) Nanostores would be the right tool. Atom-based, no provider needed, each feature owns its atoms. But that need has not materialised. Adding Nanostores preemptively would be architecture for a problem that does not exist.',
     },
   ],
 };

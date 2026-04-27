@@ -2,38 +2,38 @@ import { type ArchitectureDecision } from '../types';
 
 const cqrsReadModel: ArchitectureDecision = {
   slug: 'cqrs-read-model',
-  title: 'CQRS read model — same database, separate schema',
+  title: 'CQRS read model',
   subtitle:
-    'A separate read model is justified. A separate database is not — yet.',
+    'A separate read model is justified. A separate database is not, at least not yet.',
   badge: 'System design',
   context:
-    'The Transactions context has fundamentally different read and write patterns. Writes enforce business rules against normalised tables — one transaction at a time, validated through the aggregate. Reads serve dashboard queries — spending rollups by category, monthly trends, budget-vs-actual comparisons. Running aggregation queries across the normalised write model on every dashboard load is wasteful and couples read performance to write-model schema decisions.',
+    'The Transactions context has fundamentally different read and write patterns. Writes enforce business rules against normalised tables, one transaction at a time, validated through the aggregate. Reads serve dashboard queries: spending rollups by category, monthly trends, budget-vs-actual comparisons. Aggregating across the normalised write model on every dashboard load is wasteful and ties read performance to write-model schema choices.',
   decision:
-    'Maintain a denormalised rollup table in the same Postgres instance, materialised from domain events. The `GetSpendingByCategory` query handler reads from the rollup — not from the transactions table. A dedicated read replica is the documented scaling trigger, not a day-one requirement.',
+    'Maintain a denormalised rollup table in the same Postgres instance, built from domain events. The `GetSpendingByCategory` query handler reads from the rollup, not from the transactions table. A read replica is the scaling path when the time comes, not a day-one requirement.',
   rationale: [
-    'The rollup table is shaped exactly for the query pattern — one row per user, category, and period. Dashboard queries are single-row lookups, not aggregations across thousands of transactions.',
-    'The `TransactionCreated` event handler updates the rollup incrementally. Each new transaction bumps `totalCents` and increments `transactionCount` for its category and period. The read model is eventually consistent — acceptable for a reporting-heavy domain.',
-    'Same Postgres instance avoids the operational cost of a second database — no cross-database connection management, no replication lag monitoring, no separate backup strategy. The schema boundary is sufficient isolation at this scale.',
-    'The extraction path is documented: when read query volume justifies it, point the query handler at a read replica. The handler code does not change — only the connection string. This is the same interface-swap pattern used throughout the project.',
+    'The rollup table is shaped for the exact query pattern: one row per user, category, and period. Dashboard queries become single-row lookups instead of aggregations across thousands of transactions.',
+    'The `TransactionCreated` event handler updates the rollup incrementally. Each new transaction bumps `totalCents` and increments `transactionCount` for its category and period. The read model is eventually consistent, which is fine for reporting.',
+    'Keeping everything in one Postgres instance avoids the operational cost of a second database. No cross-database connection management, no replication lag monitoring, no separate backup strategy. Schema-level separation is enough isolation at this scale.',
+    'When read query volume justifies it, the query handler can point at a read replica. The handler code stays the same, only the connection string changes. Same interface-swap pattern used throughout the project.',
   ],
   tradeoffs: [
     {
       pro: 'Dashboard queries are O(1) lookups against pre-computed data, not O(n) aggregations across transactions.',
-      con: 'The rollup must be kept in sync via event handlers. A missed event means stale data until the next full recomputation.',
+      con: 'The rollup has to stay in sync via event handlers. A missed event means stale data until the next full recomputation.',
     },
     {
-      pro: 'Same database instance — zero additional infrastructure, one connection pool, one deploy target.',
-      con: 'Write-heavy bursts can still contend with read queries on shared Postgres resources. A read replica eliminates this at the cost of operational complexity.',
+      pro: 'Same database instance. No additional infrastructure, one connection pool, one deploy target.',
+      con: 'Write-heavy bursts can still contend with read queries on shared Postgres resources. A read replica fixes this but adds operational complexity.',
     },
     {
-      pro: 'The event-driven materialisation pattern is the same one used with a dedicated read replica or a projection store — the code is already shaped for the next step.',
-      con: 'The DurableEventBus persists events before dispatch, but a crash between rollup write and status update could cause a duplicate replay. Idempotent upserts mitigate this.',
+      pro: 'The event-driven materialisation pattern is the same one you would use with a dedicated read replica or projection store. The code is already shaped for that next step.',
+      con: 'The DurableEventBus persists events before dispatch, but a crash between the rollup write and the status update could cause a duplicate replay. Idempotent upserts handle this.',
     },
   ],
   codeBlocks: [
     {
-      label: 'Rollup table — the read model schema',
-      code: `// Prisma schema — denormalised, query-optimised
+      label: 'Rollup table. The read model schema',
+      code: `// Prisma schema. Denormalised, query-optimised
 model CategoryRollup {
   id               String @id @default(uuid())
   userId           String @map("user_id")
@@ -50,7 +50,7 @@ model CategoryRollup {
     },
     {
       label:
-        'Event handler — materialises the read model on TransactionCreated',
+        'Event handler. Materialises the read model on TransactionCreated',
       code: `// Listens for TransactionCreated, updates the rollup incrementally
 async handle(event: TransactionCreatedEvent): Promise<void> {
   await prisma.categoryRollup.upsert({
@@ -76,8 +76,8 @@ async handle(event: TransactionCreatedEvent): Promise<void> {
 }`,
     },
     {
-      label: 'Query handler — reads from rollup, not from transactions table',
-      code: `// GetSpendingByCategoryHandler — hits the read model
+      label: 'Query handler. Reads from rollup, not from transactions table',
+      code: `// GetSpendingByCategoryHandler. Hits the read model
 async execute(
   query: GetSpendingByCategoryQuery,
 ): Promise<Result<SpendingByCategory[]>> {

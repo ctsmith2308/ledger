@@ -32,7 +32,9 @@ const usePlaidLinkFlow = () => {
       handleActionResponse(exchangePublicTokenAction(input)),
     onSuccess: async () => {
       await handleActionResponse(syncTransactionsAction());
+
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts });
+
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions });
     },
   });

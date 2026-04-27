@@ -18,10 +18,9 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@generated-prisma/*": ["prisma/generated/prisma/*"]
+      "@/*": ["./src/*"],
+      "@generated-prisma/*": ["./prisma/generated/prisma/*"]
     }
   },
   "include": [
