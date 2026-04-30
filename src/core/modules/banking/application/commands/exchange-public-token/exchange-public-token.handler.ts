@@ -83,6 +83,13 @@ class ExchangePublicTokenHandler
 
       return Result.ok(plaidItem);
     } catch {
+      /**
+       * TODO: Classify Plaid errors before wrapping. The Plaid SDK throws
+       * typed errors (ITEM_LOGIN_REQUIRED, RATE_LIMIT_EXCEEDED, etc.)
+       * that should map to distinct domain exceptions so the client can
+       * show the right UX (re-link vs retry vs generic error).
+       * See: PlaidClientService known gaps comment.
+       */
       return Result.fail(new PlaidErrorException());
     }
   }
