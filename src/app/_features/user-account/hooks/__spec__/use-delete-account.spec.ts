@@ -1,27 +1,22 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { act } from '@testing-library/react';
+
+import { renderHookWithProviders } from '@/tests/common/render-hook';
+
 const mockPush = vi.fn();
-const mockMutate = vi.fn();
-let mockIsPending = false;
-let onSuccessCallback: (() => void) | null = null;
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
 }));
 
-vi.mock('@tanstack/react-query', () => ({
-  useMutation: (opts: { onSuccess?: () => void }) => {
-    onSuccessCallback = opts.onSuccess ?? null;
-    return { mutate: mockMutate, isPending: mockIsPending };
-  },
-}));
-
 vi.mock('@/app/_shared/lib/next-safe-action', () => ({
-  handleActionResponse: vi.fn(),
+  handleActionResponse: vi.fn((action: unknown) => action),
 }));
 
 vi.mock('@/app/_entities/identity/actions', () => ({
-  deleteAccountAction: vi.fn(),
+  deleteAccountAction: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { useDeleteAccount } from '../use-delete-account.hook';
@@ -29,37 +24,22 @@ import { useDeleteAccount } from '../use-delete-account.hook';
 describe('useDeleteAccount', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsPending = false;
-    onSuccessCallback = null;
   });
 
-  it('returns deleteAccount function and isDeleting', () => {
-    const { deleteAccount, isDeleting } = useDeleteAccount();
+  it('exposes deleteAccount function and isDeleting', () => {
+    const { result } = renderHookWithProviders(() => useDeleteAccount());
 
-    expect(isDeleting).toBe(false);
+    expect(result.current.deleteAccount).toBeTypeOf('function');
+    expect(result.current.isDeleting).toBe(false);
   });
 
-  it('deleteAccount calls mutate', () => {
-    const { deleteAccount } = useDeleteAccount();
+  it('navigates to login on success', async () => {
+    const { result } = renderHookWithProviders(() => useDeleteAccount());
 
-    deleteAccount();
-
-    expect(mockMutate).toHaveBeenCalled();
-  });
-
-  it('navigates to login on success', () => {
-    useDeleteAccount();
-
-    if (onSuccessCallback) onSuccessCallback();
+    await act(() => {
+      result.current.deleteAccount();
+    });
 
     expect(mockPush).toHaveBeenCalledWith('/login');
-  });
-
-  it('reflects pending state', () => {
-    mockIsPending = true;
-
-    const { isDeleting } = useDeleteAccount();
-
-    expect(isDeleting).toBe(true);
   });
 });

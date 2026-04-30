@@ -16,6 +16,19 @@ if (!envSecret) {
 
 const SECRET = new TextEncoder().encode(envSecret);
 
+/**
+ * JWT signing and verification via jose (HS256).
+ * https://github.com/panva/jose
+ *
+ * Payload carries only userId (sub) and a type discriminator (access vs
+ * mfa_challenge). No email, tier, or permissions. Data that can change
+ * is queried at runtime via getUserAccount(), keeping the token
+ * stateless and free of stale claims.
+ *
+ * verify() checks both the cryptographic signature and the type claim,
+ * rejecting tokens that don't match the expected type. This prevents
+ * challenge tokens from being used as access tokens.
+ */
 const JwtService: IJwtService = {
   async sign(
     sub: string,

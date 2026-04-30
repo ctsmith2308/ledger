@@ -8,6 +8,19 @@ import {
 const CACHE_KEY = (userId: string) => `user:${userId}:features`;
 const CACHE_TTL = 60 * 60;
 
+/**
+ * Redis cache-aside layer for feature flags. Sits in front of
+ * FeatureFlagRepository to eliminate DB round-trips on every mutation.
+ *
+ * Cache key: user:{userId}:features (Redis Set)
+ * TTL: 1 hour. Flag changes are not instant; a disabled feature remains
+ * cached as enabled for up to one hour unless manually invalidated.
+ *
+ * Gotcha: setFeatures deletes the key before re-adding members. A
+ * concurrent request between del and sadd will see an empty set (cache
+ * miss) and fall back to the database. This is a brief consistency
+ * window, not a data loss risk.
+ */
 class UpstashFeatureFlagCache implements IFeatureFlagCache {
   constructor(private readonly redis: Redis) {}
 

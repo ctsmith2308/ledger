@@ -16,6 +16,19 @@ import {
 
 import { LoginUserCommand, LoginUserResponse } from './login-user.command';
 
+/**
+ * Authenticates a user by email and password.
+ *
+ * Anti-enumeration: both "user not found" and "invalid password" dispatch
+ * a LoginFailedEvent with a reason for audit, but return distinct domain
+ * exceptions. The service layer maps both to the same generic external
+ * error so attackers cannot distinguish the two from the response.
+ *
+ * MFA branching: if the user has MFA enabled, returns MFA_REQUIRED without
+ * calling user.loggedIn(). The login event only fires on a full successful
+ * authentication (password + optional MFA). The service layer signs a
+ * challenge token for MFA_REQUIRED and an access token for SUCCESS.
+ */
 class LoginUserHandler implements IHandler<
   LoginUserCommand,
   LoginUserResponse

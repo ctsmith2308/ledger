@@ -15,6 +15,7 @@ const fsdFrontend: ArchitectureDecision = {
     "Each layer has a barrel `index.ts`. Consumers import from the barrel, not from deep internal paths. A layer's internal structure can be refactored without touching imports outside it.",
     'Feature modules own their complete slice: server actions, hooks, and UI. Adding a feature means adding a folder, not touching shared infrastructure.',
     'Primitive components (`_components/`) are stateless and have no feature dependencies. They can be extracted to a shared package with no refactoring.',
+    'Route segments can own a private `_components/` folder for glue components scoped to that segment. These are components that compose entities and widgets for a specific page but are not reusable outside that route. Next.js treats underscore-prefixed folders as private (not routable), so this works at the framework level. This gives three UI tiers: app-level primitives (`_components/`), route-scoped glue (`(route)/_components/`), and shared compositional blocks (`_widgets/`).',
   ],
   tradeoffs: [
     {
@@ -23,7 +24,7 @@ const fsdFrontend: ArchitectureDecision = {
     },
     {
       pro: 'Features are isolated. You can delete an entire feature folder without breaking others.',
-      con: 'The "lite" label means not following the full FSD spec. Engineers familiar with FSD may find the deviations inconsistent.',
+      con: 'The "lite" label means not following the full FSD spec. Route-scoped `_components/` folders and the absence of formal entity UI segments are intentional deviations from the full spec, trading strict layer purity for pragmatic co-location with Next.js routing conventions.',
     },
   ],
   codeBlocks: [
@@ -32,14 +33,13 @@ const fsdFrontend: ArchitectureDecision = {
       code: `src/app/
   _shared/       # cross-cutting content and config
   _components/   # primitive, stateless UI. Button, input, card
-  _widgets/      # compositional blocks. Header, footer, dashboard-header
-  _layouts/      # layout shells composed by route segments
   _providers/    # app-level context. Theme, query client
   _entities/     # data access grouped by domain. Actions, schemas, loaders
   _features/     # feature modules. Hooks, UI, feature-specific schemas
+  _widgets/      # compositional blocks that assemble features into page sections
 
-# Dependency rule: lower layers never import from higher ones
-# _shared → _entities → _features → routes`,
+# Dependency rule: layers import from layers below, never above
+# _shared -> _components -> _entities -> _features -> _widgets -> pages`,
     },
     {
       label: 'Entity + feature split for auth',

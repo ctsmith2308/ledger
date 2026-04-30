@@ -1,38 +1,21 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockInvalidateQueries = vi.fn();
-const mockMutate = vi.fn();
-let mockIsPending = false;
-let onSuccessCallback: (() => void) | null = null;
+import { act } from '@testing-library/react';
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
-  useMutation: (opts: { onSuccess?: () => void }) => {
-    onSuccessCallback = opts.onSuccess ?? null;
-    return { mutate: mockMutate, isPending: mockIsPending };
-  },
-}));
+import { renderHookWithProviders } from '@/tests/common/render-hook';
 
-vi.mock('@tanstack/react-form', () => ({
-  useForm: (opts: { defaultValues: unknown; onSubmit: unknown }) => ({
-    ...opts,
-    handleSubmit: vi.fn(),
-    setFieldValue: vi.fn(),
-  }),
-}));
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 vi.mock('@/app/_shared/lib/next-safe-action', () => ({
-  handleActionResponse: vi.fn(),
+  handleActionResponse: vi.fn((action: unknown) => action),
 }));
+
+const mockCreateBudgetAction = vi.fn();
 
 vi.mock('@/app/_entities/budgets/actions', () => ({
-  createBudgetAction: vi.fn(),
-}));
-
-vi.mock('@/app/_entities/budgets/schema', () => ({}));
-
-vi.mock('../schema/create-budget-form.schema', () => ({
-  createBudgetFormSchema: {},
+  createBudgetAction: (...args: unknown[]) =>
+    mockCreateBudgetAction(...args),
 }));
 
 import { useCreateBudgetForm } from '../use-create-budget-form.hook';
@@ -40,31 +23,70 @@ import { useCreateBudgetForm } from '../use-create-budget-form.hook';
 describe('useCreateBudgetForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsPending = false;
-    onSuccessCallback = null;
   });
 
-  it('returns form, formId, and isPending', () => {
-    const result = useCreateBudgetForm();
+  it('exposes form, formId, and isPending', () => {
+    const { result } = renderHookWithProviders(() => useCreateBudgetForm());
 
-    expect(result.formId).toBe('create-budget-form');
-    expect(result.isPending).toBe(false);
-    expect(result.form).toBeDefined();
+    expect(result.current.formId).toBe('create-budget-form');
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.form).toBeDefined();
   });
 
-  it('invalidates budget overview cache on success', () => {
-    useCreateBudgetForm();
+  it('calls the action with parsed input on submit', async () => {
+    mockCreateBudgetAction.mockResolvedValue(undefined);
 
-    if (onSuccessCallback) onSuccessCallback();
+    const { result } = renderHookWithProviders(() => useCreateBudgetForm());
 
-    expect(mockInvalidateQueries).toHaveBeenCalled();
+    await act(() => {
+      result.current.form.setFieldValue('category', 'FOOD_AND_DRINK');
+      result.current.form.setFieldValue('monthlyLimit', '500');
+    });
+
+    await act(() => result.current.form.handleSubmit());
+
+    expect(mockCreateBudgetAction).toHaveBeenCalledWith({
+      category: 'FOOD_AND_DRINK',
+      monthlyLimit: 500,
+    });
   });
 
-  it('reflects pending state', () => {
-    mockIsPending = true;
+  it('invalidates budget overview cache on success', async () => {
+    mockCreateBudgetAction.mockResolvedValue(undefined);
 
-    const { isPending } = useCreateBudgetForm();
+    const { result, queryClient } = renderHookWithProviders(() =>
+      useCreateBudgetForm(),
+    );
 
-    expect(isPending).toBe(true);
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await act(() => {
+      result.current.form.setFieldValue('category', 'FOOD_AND_DRINK');
+      result.current.form.setFieldValue('monthlyLimit', '500');
+    });
+
+    await act(() => result.current.form.handleSubmit());
+
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.budgetOverview,
+    });
+  });
+
+  it('calls the onSuccess callback when provided', async () => {
+    mockCreateBudgetAction.mockResolvedValue(undefined);
+    const onSuccess = vi.fn();
+
+    const { result } = renderHookWithProviders(() =>
+      useCreateBudgetForm(onSuccess),
+    );
+
+    await act(() => {
+      result.current.form.setFieldValue('category', 'FOOD_AND_DRINK');
+      result.current.form.setFieldValue('monthlyLimit', '500');
+    });
+
+    await act(() => result.current.form.handleSubmit());
+
+    expect(onSuccess).toHaveBeenCalled();
   });
 });

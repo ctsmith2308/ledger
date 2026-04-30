@@ -27,7 +27,7 @@ const cqrsReadModel: ArchitectureDecision = {
     },
     {
       pro: 'The event-driven materialisation pattern is the same one you would use with a dedicated read replica or projection store. The code is already shaped for that next step.',
-      con: 'The DurableEventBus persists events before dispatch, but a crash between the rollup write and the status update could cause a duplicate replay. Idempotent upserts handle this.',
+      con: 'The EventBus persists events before dispatch, but a crash between the rollup write and the status update could cause a duplicate replay. Idempotent upserts handle this.',
     },
   ],
   codeBlocks: [

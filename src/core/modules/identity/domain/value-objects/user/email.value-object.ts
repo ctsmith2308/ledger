@@ -8,6 +8,14 @@ interface EmailProps {
   value: string;
 }
 
+/**
+ * Email value object with two factory methods:
+ * - create() trims, validates, and lowercases. Used for user input where
+ *   normalization is required for uniqueness.
+ * - from() wraps a raw string with no validation. Used for database
+ *   reconstitution where the value is already normalized. Do not use
+ *   from() with untrusted input.
+ */
 class Email extends ValueObject<EmailProps> {
   private constructor(props: EmailProps) {
     super(props);

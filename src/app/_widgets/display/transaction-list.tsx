@@ -1,3 +1,7 @@
+// TODO: Consider moving to _entities/transactions/ui/ — this is an entity
+// display component (renders TransactionDTO[], no feature logic). Lives in
+// _widgets for now to resolve the cross-feature import violation where
+// _features/budgets imported from _features/transactions.
 'use client';
 
 import { useState } from 'react';

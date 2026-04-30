@@ -4,6 +4,12 @@ import QRCode from 'qrcode';
 
 import { type ITotpService } from '@/core/modules/identity/domain';
 
+/**
+ * TOTP configuration per RFC 6238. These constants must match what
+ * authenticator apps expect. Changing them after users have enrolled
+ * will invalidate all existing secrets.
+ * https://www.rfc-editor.org/rfc/rfc6238
+ */
 const ISSUER = 'Ledger';
 const ALGORITHM = 'SHA1';
 const DIGITS = 6;
@@ -39,6 +45,9 @@ const TotpService: ITotpService = {
       secret: Secret.fromBase32(secret),
     });
 
+    /** window: 1 allows one time step of drift (30s). Balances usability
+     *  (clock skew, slow entry) against security (larger window = larger
+     *  attack surface for brute force). */
     const delta = totp.validate({ token: code, window: 1 });
 
     return delta !== null;

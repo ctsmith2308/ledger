@@ -256,10 +256,9 @@ src/
       content/               # architecture decisions, case studies (portfolio content)
     _entities/               # data access layer by domain
     _features/               # feature modules (hooks, UI, schemas)
-    _widgets/                # compositional UI blocks
+    _widgets/                # compositional UI blocks that assemble features into page sections
     _components/             # primitive UI (buttons, forms, surfaces)
     _providers/              # ThemeProvider, QueryProvider
-    _layouts/                # DashboardLayout
     (public)/                # landing page, architecture, case studies
     (auth)/                  # login, register, MFA
     (dashboard)/             # overview, transactions, budgets, accounts

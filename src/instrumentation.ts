@@ -1,5 +1,19 @@
-// https://github.com/open-telemetry/opentelemetry-js
-
+/**
+ * Next.js instrumentation hook. Called once on server startup.
+ * https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
+ *
+ * Initializes the OpenTelemetry Node SDK with:
+ * - OTLP HTTP exporter (reads endpoint/headers from env vars)
+ * - Environment-aware sampling: 100% in dev, configurable via
+ *   OTEL_SAMPLE_RATE in production (default 10%)
+ *
+ * All instrumentation uses the OpenTelemetry API (vendor-neutral).
+ * No Grafana, Datadog, or other vendor imports exist in application
+ * code. The backend is a deployment decision controlled entirely by
+ * OTEL_EXPORTER_OTLP_ENDPOINT and OTEL_EXPORTER_OTLP_HEADERS.
+ *
+ * https://github.com/open-telemetry/opentelemetry-js
+ */
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const { NodeSDK } = await import('@opentelemetry/sdk-node');

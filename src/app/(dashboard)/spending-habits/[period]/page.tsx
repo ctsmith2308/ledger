@@ -17,7 +17,9 @@ import {
 
 import { mapSpendingDtoToCategory } from '@/app/_entities/transactions/lib';
 
-import { SpendingDoughnut, TransactionList } from '@/app/_features/transactions';
+import { SpendingDoughnut } from '@/app/_features/transactions';
+
+import { TransactionList } from '@/app/_widgets';
 
 import { PageContainer, PageHeader } from '@/app/_widgets';
 

@@ -19,6 +19,24 @@ import { type ITransactionRepository } from '@/core/modules/transactions/domain'
 
 import { UnlinkBankCommand, UnlinkBankResponse } from './unlink-bank.command';
 
+/**
+ * Unlinks a bank connection by removing the Plaid item, its accounts,
+ * and all associated transactions.
+ *
+ * Ownership check: verifies the PlaidItem belongs to the requesting user
+ * before proceeding. Returns UnauthorizedException if not.
+ *
+ * Resilient Plaid removal: if the Plaid API call to itemRemove fails
+ * (token already revoked, Plaid outage), the error is logged but local
+ * cleanup continues. The user should not be blocked from unlinking
+ * locally because Plaid's remote state is inconsistent.
+ *
+ * Cascade order: transactions are deleted before the PlaidItem so no
+ * orphaned transaction records reference deleted accounts.
+ *
+ * Cross-module dependency: imports ITransactionRepository from the
+ * transactions module to cascade-delete transactions by account IDs.
+ */
 class UnlinkBankHandler
   implements IHandler<UnlinkBankCommand, UnlinkBankResponse>
 {

@@ -4,11 +4,11 @@
 - [Upstash Redis](https://upstash.com/docs/redis)
 - [@upstash/redis SDK](https://github.com/upstash/redis-js)
 - [@upstash/ratelimit](https://github.com/upstash/ratelimit-js)
-- [QStash (roadmap)](https://upstash.com/docs/qstash)
+- [QStash](https://upstash.com/docs/qstash)
 
 ## Overview
 
-[Upstash Redis](https://upstash.com/docs/redis) serves two purposes in this project: **rate limiting** and **feature flag caching**. Both use the [`@upstash/redis`](https://github.com/upstash/redis-js) SDK with the `Redis.fromEnv()` connection pattern, which reads two environment variables:
+[Upstash](https://upstash.com/) serves three purposes in this project: **rate limiting** (Redis), **feature flag caching** (Redis), and **durable event delivery** (QStash). Redis uses the [`@upstash/redis`](https://github.com/upstash/redis-js) SDK with the `Redis.fromEnv()` connection pattern, which reads two environment variables:
 
 - `UPSTASH_REDIS_REST_URL` -- the REST endpoint for the Upstash Redis instance.
 - `UPSTASH_REDIS_REST_TOKEN` -- the bearer token for authentication.
@@ -124,22 +124,9 @@ This singleton is imported by middleware and layout files.
 
 ### Cache-Aside Pattern
 
-The feature flag cache follows a cache-aside (lazy-load) strategy with eager population on login.
+The feature flag cache follows a cache-aside (lazy-load) strategy. The cache is populated on first access, not at login time.
 
-**1. Login handler populates the cache.**
-
-**Source:** `src/core/modules/identity/application/commands/login-user/login-user.handler.ts`
-
-After successful authentication, the handler queries the feature flag repository for the user's tier and writes the result to cache:
-
-```ts
-const features = await this.featureFlagRepo.findEnabledByTier(user.tier.value);
-await this.featureFlagCache.setFeatures(user.id.value, features);
-```
-
-This means the first request after login hits a warm cache.
-
-**2. Middleware reads from cache (sub-ms).**
+**1. Middleware reads from cache (sub-ms).**
 
 **Source:** `src/app/_shared/lib/next-safe-action/middleware/with-feature-flag.ts`
 
@@ -149,19 +136,19 @@ The `withFeatureFlag` middleware checks whether a specific feature is enabled fo
 let features = await featureFlagCache.getFeatures(userId);
 ```
 
-**3. Cache miss triggers fallback and repopulation.**
+**2. Cache miss triggers fallback and repopulation.**
 
-If the cache returns `null` (TTL expired or invalidated), the middleware falls back to the database, resolves the user's account tier, queries enabled features, and repopulates the cache:
+If the cache returns `null` (first access, TTL expired, or invalidated), the middleware falls back to the database, resolves the user's account tier, queries enabled features, and repopulates the cache:
 
 ```ts
 if (!features) {
   const account = await identityService.getUserAccount(userId);
-  features = await featureFlagRepo.findEnabledByTier(account.tier);
+  features = account.features;
   await featureFlagCache.setFeatures(userId, features);
 }
 ```
 
-**4. Invalidation.**
+**3. Invalidation.**
 
 `featureFlagCache.invalidate(userId)` deletes the Redis key. The next request that hits the middleware triggers a miss, which repopulates from the database. This is used when a user's tier changes or feature flags are updated administratively.
 
@@ -184,8 +171,16 @@ The dehydrated state is passed to `<HydrationBoundary>`, making feature flags av
 
 ---
 
+## QStash -- Durable Event Delivery
+
+**Source:** `src/core/shared/infrastructure/bus/event-bus.impl.ts`
+
+QStash backs the `EventBus` for async event handler execution. When `eventBus.dispatch()` is called, the event is persisted to Postgres first, then published to QStash. QStash delivers the event to `/api/events` via HTTP, where `eventBus.process()` runs the registered handlers sequentially.
+
+This decouples the event write from handler execution. The HTTP request that triggered the event returns immediately after persisting and publishing. Handlers run asynchronously via the webhook.
+
+See `docs/flows.md` for the full event lifecycle diagram.
+
 ## Roadmap
 
-**Redis session validation.** The `UserSession` aggregate is already in place with opaque session tokens. Moving session validation from database lookups to Redis would reduce latency on every authenticated request.
-
-**QStash for event bus messaging.** The current `IEventBus` dispatches events in-process. Upstash QStash provides durable, HTTP-based message delivery that could back the event bus for cross-module communication and failure replay without running a dedicated message broker.
+**Redis session validation.** The `UserSession` aggregate is already in place with opaque session tokens. Moving session validation from database lookups to Redis would reduce latency on every authenticated request and enable immediate revocation (the proxy currently checks JWT signature only, not revocation status).

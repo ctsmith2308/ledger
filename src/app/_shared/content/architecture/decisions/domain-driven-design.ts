@@ -14,7 +14,7 @@ const domainDrivenDesign: ArchitectureDecision = {
     'Value objects validate invariants at construction time. `Email.create("not-an-email")` returns `Result.fail(new InvalidEmailException())`. Invalid state simply cannot be represented.',
     'The `Result<T, E>` type makes failure explicit at every boundary. Every failure path is a typed value, so nothing bubbles silently through the call stack.',
     'Repository interfaces live in the domain layer, implementations in infrastructure. The domain can be tested without a database by passing a mock that implements `IUserRepository`.',
-    'Domain events capture what happened in business terms. Aggregate-raised events (e.g., `UserRegistered`) get pulled after persistence and dispatched via the event bus. Handler-dispatched events (e.g., `LoginFailed`) are dispatched directly for use-case facts that no single aggregate owns. Both flow through the same DurableEventBus.',
+    'Domain events capture what happened in business terms. Aggregate-raised events (e.g., `UserRegistered`) get pulled after persistence and dispatched via the event bus. Handler-dispatched events (e.g., `LoginFailed`) are dispatched directly for use-case facts that no single aggregate owns. Both flow through the same EventBus.',
     'No IoC container means the full dependency graph is visible. `RegisterUserHandler` takes `IUserRepository`, `IEventBus`, `IPasswordHasher`, `IIdGenerator`. Exactly what it needs, nothing hidden.',
   ],
   tradeoffs: [

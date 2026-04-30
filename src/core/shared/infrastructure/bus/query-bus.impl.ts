@@ -29,10 +29,9 @@ class QueryBus {
       throw new Error(`No handler registered for query: ${key}`);
     }
 
-    // startActiveSpan sets this span as the active context parent.
-    // If infrastructure adapters (Prisma, Redis, Plaid) add their own
-    // spans in the future, they will automatically nest under this one.
-    // Switch to startSpan if parent context is not needed.
+    /** startActiveSpan sets this span as the active context parent.
+     *  Infrastructure adapter spans (Prisma, Redis, Plaid) will
+     *  automatically nest under this one. */
     return tracer.startActiveSpan(`query.${key}`, async (span) => {
       try {
         const result = (await handler.execute(query)) as Promise<

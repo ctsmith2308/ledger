@@ -20,6 +20,19 @@ const _formatPeriod = (date: Date): string => {
   return `${year}-${month}`;
 };
 
+/**
+ * Assembles the budget overview by joining data from three sources:
+ * budgets, category rollups (read model), and recent transactions.
+ *
+ * Budgets and rollups are fetched in parallel. Then for each budget,
+ * the 10 most recent transactions for that category are fetched to
+ * display in the accordion UI. Spending is read from the rollup (cents
+ * converted to dollars), not re-aggregated from raw transactions.
+ *
+ * Cross-module: reads from ICategoryRollupRepository and
+ * ITransactionRepository (transactions module). This is a read-only
+ * query that doesn't mutate state in either module.
+ */
 class GetBudgetOverviewHandler
   implements IHandler<GetBudgetOverviewQuery, GetBudgetOverviewResponse>
 {

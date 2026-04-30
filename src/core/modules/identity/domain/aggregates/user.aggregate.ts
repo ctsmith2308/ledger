@@ -15,6 +15,18 @@ import {
   MfaDisabledEvent,
 } from '../events';
 
+/**
+ * User aggregate. Consistency boundary for authentication and MFA state.
+ *
+ * MFA state machine:
+ * - setMfaSecret() stores the TOTP secret (MFA stays disabled).
+ * - confirmMfa() enables MFA if a secret is set. Idempotent: no-ops
+ *   without a secret so a premature confirm is harmless.
+ * - disableMfa() clears both the flag and the secret. The secret is
+ *   wiped on disable so disabled accounts don't leave TOTP seeds behind.
+ * - loggedIn() always fires UserLoggedInEvent with no guard. Login is
+ *   unconditional once authentication succeeds.
+ */
 class User extends AggregateRoot {
   private constructor(
     private readonly _id: UserId,

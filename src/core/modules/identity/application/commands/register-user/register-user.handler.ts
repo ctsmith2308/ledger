@@ -24,6 +24,18 @@ import {
   RegisterUserResponse,
 } from './register-user.command';
 
+/**
+ * Registers a new user with email, password, and profile data.
+ *
+ * Anti-enumeration: if the email already exists, returns Result.ok with
+ * PENDING_VERIFICATION instead of failing. The caller cannot distinguish
+ * "new account created" from "email already taken" based on the response.
+ *
+ * Event ownership: only User.register() raises UserRegisteredEvent. The
+ * UserProfile is saved separately without firing its own creation event
+ * because profile creation is a side effect of registration, not a
+ * standalone domain occurrence.
+ */
 class RegisterUserHandler implements IHandler<
   RegisterUserCommand,
   RegisterUserResponse

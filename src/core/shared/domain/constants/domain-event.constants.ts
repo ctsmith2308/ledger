@@ -18,6 +18,7 @@ const BankingEvents = {
 const TransactionEvents = {
   TRANSACTION_CREATED: 'transactions.transaction_created',
   TRANSACTIONS_SYNCED: 'transactions.transactions_synced',
+  SYNC_MISMATCH: 'transactions.sync_mismatch',
 } as const;
 
 const BudgetEvents = {

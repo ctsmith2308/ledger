@@ -1,24 +1,20 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockInvalidateQueries = vi.fn();
-const mockMutate = vi.fn();
-let mockIsPending = false;
-let onSuccessCallback: (() => void) | null = null;
+import { act } from '@testing-library/react';
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
-  useMutation: (opts: { onSuccess?: () => void }) => {
-    onSuccessCallback = opts.onSuccess ?? null;
-    return { mutate: mockMutate, isPending: mockIsPending };
-  },
-}));
+import { renderHookWithProviders } from '@/tests/common/render-hook';
+
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 vi.mock('@/app/_shared/lib/next-safe-action', () => ({
-  handleActionResponse: vi.fn(),
+  handleActionResponse: vi.fn((action: unknown) => action),
 }));
 
+const mockDeleteBudgetAction = vi.fn();
+
 vi.mock('@/app/_entities/budgets/actions', () => ({
-  deleteBudgetAction: vi.fn(),
+  deleteBudgetAction: (...args: unknown[]) => mockDeleteBudgetAction(...args),
 }));
 
 import { useDeleteBudget } from '../use-delete-budget.hook';
@@ -26,37 +22,34 @@ import { useDeleteBudget } from '../use-delete-budget.hook';
 describe('useDeleteBudget', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsPending = false;
-    onSuccessCallback = null;
   });
 
-  it('returns deleteBudget function and isDeleting', () => {
-    const { deleteBudget, isDeleting } = useDeleteBudget();
+  it('exposes deleteBudget function and isDeleting', () => {
+    const { result } = renderHookWithProviders(() => useDeleteBudget());
 
-    expect(isDeleting).toBe(false);
+    expect(result.current.deleteBudget).toBeTypeOf('function');
+    expect(result.current.isDeleting).toBe(false);
   });
 
-  it('deleteBudget calls mutate', () => {
-    const { deleteBudget } = useDeleteBudget();
+  it('calls the action and invalidates budget overview cache on success', async () => {
+    mockDeleteBudgetAction.mockResolvedValue(undefined);
 
-    deleteBudget('budget-123');
+    const { result, queryClient } = renderHookWithProviders(() =>
+      useDeleteBudget(),
+    );
 
-    expect(mockMutate).toHaveBeenCalledWith('budget-123');
-  });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-  it('invalidates budget overview cache on success', () => {
-    useDeleteBudget();
+    await act(() => {
+      result.current.deleteBudget('budget-123');
+    });
 
-    if (onSuccessCallback) onSuccessCallback();
+    expect(mockDeleteBudgetAction).toHaveBeenCalledWith({
+      budgetId: 'budget-123',
+    });
 
-    expect(mockInvalidateQueries).toHaveBeenCalled();
-  });
-
-  it('reflects pending state', () => {
-    mockIsPending = true;
-
-    const { isDeleting } = useDeleteBudget();
-
-    expect(isDeleting).toBe(true);
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.budgetOverview,
+    });
   });
 });
