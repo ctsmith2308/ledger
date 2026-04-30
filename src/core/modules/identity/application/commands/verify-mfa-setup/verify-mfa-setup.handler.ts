@@ -17,6 +17,13 @@ import {
   VerifyMfaSetupResponse,
 } from './verify-mfa-setup.command';
 
+/**
+ * Completes MFA setup by verifying the user's first TOTP code.
+ *
+ * Guard: rejects if no secret is set (setup not initiated) OR if MFA is
+ * already enabled (double-verify attempt). Both return InvalidMfaCodeException
+ * to avoid leaking state.
+ */
 class VerifyMfaSetupHandler implements IHandler<
   VerifyMfaSetupCommand,
   VerifyMfaSetupResponse

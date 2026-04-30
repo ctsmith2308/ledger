@@ -18,7 +18,7 @@ import { useFeatureFlags } from '@/app/_entities/identity/hooks';
 
 import { useBudgetOverview } from '@/app/_entities/budgets/hooks/use-budget-overview.hook';
 
-import { TransactionList } from '@/app/_features/transactions';
+import { TransactionList } from '@/app/_widgets';
 
 import {
   Accordion,
@@ -82,19 +82,8 @@ function BudgetRow({
 }) {
   const { deleteBudget, isDeleting } = useDeleteBudget();
   const { updateBudget, isUpdating } = useUpdateBudget();
-  const [editLimit, setEditLimit] = useState('');
-  const [editOpen, setEditOpen] = useState(false);
 
   const remaining = item.monthlyLimit - item.spent;
-
-  const handleEdit = () => {
-    const value = Number(editLimit);
-
-    if (value > 0) {
-      updateBudget({ budgetId: item.id, monthlyLimit: value });
-      setEditOpen(false);
-    }
-  };
 
   return (
     <AccordionItem
@@ -171,51 +160,14 @@ function BudgetRow({
           </div>
 
           <div className="flex items-center gap-2">
-            <Dialog open={editOpen} onOpenChange={setEditOpen}>
-              <DialogTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isDemo || isUpdating}
-                  />
-                }
-              >
-                <Pencil className="size-3" />
-                Edit
-              </DialogTrigger>
-
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    Edit {formatCategory(item.category)} budget
-                  </DialogTitle>
-
-                  <DialogDescription>
-                    Update the monthly spending limit.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder={item.monthlyLimit.toFixed(2)}
-                  value={editLimit}
-                  onChange={(e) => setEditLimit(e.target.value)}
-                />
-
-                <DialogFooter>
-                  <DialogClose render={<Button variant="outline" />}>
-                    Cancel
-                  </DialogClose>
-
-                  <Button disabled={isUpdating} onClick={handleEdit}>
-                    {isUpdating && <Spinner />}
-                    Save
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <EditBudgetDialog
+              budgetId={item.id}
+              category={item.category}
+              currentLimit={item.monthlyLimit}
+              isDemo={isDemo}
+              isUpdating={isUpdating}
+              onSave={updateBudget}
+            />
 
             <Button
               variant="ghost"
@@ -230,6 +182,80 @@ function BudgetRow({
         </div>
       </AccordionContent>
     </AccordionItem>
+  );
+}
+
+function EditBudgetDialog({
+  budgetId,
+  category,
+  currentLimit,
+  isDemo,
+  isUpdating,
+  onSave,
+}: {
+  budgetId: string;
+  category: string;
+  currentLimit: number;
+  isDemo: boolean;
+  isUpdating: boolean;
+  onSave: (input: { budgetId: string; monthlyLimit: number }) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [editLimit, setEditLimit] = useState('');
+
+  const handleSave = () => {
+    const value = Number(editLimit);
+
+    if (value > 0) {
+      onSave({ budgetId, monthlyLimit: value });
+      setOpen(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isDemo || isUpdating}
+          />
+        }
+      >
+        <Pencil className="size-3" />
+        Edit
+      </DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit {formatCategory(category)} budget</DialogTitle>
+
+          <DialogDescription>
+            Update the monthly spending limit.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Input
+          type="number"
+          step="0.01"
+          placeholder={currentLimit.toFixed(2)}
+          value={editLimit}
+          onChange={(e) => setEditLimit(e.target.value)}
+        />
+
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>
+            Cancel
+          </DialogClose>
+
+          <Button disabled={isUpdating} onClick={handleSave}>
+            {isUpdating && <Spinner />}
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

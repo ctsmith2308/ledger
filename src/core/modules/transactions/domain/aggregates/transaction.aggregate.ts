@@ -101,6 +101,17 @@ class Transaction extends AggregateRoot {
     );
   }
 
+  /**
+   * Partial update from Plaid sync data.
+   *
+   * Two check styles are used intentionally:
+   * - `!== undefined` for required fields (amount, date, pending).
+   *   These are only updated when explicitly provided.
+   * - `in` operator for nullable fields (merchantName, category, etc).
+   *   This distinguishes "field not provided" (skip) from "field
+   *   explicitly set to undefined" (clear the value). Plaid can send
+   *   null for these fields to indicate the value was removed.
+   */
   update(fields: TransactionUpdateFields): void {
     if (fields.amount !== undefined) this._amount = fields.amount;
     if (fields.date !== undefined) this._date = fields.date;

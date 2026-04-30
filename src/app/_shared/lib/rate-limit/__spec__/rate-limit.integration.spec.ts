@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
-import { checkLimitCurry } from '@/app/_shared/lib/rate-limit/rate-limit.service';
+
 import { RateLimitException } from '@/core/shared/domain';
+
+import { checkLimitCurry } from '../rate-limit.service';
 
 const redis = Redis.fromEnv();
 
@@ -13,8 +15,7 @@ const _createCheckLimit = (maxRequests: number, ip = '127.0.0.1') => {
     prefix: 'test:ratelimit',
   });
 
-  const resolveHeaders = async () =>
-    new Headers({ 'x-forwarded-for': ip });
+  const resolveHeaders = async () => new Headers({ 'x-forwarded-for': ip });
 
   return checkLimitCurry(ratelimit, resolveHeaders);
 };
@@ -46,6 +47,7 @@ describe('checkRateLimit', () => {
     const result = await checkLimit();
 
     expect(result.isFailure).toBe(true);
+
     expect(result.error).toBeInstanceOf(RateLimitException);
   });
 
@@ -58,6 +60,7 @@ describe('checkRateLimit', () => {
     const allowedB = await checkLimitB();
 
     expect(blockedA.isFailure).toBe(true);
+
     expect(allowedB.isSuccess).toBe(true);
   });
 });

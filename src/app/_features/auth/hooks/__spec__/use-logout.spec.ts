@@ -1,27 +1,22 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { act } from '@testing-library/react';
+
+import { renderHookWithProviders } from '@/tests/common/render-hook';
+
 const mockPush = vi.fn();
-const mockMutate = vi.fn();
-let mockIsPending = false;
-let onSuccessCallback: (() => void) | null = null;
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
 }));
 
-vi.mock('@tanstack/react-query', () => ({
-  useMutation: (opts: { onSuccess?: () => void }) => {
-    onSuccessCallback = opts.onSuccess ?? null;
-    return { mutate: mockMutate, isPending: mockIsPending };
-  },
-}));
-
 vi.mock('@/app/_shared/lib/next-safe-action', () => ({
-  handleActionResponse: vi.fn(),
+  handleActionResponse: vi.fn((action: unknown) => action),
 }));
 
 vi.mock('@/app/_entities/identity/actions', () => ({
-  logoutAction: vi.fn(),
+  logoutAction: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { useLogout } from '../use-logout.hook';
@@ -29,37 +24,22 @@ import { useLogout } from '../use-logout.hook';
 describe('useLogout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsPending = false;
-    onSuccessCallback = null;
   });
 
-  it('returns logout function and isPending', () => {
-    const { isPending } = useLogout();
+  it('exposes logout function and isPending', () => {
+    const { result } = renderHookWithProviders(() => useLogout());
 
-    expect(isPending).toBe(false);
+    expect(result.current.logout).toBeTypeOf('function');
+    expect(result.current.isPending).toBe(false);
   });
 
-  it('logout calls mutate', () => {
-    const { logout } = useLogout();
+  it('navigates to login on success', async () => {
+    const { result } = renderHookWithProviders(() => useLogout());
 
-    logout();
-
-    expect(mockMutate).toHaveBeenCalled();
-  });
-
-  it('navigates to login on success', () => {
-    useLogout();
-
-    if (onSuccessCallback) onSuccessCallback();
+    await act(() => {
+      result.current.logout();
+    });
 
     expect(mockPush).toHaveBeenCalledWith('/login');
-  });
-
-  it('reflects pending state', () => {
-    mockIsPending = true;
-
-    const { isPending } = useLogout();
-
-    expect(isPending).toBe(true);
   });
 });

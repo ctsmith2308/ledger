@@ -1,43 +1,24 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { act } from '@testing-library/react';
+
+import { renderHookWithProviders } from '@/tests/common/render-hook';
+
 const mockPush = vi.fn();
-const mockMutate = vi.fn();
-let mockIsPending = false;
-let onSuccessCallback: (() => void) | null = null;
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
-}));
-
-vi.mock('@tanstack/react-query', () => ({
-  useMutation: (opts: { onSuccess?: () => void }) => {
-    onSuccessCallback = opts.onSuccess ?? null;
-    return { mutate: mockMutate, isPending: mockIsPending };
-  },
-}));
-
-vi.mock('@tanstack/react-form', () => ({
-  useForm: (opts: { defaultValues: unknown; onSubmit: unknown }) => ({
-    ...opts,
-    handleSubmit: vi.fn(),
-    setFieldValue: vi.fn(),
-  }),
 }));
 
 vi.mock('@/app/_shared/lib/next-safe-action', () => ({
   handleActionResponse: vi.fn((action: unknown) => action),
 }));
 
+const mockRegisterAction = vi.fn();
+
 vi.mock('@/app/_entities/identity/actions', () => ({
-  registerAction: vi.fn((input: unknown) => input),
-}));
-
-vi.mock('@/app/_entities/identity/schema', () => ({
-  registerUserSchema: {},
-}));
-
-vi.mock('@/app/_shared/routes', () => ({
-  ROUTES: { login: '/login' },
+  registerAction: (...args: unknown[]) => mockRegisterAction(...args),
 }));
 
 import { useRegisterForm } from '../use-register-form.hook';
@@ -45,31 +26,36 @@ import { useRegisterForm } from '../use-register-form.hook';
 describe('useRegisterForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsPending = false;
-    onSuccessCallback = null;
   });
 
-  it('returns form, formId, and isPending', () => {
-    const result = useRegisterForm();
+  it('exposes form, formId, and isPending', () => {
+    const { result } = renderHookWithProviders(() => useRegisterForm());
 
-    expect(result.formId).toBe('register-account-form');
-    expect(result.isPending).toBe(false);
-    expect(result.form).toBeDefined();
+    expect(result.current.formId).toBe('register-account-form');
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.form).toBeDefined();
   });
 
-  it('navigates to login on success', () => {
-    useRegisterForm();
+  it('calls the action and navigates to login on success', async () => {
+    mockRegisterAction.mockResolvedValue(undefined);
 
-    if (onSuccessCallback) onSuccessCallback();
+    const { result } = renderHookWithProviders(() => useRegisterForm());
 
+    await act(() => {
+      result.current.form.setFieldValue('firstName', 'Chris');
+      result.current.form.setFieldValue('lastName', 'Smith');
+      result.current.form.setFieldValue('email', 'chris@ledger.app');
+      result.current.form.setFieldValue('password', 'Password@123!');
+    });
+
+    await act(() => result.current.form.handleSubmit());
+
+    expect(mockRegisterAction).toHaveBeenCalledWith({
+      firstName: 'Chris',
+      lastName: 'Smith',
+      email: 'chris@ledger.app',
+      password: 'Password@123!',
+    });
     expect(mockPush).toHaveBeenCalledWith('/login');
-  });
-
-  it('reflects pending state', () => {
-    mockIsPending = true;
-
-    const { isPending } = useRegisterForm();
-
-    expect(isPending).toBe(true);
   });
 });

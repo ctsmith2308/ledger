@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { prisma } from '../common/setup-db';
-import { UserRepository, UserProfileRepository } from '@/core/modules/identity/infrastructure';
+
+import { prisma } from '@/tests/common/setup-db';
+
 import {
   User,
   UserId,
@@ -10,6 +11,9 @@ import {
   LastName,
   UserProfile,
 } from '@/core/modules/identity/domain';
+
+import { UserRepository } from '../user.repository.impl';
+import { UserProfileRepository } from '../user-profile.repository.impl';
 
 const userRepository = new UserRepository(prisma);
 const profileRepository = new UserProfileRepository(prisma);

@@ -18,6 +18,26 @@ const _formatPeriod = (date: Date): string => {
   return `${year}-${month}`;
 };
 
+/**
+ * Reacts to TransactionCreatedEvent to check budget thresholds.
+ *
+ * Depends on the category rollup being up-to-date. This handler must
+ * run AFTER updateCategoryRollup in the dispatch sequence. The EventBus
+ * runs handlers sequentially in registration order, and the transactions
+ * module registers its rollup handler before the budgets module registers
+ * this one. See: the event-handler-ordering architecture decision.
+ *
+ * Threshold logic:
+ * - >= 100% of monthlyLimit: dispatches BudgetExceededEvent
+ * - >= 80% of monthlyLimit: dispatches BudgetThresholdReachedEvent
+ * - < 80%: no event (silent)
+ *
+ * Early returns: skips if the transaction has no category, or the user
+ * has no budget for that category, or no rollup exists for the period.
+ *
+ * Cross-module: reads from ICategoryRollupRepository (transactions module)
+ * to get the current spend for the category/period.
+ */
 const createRecordSpendHandler = (
   budgetRepository: IBudgetRepository,
   rollupRepository: ICategoryRollupRepository,

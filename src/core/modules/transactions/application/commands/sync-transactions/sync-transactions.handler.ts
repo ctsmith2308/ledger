@@ -5,6 +5,7 @@ import { IHandler, IEventBus, Result, DomainEvent } from '@/core/shared/domain';
 import {
   ITransactionRepository,
   Transaction,
+  SyncMismatchEvent,
 } from '@/core/modules/transactions/domain';
 
 import {
@@ -17,6 +18,24 @@ import {
   SyncTransactionsResponse,
 } from './sync-transactions.command';
 
+/**
+ * Syncs transactions from Plaid for all linked bank accounts.
+ *
+ * Uses Plaid's cursor-based /transactions/sync endpoint to pull incremental
+ * changes (added, modified, removed) rather than re-fetching everything.
+ * https://plaid.com/docs/api/products/transactions/#transactionssync
+ *
+ * Cursor persistence: the cursor is saved per PlaidItem after each batch
+ * so the next sync resumes from where it left off. If the process crashes
+ * between the transaction save and the cursor update, the next sync may
+ * re-process the same batch. Prisma's upsert on save handles this
+ * idempotently.
+ *
+ * Event dispatch: events are collected per batch and dispatched after all
+ * operations complete. TransactionCreatedEvent drives rollup materialization
+ * and budget threshold checks. SyncMismatchEvent fires when Plaid reports
+ * a modification for a transaction not in the DB (data fell out of sync).
+ */
 class SyncTransactionsHandler implements IHandler<
   SyncTransactionsCommand,
   SyncTransactionsResponse
@@ -41,6 +60,14 @@ class SyncTransactionsHandler implements IHandler<
       let currentCursor = item.cursor;
       let hasMore = true;
 
+      /**
+       * Plaid returns transactions in pages. Each response includes a
+       * next_cursor and a hasMore flag. We loop until hasMore is false,
+       * processing added/modified/removed in each batch and advancing
+       * the cursor after each page. This ensures large backlogs (initial
+       * sync or long gaps between syncs) are fully consumed without
+       * missing transactions mid-stream.
+       */
       while (hasMore) {
         const syncResult = await this.plaidClient.syncTransactions(
           item.accessToken,
@@ -61,7 +88,9 @@ class SyncTransactionsHandler implements IHandler<
         }
 
         if (syncResult.modified.length > 0) {
-          promises.push(this._handleModified(syncResult.modified));
+          promises.push(
+            this._handleModified(syncResult.modified, item.userId, batchEvents),
+          );
         }
 
         await Promise.all(promises);
@@ -105,6 +134,8 @@ class SyncTransactionsHandler implements IHandler<
 
   private async _handleModified(
     modified: PlaidSDKTransaction[],
+    userId: string,
+    batchEvents: DomainEvent[],
   ): Promise<void> {
     const plaidIds = modified.map((t) => t.transaction_id);
 
@@ -115,9 +146,16 @@ class SyncTransactionsHandler implements IHandler<
     for (const data of modified) {
       const match = existing.find((t) => t.id === data.transaction_id);
 
-      // TODO: Dispatch a sync mismatch event if Plaid reports a modification
-      // for a transaction we don't have — indicates data fell out of sync.
-      if (!match) continue;
+      if (!match) {
+        batchEvents.push(
+          new SyncMismatchEvent(
+            data.transaction_id,
+            userId,
+            data.transaction_id,
+          ),
+        );
+        continue;
+      }
 
       match.update({
         amount: data.amount,

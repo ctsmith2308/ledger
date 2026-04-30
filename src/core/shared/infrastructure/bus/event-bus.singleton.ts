@@ -1,3 +1,10 @@
+/**
+ * EventBus singleton. All modules import this shared instance.
+ *
+ * Swapping the event delivery mechanism (e.g. to SQS, Redis Streams)
+ * means replacing this file. Module code stays the same because it
+ * depends on the IEventBus interface, not this implementation.
+ */
 import { Client } from '@upstash/qstash';
 
 import { prisma } from '../persistence/prisma.singleton';

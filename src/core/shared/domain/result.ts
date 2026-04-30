@@ -1,3 +1,13 @@
+/**
+ * Monadic result type for domain operations. Encodes success/failure as
+ * a value rather than throwing, so every failure path is typed and visible.
+ *
+ * getValueOrThrow() is the bridge to the transport layer. Services call
+ * it to unwrap the result; on failure, the underlying DomainException
+ * throws and is caught by handleServerError in the action client.
+ *
+ * Frozen on construction so results cannot be mutated after creation.
+ */
 class Result<T, E extends Error> {
   private constructor(
     public readonly status: 'SUCCESS' | 'FAIL',
@@ -37,7 +47,7 @@ class Result<T, E extends Error> {
     return this._value as T;
   }
 
-  // Use 'never' for the side that isn't present
+  /** Uses 'never' for the unused side so callers can't accidentally access it. */
   public static ok<T, E extends Error = never>(value: T): Result<T, E> {
     return new Result<T, E>('SUCCESS', undefined, value);
   }

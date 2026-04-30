@@ -15,6 +15,16 @@ import {
   LogoutUserResponse,
 } from './logout-user.command';
 
+/**
+ * Revokes the user's session and dispatches a logout event.
+ *
+ * Idempotent: revocation proceeds even if the session is not found or
+ * already revoked. The event is only dispatched when a session existed
+ * so audit records reflect actual logouts, not no-ops.
+ *
+ * Handler-dispatched event: no single aggregate owns logout. The session
+ * is revoked (not deleted) so the record persists for audit.
+ */
 class LogoutUserHandler
   implements IHandler<LogoutUserCommand, LogoutUserResponse>
 {

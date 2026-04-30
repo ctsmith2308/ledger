@@ -15,8 +15,20 @@ import {
   CleanupExpiredTrialsResponse,
 } from './cleanup-expired-trials.command';
 
+/** Default 48 hours. Configurable via TRIAL_TTL_HOURS env var. */
 const TRIAL_TTL_HOURS = Number(process.env.TRIAL_TTL_HOURS ?? 48);
 
+/**
+ * Deletes trial users whose accounts have exceeded the TTL.
+ * Designed to run on a schedule (QStash cron).
+ *
+ * Ordering matters: sessions are revoked before the user is deleted so
+ * no dangling session records reference a deleted user.
+ *
+ * Handler-dispatched event: the user aggregate is being destroyed, so it
+ * cannot raise its own event. The handler dispatches AccountDeletedEvent
+ * directly per the handler-dispatched pattern.
+ */
 class CleanupExpiredTrialsHandler
   implements IHandler<CleanupExpiredTrialsCommand, CleanupExpiredTrialsResponse>
 {

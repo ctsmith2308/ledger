@@ -9,7 +9,7 @@ const config = defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/__spec__/**/*.spec.ts'],
-    exclude: ['node_modules', '.next'],
+    exclude: ['node_modules', '.next', 'src/**/*.integration.spec.ts'],
   },
   resolve: {
     alias: {

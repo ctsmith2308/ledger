@@ -8,6 +8,18 @@ type ErrorResponse = {
   message: string;
 };
 
+/**
+ * Maps internal exception types to stable, sanitized client responses.
+ *
+ * Security: enumeration-sensitive exceptions (UNAUTHORIZED, SESSION_EXPIRED,
+ * SESSION_REVOKED, INVALID_SESSION_ID, LOGIN_FAILED) all map to the same
+ * generic message so attackers cannot distinguish failure reasons from the
+ * response. Internal exception granularity is preserved in logs.
+ *
+ * Ordering: DomainException is checked first (most common), then ZodError
+ * (input validation), then PrismaClientKnownRequestError (persistence),
+ * then a catch-all SERVER_ERROR for anything unexpected.
+ */
 const domainTypeMap = new Map<string, ErrorResponse>([
   ['UNAUTHORIZED', { code: ERROR_CODES.UNAUTHORIZED, message: 'Authentication required.' }],
   ['SESSION_EXPIRED', { code: ERROR_CODES.UNAUTHORIZED, message: 'Authentication required.' }],

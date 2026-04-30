@@ -21,6 +21,7 @@ This document is the authoritative record of architectural decisions, experiment
 8. [Frontend — Feature-Sliced Design](#8-frontend--feature-sliced-design)
 9. [Validation Strategy](#9-validation-strategy)
 10. [Security Considerations](#10-security-considerations)
+11. [Concepts & Further Reading](#11-concepts--further-reading)
 
 ---
 
@@ -322,9 +323,8 @@ src/
       content/                      # portfolio copy. Architecture decisions, case studies.
       routes/                       # route constants
     _components/                    # primitive, stateless UI. Button, input, card.
-    _widgets/                       # compositional blocks. Headers, footers, dashboard shell.
+    _widgets/                       # compositional blocks that assemble features into page sections.
     _providers/                     # app-level context. Theme, query.
-    _layouts/                       # shared layout wrappers
     _entities/                      # data access layer. Server actions, action schemas, entity hooks.
       identity/
         actions/                    # login, register, logout, delete, mfa actions
@@ -864,11 +864,10 @@ Client calls handleActionResponse(loginAction({ email, password }))
             → hasher.verify()
             → user.loggedIn(), raises UserLoggedInEvent
             → pullDomainEvents() + eventBus.dispatch()
-            → featureFlagRepo + cache warm
             → Result.ok({ type: 'SUCCESS', user })
         → service signs JWT via jwtService.sign(userId, JWT_TYPE.ACCESS, '15m')
-        → returns { type: 'SUCCESS', accessToken }
-      → setCookie(accessToken), httpOnly cookie
+        → returns { type: 'SUCCESS', token }
+      → setCookie(token), httpOnly cookie
       → returns void (success with no data)
   → next-safe-action returns { data: undefined }
   → handleActionResponse unwraps, returns undefined
@@ -884,12 +883,12 @@ On any throw:
 
 ```
 loginAction → identityService.loginUser() → signs JWT (userId in sub)
-  → MFA disabled: { type: 'SUCCESS', accessToken } → setCookie(accessToken)
-  → MFA enabled:  { type: 'MFA_REQUIRED', challengeToken } → returned to client
+  → MFA disabled: { type: 'SUCCESS', token } → setCookie(token)
+  → MFA enabled:  { type: 'MFA_REQUIRED', token } → returned as challengeToken
 
 verifyMfaLoginAction → identityService.verifyMfaLogin(challengeToken, totpCode)
   → verifies MFA_CHALLENGE JWT, validates TOTP code
-  → signs new ACCESS JWT → { accessToken } → setCookie(accessToken)
+  → signs new ACCESS JWT → { token } → setCookie(token)
 
 proxy.ts (Next.js edge middleware, exported as `middleware`)
   → reads session cookie
@@ -910,7 +909,7 @@ loadSession() (for React Server Components)
 
 Session cookies are managed via standalone helpers in `_shared/lib/session/session.service.ts`:
 
-- `setCookie(accessToken)`: sets an httpOnly, secure, sameSite=lax cookie.
+- `setCookie(token)`: sets an httpOnly, secure, sameSite=lax cookie.
 - `deleteCookie()`: clears the session cookie.
 - `getCookie()`: reads the cookie value.
 - `loadSession()`: `React.cache()` wrapper that reads the cookie, verifies the JWT, and returns `{ userId }`. Used in React Server Components for session resolution.
@@ -940,13 +939,13 @@ FSD enforces strict one-way dependencies between UI layers. Lower layers never i
 | Layer | Directory | Responsibility |
 |---|---|---|
 | shared | `_shared/` | Cross-cutting libraries, utilities, session management, action client. Base layer. |
-| entities | `_entities/` | Data access layer grouped by domain. Server actions, action-level schemas, entity hooks. |
 | components | `_components/` | Primitive, stateless UI: button, input, card. No feature dependencies. |
-| widgets | `_widgets/` | Compositional blocks: headers, footers, dashboard shell. |
 | providers | `_providers/` | App-level context: theme, query. |
+| entities | `_entities/` | Data access layer grouped by domain. Server actions, action-level schemas, entity hooks. |
 | features | `_features/` | Domain feature modules. Each owns hooks, UI, and feature-specific schemas. |
+| widgets | `_widgets/` | Compositional blocks that assemble features into page sections. |
 
-**Dependency rule:** `_shared` -> `_entities` -> `_components` -> `_widgets` -> `_features` -> routes. No layer imports from above itself. Features never import from other features. Entities never import from features, widgets, or components.
+**Dependency rule:** `_shared` -> `_components` -> `_entities` -> `_features` -> `_widgets` -> pages. Layers import from layers below, never above. Features never import from other features. Entities never import from features, widgets, or components. Widgets can import from features (that is their job: composing features into page sections).
 
 Each layer exposes a barrel `index.ts`. Consumers import from the barrel, never from deep internal paths. This means a layer's internal structure can change without touching any import paths outside it.
 
@@ -1046,3 +1045,48 @@ Both map to the same `VALIDATION_ERROR` response externally.
 - **Input validation**: All action inputs are validated via Zod schemas declared on the `next-safe-action` chain. Unvalidated data never reaches the service or domain layers.
 - **Prisma**: Parameterised queries only. No raw SQL in the current codebase.
 - **Rate limiting**: The `withRateLimit` middleware enforces request rate limits on sensitive actions (login, registration).
+
+---
+
+## 11. Concepts & Further Reading
+
+If you are new to the patterns in this codebase, start with the annotated building blocks in `src/core/shared/domain/`. Each file has a block comment explaining what the concept is and how it is used here.
+
+### Code map
+
+| Concept | File | What it does |
+|---|---|---|
+| Value Object | `shared/domain/value-object.ts` | Immutable, identity-by-value. `Email`, `Password`, `UserId` extend this. |
+| Aggregate Root | `shared/domain/aggregate-root.ts` | Consistency boundary. Collects domain events during mutations. |
+| Domain Event | `shared/domain/domain-event.ts` | Records that something meaningful happened. Persisted for audit. |
+| Result | `shared/domain/result.ts` | Monadic success/failure. Every domain operation returns this instead of throwing. |
+| Command | `shared/domain/bus/command.ts` | Mutates state. Phantom type drives return type inference at dispatch. |
+| Query | `shared/domain/bus/query.ts` | Returns data without mutation. Same phantom type pattern. |
+| IHandler | `shared/domain/handler.ts` | Application layer contract. Orchestrates domain operations. |
+| IEventBus | `shared/domain/bus/event-bus.interface.ts` | Domain abstraction for event delivery. Implementation is swappable. |
+| Repository | `modules/identity/domain/repositories/user.repository.ts` | Domain-shaped persistence interface. Implementation lives in infrastructure. |
+| CommandBus | `shared/infrastructure/bus/command-bus.impl.ts` | Dispatches commands to handlers with OpenTelemetry tracing. |
+| EventBus | `shared/infrastructure/bus/event-bus.impl.ts` | Persists events to Postgres, publishes to QStash for async handler execution. |
+
+### Recommended reading
+
+**Domain-Driven Design:**
+- Eric Evans, *Domain-Driven Design: Tackling Complexity in the Heart of Software* (2003). The original. Chapters 5-6 (Entities, Value Objects, Aggregates) map directly to this codebase.
+- Vaughn Vernon, *Implementing Domain-Driven Design* (2013). More practical than Evans. Chapter 10 (Aggregates) is particularly relevant.
+- Martin Fowler, [DDD Aggregate pattern](https://martinfowler.com/bliki/DDD_Aggregate.html). Short overview of aggregate design rules.
+
+**CQRS and Event-Driven Architecture:**
+- Greg Young, [CQRS Documents](https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf). The foundational paper. Explains why commands and queries are separated and what that enables.
+- Martin Fowler, [CQRS](https://martinfowler.com/bliki/CQRS.html). Concise overview with guidance on when CQRS is and isn't justified.
+- Martin Fowler, [Domain Event](https://martinfowler.com/eaaDev/DomainEvent.html). What domain events are and how they differ from system events.
+
+**Clean Architecture:**
+- Robert C. Martin, [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html). The dependency rule (inner layers never depend on outer layers) is the core principle of this codebase.
+- Robert C. Martin, *Clean Architecture* (2017). Chapters 20-22 cover the dependency inversion that drives the repository interface pattern used here.
+
+**Result Type / Railway-Oriented Programming:**
+- Scott Wlaschin, [Railway Oriented Programming](https://fsharpforfunandprofit.com/rop/). The conceptual foundation for the Result type pattern. Written for F# but the ideas are language-agnostic.
+
+**Feature-Sliced Design:**
+- [Official FSD documentation](https://feature-sliced.design/docs/get-started/overview). The full specification. This codebase applies a lite variant: the layer hierarchy and one-way dependency rules are followed, but formal slice/segment naming and strict public API enforcement are not.
+- [FSD Layer reference](https://feature-sliced.design/docs/reference/layers). Defines the seven layers (shared, entities, features, widgets, pages, processes, app) and the "import only from layers strictly below" rule.

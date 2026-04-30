@@ -10,6 +10,18 @@ const _formatPeriod = (date: Date): string => {
   return `${year}-${month}`;
 };
 
+/**
+ * Materializes the CQRS read model on TransactionCreatedEvent.
+ *
+ * Upserts a row in the category_rollups table (one per user + category +
+ * period). Amounts are stored in cents to avoid floating-point drift in
+ * aggregations. The rollup must complete before the budgets module's
+ * recordSpend handler runs, because recordSpend reads from this rollup.
+ * Sequential dispatch in the EventBus guarantees this ordering.
+ *
+ * See: the event-handler-ordering architecture decision for why
+ * registration order matters.
+ */
 const createUpdateCategoryRollupHandler = (
   rollupRepository: ICategoryRollupRepository,
 ) => {

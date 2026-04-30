@@ -19,7 +19,7 @@ import {
   calcWeeklySpendingByCategory,
 } from '@/app/_entities/transactions/lib';
 
-import { TransactionList } from '@/app/_features/transactions';
+import { TransactionList } from '@/app/_widgets';
 
 import { ConnectAccountCard } from '@/app/_features/plaid';
 

@@ -4,7 +4,7 @@ import { transactionsService } from '@/core/modules/transactions';
 
 import { loadSession } from '@/app/_shared/lib/session/session.service';
 
-import { TransactionList } from '@/app/_features/transactions';
+import { TransactionList } from '@/app/_widgets';
 
 import { ConnectAccountCard } from '@/app/_features/plaid';
 

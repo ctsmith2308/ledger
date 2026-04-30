@@ -15,7 +15,7 @@ sequenceDiagram
     participant TH as SyncTransactionsHandler
     participant Plaid as Plaid API
     participant DB as Postgres (Write)
-    participant EB as DurableEventBus
+    participant EB as EventBus
     participant ES as domain_events Table
     participant RH as updateCategoryRollup
     participant RDB as Postgres (Read Model)
@@ -53,7 +53,7 @@ flowchart TB
     subgraph Shared Infrastructure
         CB[CommandBus]
         QB[QueryBus]
-        EB[DurableEventBus -- singleton]
+        EB[EventBus -- singleton]
         ES[(domain_events table)]
         EB -->|persist first| ES
     end
@@ -137,23 +137,25 @@ flowchart LR
 
 ---
 
-## Durable Event Bus -- Persist First, Dispatch Second
+## Event Bus -- Persist, Publish, Process
 
-The event lifecycle from aggregate to handler. Every event is written to Postgres before any handler executes. Failed handlers are tracked and retryable.
+The event lifecycle from aggregate to handler. Every event is persisted to Postgres, then published to QStash for async handler execution via a webhook. Failed handlers are tracked and retryable.
 
 ```mermaid
 flowchart TD
     A[Aggregate raises DomainEvent] --> B[Handler calls eventBus.dispatch]
     B --> C[Persist to domain_events table<br/>status: pending]
     C --> D{Handlers registered?}
-    D -->|No| E[Mark processed]
-    D -->|Yes| F[Run handlers sequentially]
-    F --> G{All handlers succeed?}
-    G -->|Yes| H[Mark processed<br/>set processedAt]
-    G -->|No| I[Mark failed<br/>increment attempts<br/>store error]
-    I --> J{attempts < 3?}
-    J -->|Yes| K[Available for replayFailed]
-    J -->|No| L[Dead -- requires manual review]
+    D -->|No| E[Mark processed<br/>audit only]
+    D -->|Yes| F[Publish to QStash]
+    F --> G[QStash calls /api/events webhook]
+    G --> H[eventBus.process runs handlers sequentially]
+    H --> I{All handlers succeed?}
+    I -->|Yes| J[Mark processed<br/>set processedAt]
+    I -->|No| K[Mark failed<br/>increment attempts<br/>store error]
+    K --> L{attempts < 3?}
+    L -->|Yes| M[Available for replayFailed]
+    L -->|No| N[Dead -- requires manual review]
 ```
 
 ---
@@ -170,7 +172,7 @@ sequenceDiagram
     participant CB as CommandBus
     participant RH as RegisterUserHandler
     participant DB as Postgres
-    participant EB as DurableEventBus
+    participant EB as EventBus
 
     UI->>SA: register(firstName, lastName, email, password)
     SA->>SVC: registerUser(...)
@@ -191,7 +193,7 @@ sequenceDiagram
 
 ## Auth Flow -- Login (No MFA)
 
-When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, caches feature flags in Upstash, and `IdentityService` signs the JWT. The action sets the cookie directly.
+When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, and `IdentityService` signs the JWT. The action sets the cookie directly. Feature flags are loaded lazily by the `withFeatureFlag` middleware on the first gated action, not at login time.
 
 ```mermaid
 sequenceDiagram
@@ -201,8 +203,7 @@ sequenceDiagram
     participant CB as CommandBus
     participant LH as LoginUserHandler
     participant DB as Postgres
-    participant EB as DurableEventBus
-    participant FF as FeatureFlagCache<br/>Upstash
+    participant EB as EventBus
 
     UI->>SA: login(email, password)
     SA->>SVC: loginUser(email, password)
@@ -214,12 +215,10 @@ sequenceDiagram
     Note over LH: UserLoggedInEvent (aggregate-raised)
     LH->>LH: user.pullDomainEvents()
     LH->>EB: dispatch(events)
-    LH->>DB: featureFlagRepo.findEnabledByTier
-    LH->>FF: featureFlagCache.setFeatures
     LH-->>SVC: Result.ok({ type: SUCCESS, user })
     SVC->>SVC: jwtService.sign(userId, access, 15m)
-    SVC-->>SA: { type: SUCCESS, accessToken }
-    SA->>SA: setCookie(accessToken)
+    SVC-->>SA: { type: SUCCESS, token }
+    SA->>SA: setCookie(token)
     SA-->>UI: redirect /overview
 ```
 
@@ -238,10 +237,9 @@ sequenceDiagram
     participant LH as LoginUserHandler
     participant VH as VerifyMfaLoginHandler
     participant DB as Postgres
-    participant EB as DurableEventBus
-    participant FF as FeatureFlagCache<br/>Upstash
+    participant EB as EventBus
 
-    Note over UI,FF: Step 1 -- Credential Check
+    Note over UI,EB: Step 1 -- Credential Check
     UI->>SA: login(email, password)
     SA->>SVC: loginUser(email, password)
     SVC->>CB: dispatch(LoginUserCommand)
@@ -251,12 +249,12 @@ sequenceDiagram
     LH->>LH: user.mfaEnabled == true
     LH-->>SVC: Result.ok({ type: MFA_REQUIRED, user })
     SVC->>SVC: jwtService.sign(userId, mfa_challenge, 5m)
-    SVC-->>SA: { type: MFA_REQUIRED, challengeToken }
-    SA-->>UI: { challengeToken }
+    SVC-->>SA: { type: MFA_REQUIRED, token }
+    SA-->>UI: { challengeToken: token }
     UI->>UI: sessionStorage.set(challengeToken)
     UI->>UI: redirect /mfa
 
-    Note over UI,FF: Step 2 -- TOTP Verification
+    Note over UI,EB: Step 2 -- TOTP Verification
     UI->>SA: verifyMfaLogin(challengeToken, totpCode)
     SA->>SVC: verifyMfaLogin(challengeToken, totpCode)
     SVC->>SVC: jwtService.verify(token, mfa_challenge)
@@ -268,12 +266,10 @@ sequenceDiagram
     Note over VH: UserLoggedInEvent (aggregate-raised)
     VH->>VH: user.pullDomainEvents()
     VH->>EB: dispatch(events)
-    VH->>DB: featureFlagRepo.findEnabledByTier
-    VH->>FF: featureFlagCache.setFeatures
     VH-->>SVC: Result.ok(user)
     SVC->>SVC: jwtService.sign(userId, access, 15m)
-    SVC-->>SA: { accessToken }
-    SA->>SA: setCookie(accessToken)
+    SVC-->>SA: { token }
+    SA->>SA: setCookie(token)
     SA-->>UI: redirect /overview
 ```
 
@@ -313,7 +309,7 @@ sequenceDiagram
     participant CB as CommandBus
     participant VH as VerifyMfaSetupHandler
     participant DB as Postgres
-    participant EB as DurableEventBus
+    participant EB as EventBus
 
     UI->>SA2: verifyMfaSetup(totpCode)
     SA2->>SVC: verifyMfaSetup(userId, totpCode)
@@ -373,3 +369,4 @@ Summary of all domain events, their ownership pattern, and dispatch origin.
 | `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
 | `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
 | `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |
+| `SyncMismatchEvent` | `SyncTransactionsHandler` | Handler-dispatched |

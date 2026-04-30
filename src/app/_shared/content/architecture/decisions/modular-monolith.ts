@@ -12,7 +12,7 @@ const modularMonolith: ArchitectureDecision = {
     'Build a modular monolith. Domain boundaries are enforced at the module level with explicit dependency wiring and no cross-module imports. Each module owns its domain, application, and infrastructure layers. The event bus handles cross-module communication without tight coupling. Splitting into services later is a deployment decision, not an architectural rewrite.',
   rationale: [
     "Domain boundaries are hard to get right on the first pass. A monolith lets you move them cheaply. Once a boundary becomes a network contract between services, refactoring gets expensive fast.",
-    'Cross-module communication already goes through an IEventBus interface, and the DurableEventBus persists events to Postgres before dispatch. If this ever needs multi-instance fan-out, swapping to SQS or Redis Streams is an infrastructure change. Domain code stays the same.',
+    'Cross-module communication already goes through an IEventBus interface, and the EventBus persists events to Postgres before dispatch. If this ever needs multi-instance fan-out, swapping to SQS or Redis Streams is an infrastructure change. Domain code stays the same.',
     'Dependencies are wired manually. Concrete infrastructure classes get imported and constructed in each command and query index file, so the full dependency graph is visible at compile time. TypeScript catches missing dependencies before the app starts. No IoC container magic.',
     'At this scale, one deployment unit keeps things simple: one database connection, one process, one set of logs, one deploy pipeline.',
   ],
@@ -26,7 +26,7 @@ const modularMonolith: ArchitectureDecision = {
       con: 'Module boundary discipline is enforced by convention, not by the compiler. A careless import can couple modules silently.',
     },
     {
-      pro: 'The DurableEventBus persists every event to Postgres before handler execution, so events survive crashes and can be replayed or audited without an external broker.',
+      pro: 'The EventBus persists every event to Postgres before handler execution, so events survive crashes and can be replayed or audited without an external broker.',
       con: 'Still single-process dispatch. Multi-instance fan-out would need an external broker (SQS, Redis Streams). The IEventBus interface keeps that swap path open.',
     },
   ],
@@ -58,8 +58,8 @@ interface IEventBus {
   dispatch(events: DomainEvent[]): Promise<void>;
 }
 
-// Today: DurableEventBus. Postgres persistence + in-process dispatch
-const eventBus = new DurableEventBus(prisma);
+// Today: EventBus. Postgres persistence + QStash async dispatch
+const eventBus = new EventBus(prisma, qstash, appUrl);
 
 // Tomorrow: swap one line, zero domain changes
 const eventBus = new SqsEventBus(sqsClient, queueUrl);`,

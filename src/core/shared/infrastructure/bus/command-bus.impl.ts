@@ -8,6 +8,18 @@ type AnyCommand = Command<unknown>;
 
 const tracer = trace.getTracer('ledger');
 
+/**
+ * Dispatches commands to registered handlers with OpenTelemetry tracing.
+ *
+ * Each dispatch creates a child span under the active HTTP request trace,
+ * giving handler-level visibility in the trace timeline (e.g. "LoginUser
+ * took 45ms" instead of just "POST /login returned in 200ms"). Failures
+ * are recorded on the span via ObservabilityService before re-throwing.
+ *
+ * Registration is explicit via the module composition root (api/index.ts),
+ * not via decorators or auto-discovery. If a handler is not registered,
+ * dispatch throws at runtime.
+ */
 class CommandBus {
   private readonly _handlers = new Map<string, IHandler<AnyCommand, unknown>>();
 
@@ -32,10 +44,9 @@ class CommandBus {
       throw new Error(`No handler registered for command: ${key}`);
     }
 
-    // startActiveSpan sets this span as the active context parent.
-    // If infrastructure adapters (Prisma, Redis, Plaid) add their own
-    // spans in the future, they will automatically nest under this one.
-    // Switch to startSpan if parent context is not needed.
+    /** startActiveSpan sets this span as the active context parent.
+     *  Infrastructure adapter spans (Prisma, Redis, Plaid) will
+     *  automatically nest under this one. */
     return tracer.startActiveSpan(`command.${key}`, async (span) => {
       try {
         const result = (await handler.execute(command)) as Promise<

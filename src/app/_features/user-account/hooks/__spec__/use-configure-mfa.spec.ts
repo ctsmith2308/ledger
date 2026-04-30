@@ -1,74 +1,25 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockInvalidateQueries = vi.fn();
-let mockStateValues: Record<string, unknown> = {};
-let mockSetters: Record<string, (val: unknown) => void> = {};
-let stateIndex = 0;
-const stateKeys = ['mfaProgress', 'qrCodeDataUrl'];
+import { act } from '@testing-library/react';
 
-vi.mock('react', () => ({
-  useState: (initial: unknown) => {
-    const key = stateKeys[stateIndex % stateKeys.length];
-    stateIndex++;
-    const value =
-      mockStateValues[key] !== undefined ? mockStateValues[key] : initial;
-    const setter = (val: unknown) => {
-      mockStateValues[key] = val;
-    };
-    mockSetters[key] = setter;
-    return [value, setter];
-  },
-}));
+import { renderHookWithProviders } from '@/tests/common/render-hook';
 
-const mockSetupMutate = vi.fn();
-const mockVerifyMutate = vi.fn();
-const mockDisableMutate = vi.fn();
-let setupOnSuccess: ((result: { qrCodeDataUrl?: string }) => void) | null =
-  null;
-let verifyOnSuccess: (() => void) | null = null;
-let disableOnSuccess: (() => void) | null = null;
-let mockSetupIsPending = false;
-let mockVerifyIsPending = false;
-let mockDisableIsPending = false;
-let mutationIndex = 0;
-
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
-  useMutation: (opts: { onSuccess?: (...args: never[]) => void }) => {
-    const idx = mutationIndex % 3;
-    mutationIndex++;
-
-    if (idx === 0) {
-      setupOnSuccess = opts.onSuccess as typeof setupOnSuccess;
-      return { mutate: mockSetupMutate, isPending: mockSetupIsPending };
-    }
-
-    if (idx === 1) {
-      verifyOnSuccess = opts.onSuccess as typeof verifyOnSuccess;
-      return { mutate: mockVerifyMutate, isPending: mockVerifyIsPending };
-    }
-
-    disableOnSuccess = opts.onSuccess as typeof disableOnSuccess;
-    return { mutate: mockDisableMutate, isPending: mockDisableIsPending };
-  },
-}));
-
-vi.mock('@tanstack/react-form', () => ({
-  useForm: (opts: { defaultValues: unknown; onSubmit: unknown }) => ({
-    ...opts,
-    handleSubmit: vi.fn(),
-    reset: vi.fn(),
-  }),
-}));
+import { queryKeys } from '@/app/_shared/lib/query/query-keys';
 
 vi.mock('@/app/_shared/lib/next-safe-action', () => ({
-  handleActionResponse: vi.fn(),
+  handleActionResponse: vi.fn((action: unknown) => action),
 }));
 
+const mockSetupMfaAction = vi.fn();
+const mockVerifyMfaSetupAction = vi.fn();
+const mockDisableMfaAction = vi.fn();
+
 vi.mock('@/app/_entities/identity/actions', () => ({
-  setupMfaAction: vi.fn(),
-  verifyMfaSetupAction: vi.fn(),
-  disableMfaAction: vi.fn(),
+  setupMfaAction: (...args: unknown[]) => mockSetupMfaAction(...args),
+  verifyMfaSetupAction: (...args: unknown[]) =>
+    mockVerifyMfaSetupAction(...args),
+  disableMfaAction: (...args: unknown[]) => mockDisableMfaAction(...args),
 }));
 
 import { useConfigureMfa, MFA_PROGRESS } from '../use-configure-mfa.hook';
@@ -76,97 +27,94 @@ import { useConfigureMfa, MFA_PROGRESS } from '../use-configure-mfa.hook';
 describe('useConfigureMfa', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockStateValues = {};
-    mockSetters = {};
-    stateIndex = 0;
-    mutationIndex = 0;
-    setupOnSuccess = null;
-    verifyOnSuccess = null;
-    disableOnSuccess = null;
-    mockSetupIsPending = false;
-    mockVerifyIsPending = false;
-    mockDisableIsPending = false;
   });
 
-  it('returns initial idle state', () => {
-    const result = useConfigureMfa();
+  it('starts in idle state with no QR code', () => {
+    const { result } = renderHookWithProviders(() => useConfigureMfa());
 
-    expect(result.mfaProgress).toBe('idle');
-    expect(result.qrCodeDataUrl).toBeNull();
-    expect(result.formId).toBe('mfa-setup-form');
-    expect(result.isEnabling).toBe(false);
-    expect(result.isVerifying).toBe(false);
-    expect(result.isDisabling).toBe(false);
+    expect(result.current.mfaProgress).toBe(MFA_PROGRESS.IDLE);
+    expect(result.current.qrCodeDataUrl).toBeNull();
+    expect(result.current.formId).toBe('mfa-setup-form');
+    expect(result.current.isEnabling).toBe(false);
+    expect(result.current.isVerifying).toBe(false);
+    expect(result.current.isDisabling).toBe(false);
   });
 
-  it('enableMfa calls setup mutation', () => {
-    const { enableMfa } = useConfigureMfa();
+  it('transitions to showing_qr with QR data on setup success', async () => {
+    mockSetupMfaAction.mockResolvedValue({
+      qrCodeDataUrl: 'data:image/png;base64,abc',
+    });
 
-    enableMfa();
+    const { result } = renderHookWithProviders(() => useConfigureMfa());
 
-    expect(mockSetupMutate).toHaveBeenCalled();
+    await act(() => {
+      result.current.enableMfa();
+    });
+
+    expect(result.current.mfaProgress).toBe(MFA_PROGRESS.SHOWING_QR);
+    expect(result.current.qrCodeDataUrl).toBe('data:image/png;base64,abc');
   });
 
-  it('setup success transitions to showing_qr with qr data', () => {
-    useConfigureMfa();
+  it('transitions to success on verify', async () => {
+    mockSetupMfaAction.mockResolvedValue({
+      qrCodeDataUrl: 'data:image/png;base64,abc',
+    });
+    mockVerifyMfaSetupAction.mockResolvedValue(undefined);
 
-    if (setupOnSuccess)
-      setupOnSuccess({ qrCodeDataUrl: 'data:image/png;base64,abc' });
+    const { result } = renderHookWithProviders(() => useConfigureMfa());
 
-    expect(mockStateValues['qrCodeDataUrl']).toBe(
-      'data:image/png;base64,abc',
+    await act(() => {
+      result.current.enableMfa();
+    });
+
+    await act(() => {
+      result.current.form.setFieldValue('totpCode', '123456');
+    });
+
+    await act(() => result.current.form.handleSubmit());
+
+    expect(mockVerifyMfaSetupAction).toHaveBeenCalledWith({
+      totpCode: '123456',
+    });
+    expect(result.current.mfaProgress).toBe(MFA_PROGRESS.SUCCESS);
+  });
+
+  it('invalidates user account cache on disable', async () => {
+    mockDisableMfaAction.mockResolvedValue(undefined);
+
+    const { result, queryClient } = renderHookWithProviders(() =>
+      useConfigureMfa(),
     );
-    expect(mockStateValues['mfaProgress']).toBe(MFA_PROGRESS.SHOWING_QR);
-  });
 
-  it('verify success transitions to success state', () => {
-    useConfigureMfa();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-    if (verifyOnSuccess) verifyOnSuccess();
+    await act(() => {
+      result.current.disableMfa();
+    });
 
-    expect(mockStateValues['mfaProgress']).toBe(MFA_PROGRESS.SUCCESS);
-  });
-
-  it('disable success invalidates user account query', () => {
-    useConfigureMfa();
-
-    if (disableOnSuccess) disableOnSuccess();
-
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['user-account'],
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.userAccount,
     });
   });
 
-  it('reflects enabling pending state', () => {
-    mockSetupIsPending = true;
+  it('reset returns to idle state and clears QR data', async () => {
+    mockSetupMfaAction.mockResolvedValue({
+      qrCodeDataUrl: 'data:image/png;base64,abc',
+    });
 
-    const { isEnabling } = useConfigureMfa();
+    const { result } = renderHookWithProviders(() => useConfigureMfa());
 
-    expect(isEnabling).toBe(true);
-  });
+    await act(() => {
+      result.current.enableMfa();
+    });
 
-  it('reflects verifying pending state', () => {
-    mockVerifyIsPending = true;
+    expect(result.current.mfaProgress).toBe(MFA_PROGRESS.SHOWING_QR);
 
-    const { isVerifying } = useConfigureMfa();
+    act(() => {
+      result.current.reset();
+    });
 
-    expect(isVerifying).toBe(true);
-  });
-
-  it('reflects disabling pending state', () => {
-    mockDisableIsPending = true;
-
-    const { isDisabling } = useConfigureMfa();
-
-    expect(isDisabling).toBe(true);
-  });
-
-  it('reset returns to idle state', () => {
-    const { reset } = useConfigureMfa();
-
-    reset();
-
-    expect(mockStateValues['mfaProgress']).toBe(MFA_PROGRESS.IDLE);
-    expect(mockStateValues['qrCodeDataUrl']).toBeNull();
+    expect(result.current.mfaProgress).toBe(MFA_PROGRESS.IDLE);
+    expect(result.current.qrCodeDataUrl).toBeNull();
   });
 });
