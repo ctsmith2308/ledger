@@ -241,7 +241,7 @@ See [Application Layer, Command Bus](#command-bus--query-bus) for the full imple
 
 ```
 src/
-  proxy.ts                          # Next.js edge middleware. JWT validation, route protection.
+  proxy.ts                          # Next.js middleware. JWT validation, route protection.
 
   core/                             # framework-agnostic domain and application logic
     modules/
@@ -296,7 +296,7 @@ src/
         constants/                  # FEATURE_KEYS, USER_TIERS, JWT_TYPE, ERROR_CODES, TRANSACTION_CATEGORIES
         exceptions/                 # typed domain exceptions
         repositories/               # IFeatureFlagRepository
-        services/                   # IEventBus, IJwtService, IFeatureFlagCache, IObservabilityService
+        services/                   # IJwtService, IIdGenerator, IFeatureFlagCache, IObservabilityService
         aggregate-root.ts
         bus/                        # Command<T> and Query<T> base classes
         domain-event.ts
@@ -304,12 +304,12 @@ src/
         result.ts                   # Result<T, E>
         value-object.ts
       infrastructure/               # shared infrastructure implementations
-        bus/                        # CommandBus, QueryBus singletons
+        bus/                        # CommandBus, QueryBus, EventBus, InProcessEventBus singletons
         cache/                      # UpstashFeatureFlagCache (Upstash Redis)
         persistence/                # Prisma singleton, PrismaService
         repositories/               # FeatureFlagRepository (Prisma)
-        services/                   # JwtService, ObservabilityService (OpenTelemetry)
-        utils/                      # logger, toErrorResponse, correlationIdGenerator
+        services/                   # JwtService, IdGenerator, ObservabilityService (OpenTelemetry)
+        utils/                      # logger, toErrorResponse
 
   app/                              # Next.js app. Transport and UI layer.
     _shared/                        # shared utilities, libraries, content
@@ -471,12 +471,19 @@ Both paths flow through the same `EventBus` and land in the `domain_events` tabl
 |---|---|---|
 | `UserRegisteredEvent` | `User.register()` | Aggregate-raised |
 | `UserLoggedInEvent` | `User.loggedIn()` | Aggregate-raised |
-| `UserProfileUpdatedEvent` | `UserProfile.updateName()` | Aggregate-raised |
+| `UserProfileUpdatedEvent` | `UserProfile.updateName()` / `UserProfile.save()` | Aggregate-raised |
 | `MfaEnabledEvent` | `User.confirmMfa()` | Aggregate-raised |
 | `MfaDisabledEvent` | `User.disableMfa()` | Aggregate-raised |
+| `BankAccountLinkedEvent` | `PlaidItem.create()` | Aggregate-raised |
+| `BudgetCreatedEvent` | `Budget.create()` | Aggregate-raised |
+| `TransactionCreatedEvent` | `Transaction.create()` | Aggregate-raised |
 | `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
 | `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
 | `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |
+| `BankAccountUnlinkedEvent` | `UnlinkBankHandler` | Handler-dispatched |
+| `BudgetExceededEvent` | `recordSpend` event handler | Handler-dispatched |
+| `BudgetThresholdReachedEvent` | `recordSpend` event handler | Handler-dispatched |
+| `SyncMismatchEvent` | `SyncTransactionsHandler` | Handler-dispatched |
 
 **Why not full event sourcing:** The system persists events durably for audit, cross-module communication, and failure replay, but aggregates are reconstituted from database snapshots via `reconstitute()`, not from event replay. Full event sourcing would require every event to flow through an aggregate, aggregate reconstitution from event streams, and a message broker for reliable delivery and projection rebuilds. The infrastructure cost is not justified at the current scale. The `IEventBus` interface preserves the upgrade path.
 
@@ -495,15 +502,7 @@ const { accessToken } = (await identityService.loginUser(dto.email, dto.password
 
 ### Repository Interfaces
 
-Repository interfaces are defined in the domain layer with no Prisma imports and no infrastructure dependencies:
-
-```ts
-// domain/repositories/user.repository.ts
-interface IUserRepository {
-  findByEmail(email: Email): Promise<User | null>;
-  save(user: User): Promise<void>;
-}
-```
+Repository interfaces are defined in the domain layer with no Prisma imports and no infrastructure dependencies. See [`IUserRepository`](https://github.com/ctsmith2308/ledger/blob/master/src/core/modules/identity/domain/repositories/user.repository.ts) for an example.
 
 Implementations live in `infrastructure/repositories/` with an `.impl.ts` suffix (e.g., `user.repository.impl.ts`). Infrastructure mappers that convert between Prisma rows and domain aggregates live in `infrastructure/mappers/`. The domain can be unit tested with a mock `IUserRepository`, no database required.
 
@@ -553,14 +552,14 @@ class LoginUserCommand extends Command<LoginUserResponse> {
 }
 ```
 
-`CommandBus.register` uses `{ name: string; prototype: T }` as the class token type. This avoids `Function` and `any` while letting TypeScript infer `T` from the class prototype:
+`CommandBus.register` uses `{ type: string; prototype: T }` as the class token type. This avoids `Function` and `any` while letting TypeScript infer `T` from the class prototype:
 
 ```ts
 register<T extends AnyCommand>(
-  CommandClass: { name: string; prototype: T },
+  CommandClass: { type: string; prototype: T },
   handler: IHandler<T, T['_response']>,
 ): void {
-  this._handlers.set(CommandClass.name, handler as IHandler<AnyCommand, unknown>);
+  this._handlers.set(CommandClass.type, handler as IHandler<AnyCommand, unknown>);
 }
 ```
 
@@ -642,12 +641,9 @@ class IdentityService {
     );
 
     const loginResult = result.getValueOrThrow();
-    const userId = loginResult.user.id.value;
-    const isSuccess = loginResult.type === 'SUCCESS';
-    const type = isSuccess ? JWT_TYPE.ACCESS : JWT_TYPE.MFA_CHALLENGE;
-    const ttl = isSuccess ? '15m' : '5m';
+    const { userId, purpose, ttl } = LoginMapper.toSigningParams(loginResult);
 
-    const tokenResult = await this.jwtService.sign(userId, type, ttl);
+    const tokenResult = await this.jwtService.sign(userId, purpose, ttl);
     const token = tokenResult.getValueOrThrow();
 
     return LoginMapper.toDTO(loginResult.type, token);
@@ -712,7 +708,7 @@ infrastructure/
 
 `EventBus` implements `IEventBus`. Every event is persisted to the `domain_events` table in Postgres, then published to QStash for async handler execution. A webhook endpoint (`/api/events`) receives the message and calls `eventBus.process()`, which runs handlers sequentially in registration order and marks the event as processed or failed.
 
-The `domain_events` table serves three roles: durable delivery guarantee (persist before dispatch), audit trail (queryable by aggregate, type, status, timestamp), and failure tracking (attempt count, error message, `replayFailed()` for retry). See the `durable-event-bus` architecture decision for the full rationale.
+The `domain_events` table serves three roles: durable delivery guarantee (persist before dispatch), audit trail (queryable by aggregate, type, status, timestamp), and failure tracking (attempt count, error message, `replayFailed()` for retry). See the `persist-first-event-dispatch` architecture decision for the full rationale.
 
 ### JWT Service
 
@@ -745,9 +741,18 @@ Feature flags are checked in two places:
 const ObservabilityService: IObservabilityService = {
   recordHandlerFailure(handlerName: string, error: unknown): void {
     const span = trace.getActiveSpan();
+
     if (!span) return;
+
+    const message =
+      error instanceof Error ? error.message : 'Unknown error';
+
+    const type =
+      error instanceof Error ? error.constructor.name : 'UnknownError';
+
     span.setAttribute('handler.name', handlerName);
-    span.setAttribute('error.type', error instanceof Error ? error.constructor.name : 'UnknownError');
+    span.setAttribute('error.type', type);
+    span.setAttribute('error.message', message);
     span.setStatus({ code: SpanStatusCode.ERROR, message });
   },
 };
@@ -757,15 +762,7 @@ Events replace application-level logging for audit purposes. The `logger` utilit
 
 ### Error Response Mapping
 
-`toErrorResponse` maps all thrown values to a stable external shape. Prisma errors are mapped by code before domain exceptions:
-
-```ts
-const prismaErrorMap: Record<string, ErrorResponse> = {
-  P2002: domainTypeMap.CONFLICT,      // unique constraint
-  P2025: domainTypeMap.NOT_FOUND,     // record not found
-  P2003: domainTypeMap.CONFLICT,      // foreign key constraint
-};
-```
+`toErrorResponse` maps all thrown values to a stable external shape. Domain exceptions are checked first, then Zod validation errors, then Prisma errors by code, with a catch-all for anything unexpected. See [`to-error-response.util.ts`](https://github.com/ctsmith2308/ledger/blob/master/src/core/shared/infrastructure/utils/to-error-response.util.ts) for the full mapping.
 
 ---
 
@@ -773,17 +770,7 @@ const prismaErrorMap: Record<string, ErrorResponse> = {
 
 ### `next-safe-action` — the action framework
 
-All server actions are created via `next-safe-action`. The `actionClient` is configured with a single `handleServerError` catch boundary that maps all thrown errors through `toErrorResponse`:
-
-```ts
-// _shared/lib/next-safe-action/action-client.ts
-const actionClient = createSafeActionClient({
-  handleServerError: (error): ErrorResponse => {
-    logger.error(error);
-    return toErrorResponse(error);
-  },
-});
-```
+All server actions are created via `next-safe-action`. The `actionClient` is configured with a `handleServerError` catch boundary that maps all thrown errors through `toErrorResponse`, a metadata schema for action naming, and a chained `.use()` middleware that wraps every action in an OpenTelemetry span. See [`action-client.ts`](https://github.com/ctsmith2308/ledger/blob/master/src/app/_shared/lib/next-safe-action/action-client.ts) for the full configuration.
 
 Actions chain middleware inline using `.use()` and declare input schemas via `.inputSchema()`:
 

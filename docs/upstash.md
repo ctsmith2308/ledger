@@ -8,7 +8,7 @@
 
 ## Overview
 
-[Upstash](https://upstash.com/) serves three purposes in this project: **rate limiting** (Redis), **feature flag caching** (Redis), and **durable event delivery** (QStash). Redis uses the [`@upstash/redis`](https://github.com/upstash/redis-js) SDK with the `Redis.fromEnv()` connection pattern, which reads two environment variables:
+[Upstash](https://upstash.com/) serves three purposes in this project: **rate limiting** (Redis), **feature flag caching** (Redis), and **async event dispatch** (QStash). Redis uses the [`@upstash/redis`](https://github.com/upstash/redis-js) SDK with the `Redis.fromEnv()` connection pattern, which reads two environment variables:
 
 - `UPSTASH_REDIS_REST_URL` -- the REST endpoint for the Upstash Redis instance.
 - `UPSTASH_REDIS_REST_TOKEN` -- the bearer token for authentication.
@@ -171,7 +171,7 @@ The dehydrated state is passed to `<HydrationBoundary>`, making feature flags av
 
 ---
 
-## QStash -- Durable Event Delivery
+## QStash -- Async Event Dispatch
 
 **Source:** `src/core/shared/infrastructure/bus/event-bus.impl.ts`
 

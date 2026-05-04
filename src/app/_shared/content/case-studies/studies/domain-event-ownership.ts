@@ -7,7 +7,7 @@ const domainEventOwnership: CaseStudy = {
     'Not every event belongs to an aggregate. Recognising the difference kept the domain honest.',
   badge: 'Architecture',
   summary:
-    'Ledger uses a durable event-driven architecture. Events are persisted for audit, cross-module communication, and failure replay, but aggregates are reconstituted from database snapshots, not event streams. That distinction created a question: if events are not the source of truth for state, does every event still need to flow through an aggregate? The answer was no, and formalising that boundary prevented a category of modelling mistakes.',
+    'Ledger uses a persist-first event-driven architecture. Events are persisted for audit, cross-module communication, and failure replay, but aggregates are reconstituted from database snapshots, not event streams. That distinction created a question: if events are not the source of truth for state, does every event still need to flow through an aggregate? The answer was no, and formalising that boundary prevented a category of modelling mistakes.',
   sections: [
     {
       heading: 'The orthodox position',
@@ -57,7 +57,7 @@ const domainEventOwnership: CaseStudy = {
     },
     {
       heading: 'Why not full event sourcing',
-      body: 'Full event sourcing would resolve the ownership question by requiring every event to flow through an aggregate. But it also requires aggregate reconstitution from event replay, a message broker for reliable delivery and projection rebuilds, and snapshot strategies for long-lived aggregates. The infrastructure cost is not justified at this scale. The current architecture (durable event persistence with database-backed aggregate state) provides the audit trail and cross-module decoupling benefits without the operational overhead. The IEventBus interface preserves the upgrade path if the system grows into it.',
+      body: 'Full event sourcing would resolve the ownership question by requiring every event to flow through an aggregate. But it also requires aggregate reconstitution from event replay, a message broker for reliable delivery and projection rebuilds, and snapshot strategies for long-lived aggregates. The infrastructure cost is not justified at this scale. The current architecture (persist-first event dispatch with database-backed aggregate state) provides the audit trail and cross-module decoupling benefits without the operational overhead. The IEventBus interface preserves the upgrade path if the system grows into it.',
     },
   ],
 };

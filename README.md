@@ -12,8 +12,6 @@ A portfolio project built to production-grade standards. Not to compete with Min
 |---|---|
 | **Live demo** | [ledger-production.up.railway.app](https://ledger-production.up.railway.app/) |
 | **Architecture doc** | [docs/architecture.md](./docs/architecture.md) |
-| **Case studies** | [Server actions as transport](https://ledger-production.up.railway.app/case-studies/trpc-vs-server-actions), [Nuxt to Next.js](https://ledger-production.up.railway.app/case-studies/nuxt-to-nextjs) |
-| **Source** | [github.com/ctsmith2308/ledger](https://github.com/ctsmith2308/ledger) |
 
 ---
 
@@ -62,7 +60,7 @@ Fill in the required values in `.env`:
 | `POSTGRES_DB` | Postgres database name (default: `ledger`) |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL (feature flag cache, rate limiting) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
-| `QSTASH_URL` | QStash URL for durable event bus delivery |
+| `QSTASH_URL` | QStash URL for async event processing |
 | `QSTASH_TOKEN` | QStash authentication token |
 | `QSTASH_CURRENT_SIGNING_KEY` | QStash webhook signature verification (current key) |
 | `QSTASH_NEXT_SIGNING_KEY` | QStash webhook signature verification (next rotation key) |
@@ -134,7 +132,7 @@ App runs at [http://localhost:3000](http://localhost:3000).
 | `npm run prisma:seed` | Seed users, budgets, and feature flags |
 | `npm run prisma:seed:demo` | Seed Plaid sandbox data |
 | `npm run prisma:reset` | Reset database and run migrations |
-| `npm run prisma:reset:full` | Reset + migrate + seed + seed demo |
+| `npm run prisma:reset:full` | Reset + migrate + seed demo |
 | `npm run prisma:migrate:deploy` | Deploy migrations (non-interactive, for CI/CD) |
 | `npm run test:e2e` | Run Playwright end-to-end tests |
 | `npm run test:e2e:ui` | Run Playwright e2e tests with UI |
@@ -205,7 +203,7 @@ The full written record of every decision and experiment lives in **[docs/archit
 
 - **CQRS with typed command and query buses.** Phantom types, Module composition roots, return type inference without explicit generics
 - **Modular monolith.** Domain boundaries enforced at the module level (identity, banking, transactions, budgets), no premature service extraction
-- **Domain-Driven Design (lite).** Aggregates, value objects, domain events, repository interfaces, and a durable event bus (Postgres-backed, persist-first)
+- **Domain-Driven Design (lite).** Aggregates, value objects, domain events, repository interfaces, and Postgres-backed event persistence with QStash async processing
 - **Feature-Sliced Design (lite).** One-way dependency rules without the full FSD specification overhead
 - **Server actions via next-safe-action.** `actionClient` with `.use()` middleware chaining, single catch boundary via `handleServerError`, consistent error shape
 - **TOTP-based MFA.** Two-step login flow with type-based JWT signing (`JWT_TYPE.ACCESS`, `JWT_TYPE.MFA_CHALLENGE`)
@@ -232,7 +230,8 @@ src/
         bus/                 # Command, Query base classes, IEventBus interface
         constants/           # FEATURE_KEYS, USER_TIERS, JWT_TYPE, ERROR_CODES, event types
         exceptions/          # typed domain exceptions
-        services/            # IJwtService, IObservabilityService, IFeatureFlagRepository
+        repositories/        # IFeatureFlagRepository
+        services/            # IJwtService, IObservabilityService, IIdGenerator, IFeatureFlagCacheService
       infrastructure/
         bus/                 # CommandBus, QueryBus, EventBus, InProcessEventBus
         cache/               # UpstashFeatureFlagCache
@@ -240,6 +239,7 @@ src/
         repositories/        # FeatureFlagRepository
         services/            # JwtService, IdGenerator, ObservabilityService
         utils/               # toErrorResponse, logger
+  tests/                     # Playwright e2e tests
   proxy.ts                   # JWT verification, protects dashboard routes
   instrumentation.ts         # OpenTelemetry SDK init
 
@@ -252,8 +252,8 @@ src/
         rate-limit/          # Upstash rate limiter
         formatters/          # format-category
         tailwind/            # cn utility
-      routes/                # ROUTES constant
-      content/               # architecture decisions, case studies (portfolio content)
+      routes/              # ROUTES constant
+      content/             # architecture decisions, case studies (portfolio content)
     _entities/               # data access layer by domain
     _features/               # feature modules (hooks, UI, schemas)
     _widgets/                # compositional UI blocks that assemble features into page sections
@@ -261,7 +261,7 @@ src/
     _providers/              # ThemeProvider, QueryProvider
     (public)/                # landing page, architecture, case studies
     (auth)/                  # login, register, MFA
-    (dashboard)/             # overview, transactions, budgets, accounts
+    (dashboard)/             # overview, transactions, budgets, accounts, spending-habits
     (account)/               # settings
     api/                     # route handlers
 

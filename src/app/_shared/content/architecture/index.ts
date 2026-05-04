@@ -7,7 +7,7 @@ import { serverActions } from './decisions/server-actions';
 import { fsdFrontend } from './decisions/fsd-frontend';
 import { cqrsReadModel } from './decisions/cqrs-read-model';
 import { eventHandlerOrdering } from './decisions/event-handler-ordering';
-import { durableEventBus } from './decisions/durable-event-bus';
+import { persistFirstEventDispatch } from './decisions/persist-first-event-dispatch';
 import { jwtAuth } from './decisions/jwt-auth';
 import { mfa } from './decisions/mfa';
 import { featureFlags } from './decisions/feature-flags';
@@ -22,7 +22,7 @@ const decisions: ArchitectureDecision[] = [
   cqrsCommandBus,
   cqrsReadModel,
   eventBus,
-  durableEventBus,
+  persistFirstEventDispatch,
   eventHandlerOrdering,
   jwtAuth,
   mfa,

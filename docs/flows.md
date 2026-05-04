@@ -6,7 +6,7 @@ Visual diagrams of the key data flows and architectural boundaries in Ledger. Re
 
 ## Transaction Sync --> Event --> Read Model --> Budget Check
 
-The full end-to-end flow when a user syncs transactions from Plaid. Shows the durable event bus persisting to the event store, sequential handler dispatch, read model materialisation, and budget breach detection.
+The full end-to-end flow when a user syncs transactions from Plaid. Shows persist-first event dispatch to the event store, sequential handler dispatch, read model materialisation, and budget breach detection.
 
 ```mermaid
 sequenceDiagram
@@ -330,7 +330,7 @@ sequenceDiagram
 
 ## Feature Flag Flow
 
-Feature flags are cached per-user in Upstash on login. The `withFeatureFlag` middleware checks the cache on every gated action. On cache miss, it falls back to the database and repopulates the cache.
+Feature flags follow a cache-aside pattern. The `withFeatureFlag` middleware checks the Upstash cache on every gated action. On cache miss (first access, TTL expired, or invalidated), it falls back to the database and repopulates the cache.
 
 ```mermaid
 flowchart TD
@@ -366,7 +366,13 @@ Summary of all domain events, their ownership pattern, and dispatch origin.
 | `UserProfileUpdatedEvent` | `UserProfile.updateName()` / `UserProfile.save()` | Aggregate-raised |
 | `MfaEnabledEvent` | `User.confirmMfa()` | Aggregate-raised |
 | `MfaDisabledEvent` | `User.disableMfa()` | Aggregate-raised |
+| `BankAccountLinkedEvent` | `PlaidItem.create()` | Aggregate-raised |
+| `BudgetCreatedEvent` | `Budget.create()` | Aggregate-raised |
+| `TransactionCreatedEvent` | `Transaction.create()` | Aggregate-raised |
 | `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
 | `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
 | `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |
+| `BankAccountUnlinkedEvent` | `UnlinkBankHandler` | Handler-dispatched |
+| `BudgetExceededEvent` | `recordSpend` event handler | Handler-dispatched |
+| `BudgetThresholdReachedEvent` | `recordSpend` event handler | Handler-dispatched |
 | `SyncMismatchEvent` | `SyncTransactionsHandler` | Handler-dispatched |

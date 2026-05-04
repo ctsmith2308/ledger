@@ -1,8 +1,8 @@
 import { type ArchitectureDecision } from '../types';
 
-const durableEventBus: ArchitectureDecision = {
-  slug: 'durable-event-bus',
-  title: 'Durable event bus with async dispatch',
+const persistFirstEventDispatch: ArchitectureDecision = {
+  slug: 'persist-first-event-dispatch',
+  title: 'Persist-first event dispatch with async processing',
   subtitle:
     'Every event hits Postgres before any handler runs. QStash handles async delivery.',
   badge: 'Infrastructure',
@@ -97,4 +97,4 @@ GROUP BY event_type;`,
   ],
 };
 
-export { durableEventBus };
+export { persistFirstEventDispatch };
