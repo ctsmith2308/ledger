@@ -1,10 +1,6 @@
-import { redirect } from 'next/navigation';
-
 import Link from 'next/link';
 
 import { ArrowRight } from 'lucide-react';
-
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 import { identityService } from '@/core/modules/identity';
 
@@ -12,15 +8,9 @@ import { bankingService } from '@/core/modules/banking';
 
 import { transactionsService } from '@/core/modules/transactions';
 
-import { DomainException } from '@/core/shared/domain';
-
 import { ROUTES } from '@/app/_shared/routes';
 
-import { getQueryClient } from '@/app/_shared/lib/query';
-
-import { queryKeys } from '@/app/_shared/lib/query/query-keys';
-
-import { AuthManager } from '@/app/_shared/lib/session';
+import { loadSession } from '@/app/_shared/lib/session/session.service';
 
 import { calcTotalsByType } from '@/app/_entities/banking/lib';
 
@@ -40,31 +30,19 @@ import { SpendingDoughnut } from '@/app/_features/transactions';
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
 const loadOverviewData = async () => {
-  try {
-    const queryClient = getQueryClient();
-    const { userId } = await AuthManager.getSession();
+  const session = await loadSession();
 
-    const [account, accounts, transactions] = await Promise.all([
-      identityService.getUserAccount(userId),
-      bankingService.getAccounts(userId),
-      transactionsService.getTransactions(userId),
-    ]);
+  const [account, accounts, transactions] = await Promise.all([
+    identityService.getUserAccount(session.userId),
+    bankingService.getAccounts(session.userId),
+    transactionsService.getTransactions(session.userId),
+  ]);
 
-    queryClient.setQueryData(queryKeys.userAccount, account);
-
-    queryClient.setQueryData(queryKeys.featureFlags, account.features);
-
-    return { queryClient, account, accounts, transactions };
-  } catch (error) {
-    if (error instanceof DomainException) redirect('/login');
-
-    throw error;
-  }
+  return { account, accounts, transactions };
 };
 
 async function OverviewPage() {
-  const { queryClient, account, accounts, transactions } =
-    await loadOverviewData();
+  const { account, accounts, transactions } = await loadOverviewData();
 
   const hasAccounts = accounts.length > 0;
   const monthlyByCategory = calcMonthlySpendingByCategory(transactions);
@@ -72,84 +50,82 @@ async function OverviewPage() {
   const accountTotals = calcTotalsByType(accounts);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <PageContainer>
-        <PageHeader
-          title={`Welcome back, ${account.firstName}`}
-          description="Here's a summary of your finances."
-        />
+    <PageContainer>
+      <PageHeader
+        title={`Welcome back, ${account.firstName}`}
+        description="Here's a summary of your finances."
+      />
 
-        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold text-foreground">
-              This Week&apos;s Spending
-            </h2>
+      <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            This Week&apos;s Spending
+          </h2>
 
-            <SpendingDoughnut data={hasAccounts ? weeklyByCategory : []} />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Monthly Spending
-              </h2>
-
-              <Link
-                href={ROUTES.spendingHabits}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                View all
-                <ArrowRight className="size-3" />
-              </Link>
-            </div>
-
-            <SpendingDoughnut data={hasAccounts ? monthlyByCategory : []} />
-          </div>
+          <SpendingDoughnut data={hasAccounts ? weeklyByCategory : []} />
         </div>
 
-        {!hasAccounts && <ConnectAccountCard />}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">
+              Monthly Spending
+            </h2>
 
-        {hasAccounts && (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Recent Transactions
-              </h2>
-
-              <Link
-                href={ROUTES.transactions}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                View all
-                <ArrowRight className="size-3" />
-              </Link>
-            </div>
-
-            <TransactionList transactions={transactions.slice(0, 10)} />
+            <Link
+              href={ROUTES.spendingHabits}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              View all
+              <ArrowRight className="size-3" />
+            </Link>
           </div>
-        )}
 
-        {hasAccounts && (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Account Totals
-              </h2>
+          <SpendingDoughnut data={hasAccounts ? monthlyByCategory : []} />
+        </div>
+      </div>
 
-              <Link
-                href={ROUTES.accounts}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                View all
-                <ArrowRight className="size-3" />
-              </Link>
-            </div>
+      {!hasAccounts && <ConnectAccountCard />}
 
-            <AccountTotalsTable totals={accountTotals} limit={4} />
+      {hasAccounts && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">
+              Recent Transactions
+            </h2>
+
+            <Link
+              href={ROUTES.transactions}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              View all
+              <ArrowRight className="size-3" />
+            </Link>
           </div>
-        )}
-      </PageContainer>
-    </HydrationBoundary>
+
+          <TransactionList transactions={transactions.slice(0, 10)} />
+        </div>
+      )}
+
+      {hasAccounts && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">
+              Account Totals
+            </h2>
+
+            <Link
+              href={ROUTES.accounts}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              View all
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
+
+          <AccountTotalsTable totals={accountTotals} limit={4} />
+        </div>
+      )}
+    </PageContainer>
   );
 }
 

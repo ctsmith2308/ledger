@@ -29,8 +29,6 @@ import {
   VerifyMfaLoginHandler,
   DisableMfaCommand,
   DisableMfaHandler,
-  RefreshSessionCommand,
-  RefreshSessionHandler,
   GetUserAccountQuery,
   GetUserAccountHandler,
 } from '../application';
@@ -77,10 +75,8 @@ class IdentityModule {
       LoginUserCommand,
       new LoginUserHandler(
         repos.userRepository,
-        repos.userSessionRepository,
         services.eventBus,
         services.passwordHasher,
-        services.idGenerator,
       ),
     );
 
@@ -133,21 +129,14 @@ class IdentityModule {
       VerifyMfaLoginCommand,
       new VerifyMfaLoginHandler(
         repos.userRepository,
-        repos.userSessionRepository,
         services.eventBus,
         TotpService,
-        services.idGenerator,
       ),
     );
 
     commandBus.register(
       DisableMfaCommand,
       new DisableMfaHandler(repos.userRepository, services.eventBus),
-    );
-
-    commandBus.register(
-      RefreshSessionCommand,
-      new RefreshSessionHandler(repos.userSessionRepository),
     );
 
     queryBus.register(

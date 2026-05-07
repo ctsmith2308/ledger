@@ -1,15 +1,29 @@
-import {
-  type LoginSuccessDTO,
-  type MfaChallengeDTO,
-} from '../identity.dto';
+import { JWT_TYPE, JWT_TTL, type JwtType } from '@/core/shared/domain';
+
+import { type LoginResult } from '../../application';
+
+import { type LoginResponseDTO } from '../identity.dto';
+
+type SigningParams = {
+  userId: string;
+  purpose: JwtType;
+  ttl: string;
+};
 
 const LoginMapper = {
-  toSuccessDTO(token: string, sessionId: string): LoginSuccessDTO {
-    return { type: 'SUCCESS', token, sessionId };
+  toSigningParams(loginResult: LoginResult): SigningParams {
+    const userId = loginResult.user.id.value;
+    const isSuccess = loginResult.type === 'SUCCESS';
+
+    return {
+      userId,
+      purpose: isSuccess ? JWT_TYPE.ACCESS : JWT_TYPE.MFA_CHALLENGE,
+      ttl: isSuccess ? JWT_TTL.ACCESS : JWT_TTL.MFA_CHALLENGE,
+    };
   },
 
-  toMfaChallengeDTO(token: string): MfaChallengeDTO {
-    return { type: 'MFA_REQUIRED', token };
+  toDTO(type: LoginResult['type'], token: string): LoginResponseDTO {
+    return { type, token };
   },
 };
 

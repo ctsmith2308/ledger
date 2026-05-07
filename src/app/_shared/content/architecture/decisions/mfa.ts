@@ -40,26 +40,18 @@ if (user.mfaEnabled) {
 }
 
 user.loggedIn();
-// Create session on SUCCESS
-const sessionId = SessionId.from(this.idGenerator.generate());
-const session = UserSession.create(sessionId, userId);
-await this.sessionRepository.save(session);
-
 const events = user.pullDomainEvents();
 await this.eventBus.dispatch(events);
-return Result.ok({ type: 'SUCCESS' as const, user, sessionId: sessionId.value });
+return Result.ok({ type: 'SUCCESS' as const, user });
 
 // IdentityService signs based on the union type
 const loginResult = result.getValueOrThrow();
 const userId = loginResult.user.id.value;
+const isSuccess = loginResult.type === 'SUCCESS';
+const type = isSuccess ? JWT_TYPE.ACCESS : JWT_TYPE.MFA_CHALLENGE;
+const ttl = isSuccess ? '15m' : '5m';
 
-if (loginResult.type === 'SUCCESS') {
-  const token = await this.jwtService.signAccess(userId);
-  return LoginMapper.toSuccessDTO(token, loginResult.sessionId);
-}
-
-const token = await this.jwtService.signChallenge(userId);
-return LoginMapper.toMfaChallengeDTO(token);`,
+const token = await this.jwtService.sign(userId, type, ttl);`,
     },
     {
       label: 'MFA setup. Two-phase with aggregate-raised events',
@@ -104,11 +96,11 @@ await this.eventBus.dispatch(events);`,
     },
     {
       label: 'Challenge token flow. sessionStorage on the client',
-      code: `// Login action. SUCCESS sets both cookies, MFA_REQUIRED returns challenge
+      code: `// Login action. Both DTO types use a .token field
 const response = await identityService.loginUser(email, password);
 
 if (response.type === 'SUCCESS') {
-  await AuthManager.setSession(response.token, response.sessionId);
+  await setCookie(response.token);
   return;
 }
 return { challengeToken: response.token };

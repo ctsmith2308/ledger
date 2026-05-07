@@ -7,19 +7,26 @@ import { JWT_TYPE } from '@/core/shared/domain';
 import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
 import { toErrorResponse } from '@/core/shared/infrastructure';
 
-import { ACCESS_TOKEN } from '@/app/_shared/config/auth.config';
+const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
 async function GET(request: NextRequest) {
-  const token = request.cookies.get(ACCESS_TOKEN)?.value;
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const { sub: userId } = await JwtService.verify(token, JWT_TYPE.ACCESS);
+  const jwtResult = await JwtService.verify(token, JWT_TYPE.ACCESS);
 
-    const data = await budgetsService.getBudgetOverview(userId, new Date());
+  if (jwtResult.isFailure) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const data = await budgetsService.getBudgetOverview(
+      jwtResult.value,
+      new Date(),
+    );
 
     return NextResponse.json(data);
   } catch (error: unknown) {

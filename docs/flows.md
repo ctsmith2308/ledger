@@ -6,7 +6,7 @@ Visual diagrams of the key data flows and architectural boundaries in Ledger. Re
 
 ## Transaction Sync --> Event --> Read Model --> Budget Check
 
-The full end-to-end flow when a user syncs transactions from Plaid. Shows persist-first event dispatch to the event store, sequential handler dispatch, read model materialisation, and budget breach detection.
+The full end-to-end flow when a user syncs transactions from Plaid. Shows the durable event bus persisting to the event store, sequential handler dispatch, read model materialisation, and budget breach detection.
 
 ```mermaid
 sequenceDiagram
@@ -193,7 +193,7 @@ sequenceDiagram
 
 ## Auth Flow -- Login (No MFA)
 
-When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, creates a `UserSession` in Postgres, and `IdentityService` signs the JWT. The action sets both cookies via `AuthManager.setSession()`. Feature flags are loaded lazily by the `withFeatureFlag` middleware on the first gated action, not at login time.
+When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, and `IdentityService` signs the JWT. The action sets the cookie directly. Feature flags are loaded lazily by the `withFeatureFlag` middleware on the first gated action, not at login time.
 
 ```mermaid
 sequenceDiagram
@@ -212,14 +212,13 @@ sequenceDiagram
     LH->>DB: userRepository.findByEmail
     LH->>LH: verify password hash
     LH->>LH: user.loggedIn()
-    LH->>DB: sessionRepository.save(session)
     Note over LH: UserLoggedInEvent (aggregate-raised)
     LH->>LH: user.pullDomainEvents()
     LH->>EB: dispatch(events)
-    LH-->>SVC: Result.ok({ type: SUCCESS, user, sessionId })
-    SVC->>SVC: jwtService.signAccess(userId)
-    SVC-->>SA: { type: SUCCESS, token, sessionId }
-    SA->>SA: AuthManager.setSession(token, sessionId)
+    LH-->>SVC: Result.ok({ type: SUCCESS, user })
+    SVC->>SVC: jwtService.sign(userId, access, 15m)
+    SVC-->>SA: { type: SUCCESS, token }
+    SA->>SA: setCookie(token)
     SA-->>UI: redirect /overview
 ```
 
@@ -249,7 +248,7 @@ sequenceDiagram
     LH->>LH: verify password hash
     LH->>LH: user.mfaEnabled == true
     LH-->>SVC: Result.ok({ type: MFA_REQUIRED, user })
-    SVC->>SVC: jwtService.signChallenge(userId)
+    SVC->>SVC: jwtService.sign(userId, mfa_challenge, 5m)
     SVC-->>SA: { type: MFA_REQUIRED, token }
     SA-->>UI: { challengeToken: token }
     UI->>UI: sessionStorage.set(challengeToken)
@@ -264,14 +263,13 @@ sequenceDiagram
     VH->>DB: userRepository.findById
     VH->>VH: totpService.verify(secret, code)
     VH->>VH: user.loggedIn()
-    VH->>DB: sessionRepository.save(session)
     Note over VH: UserLoggedInEvent (aggregate-raised)
     VH->>VH: user.pullDomainEvents()
     VH->>EB: dispatch(events)
-    VH-->>SVC: Result.ok({ type: SUCCESS, user, sessionId })
-    SVC->>SVC: jwtService.signAccess(userId)
-    SVC-->>SA: { token, sessionId }
-    SA->>SA: AuthManager.setSession(token, sessionId)
+    VH-->>SVC: Result.ok(user)
+    SVC->>SVC: jwtService.sign(userId, access, 15m)
+    SVC-->>SA: { token }
+    SA->>SA: setCookie(token)
     SA-->>UI: redirect /overview
 ```
 
@@ -332,7 +330,7 @@ sequenceDiagram
 
 ## Feature Flag Flow
 
-Feature flags follow a cache-aside pattern. The `withFeatureFlag` middleware checks the Upstash cache on every gated action. On cache miss (first access, TTL expired, or invalidated), it falls back to the database and repopulates the cache.
+Feature flags are cached per-user in Upstash on login. The `withFeatureFlag` middleware checks the cache on every gated action. On cache miss, it falls back to the database and repopulates the cache.
 
 ```mermaid
 flowchart TD
@@ -368,13 +366,7 @@ Summary of all domain events, their ownership pattern, and dispatch origin.
 | `UserProfileUpdatedEvent` | `UserProfile.updateName()` / `UserProfile.save()` | Aggregate-raised |
 | `MfaEnabledEvent` | `User.confirmMfa()` | Aggregate-raised |
 | `MfaDisabledEvent` | `User.disableMfa()` | Aggregate-raised |
-| `BankAccountLinkedEvent` | `PlaidItem.create()` | Aggregate-raised |
-| `BudgetCreatedEvent` | `Budget.create()` | Aggregate-raised |
-| `TransactionCreatedEvent` | `Transaction.create()` | Aggregate-raised |
 | `LoginFailedEvent` | `LoginUserHandler` | Handler-dispatched |
 | `UserLoggedOutEvent` | `LogoutUserHandler` | Handler-dispatched |
 | `AccountDeletedEvent` | `DeleteAccountHandler` | Handler-dispatched |
-| `BankAccountUnlinkedEvent` | `UnlinkBankHandler` | Handler-dispatched |
-| `BudgetExceededEvent` | `recordSpend` event handler | Handler-dispatched |
-| `BudgetThresholdReachedEvent` | `recordSpend` event handler | Handler-dispatched |
 | `SyncMismatchEvent` | `SyncTransactionsHandler` | Handler-dispatched |
