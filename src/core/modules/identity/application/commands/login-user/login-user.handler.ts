@@ -1,7 +1,6 @@
 import {
   IHandler,
   IEventBus,
-  IIdGenerator,
   InvalidEmailException,
   InvalidPasswordException,
   Result,
@@ -11,10 +10,6 @@ import {
   Email,
   IPasswordHasher,
   IUserRepository,
-  IUserSessionRepository,
-  UserSession,
-  SessionId,
-  UserId,
   Password,
   LoginFailedEvent,
 } from '@/core/modules/identity/domain';
@@ -30,14 +25,9 @@ import { LoginUserCommand, LoginUserResponse } from './login-user.command';
  * error so attackers cannot distinguish the two from the response.
  *
  * MFA branching: if the user has MFA enabled, returns MFA_REQUIRED without
- * calling user.loggedIn() or creating a session. The login event and session
- * creation only fire on a full successful authentication (password + optional
- * MFA). The service layer signs a challenge token for MFA_REQUIRED and an
- * access token for SUCCESS.
- *
- * Session creation: on SUCCESS, persists a UserSession to Postgres. The
- * session ID is returned to the service layer, which includes it in the
- * response DTO for the action to set as the refresh cookie.
+ * calling user.loggedIn(). The login event only fires on a full successful
+ * authentication (password + optional MFA). The service layer signs a
+ * challenge token for MFA_REQUIRED and an access token for SUCCESS.
  */
 class LoginUserHandler implements IHandler<
   LoginUserCommand,
@@ -45,10 +35,8 @@ class LoginUserHandler implements IHandler<
 > {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly sessionRepository: IUserSessionRepository,
     private readonly eventBus: IEventBus,
     private readonly hasher: IPasswordHasher,
-    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(command: LoginUserCommand): Promise<LoginUserResponse> {
@@ -89,19 +77,10 @@ class LoginUserHandler implements IHandler<
 
     user.loggedIn();
 
-    const sessionId = SessionId.from(this.idGenerator.generate());
-    const userId = UserId.from(user.id.value);
-    const session = UserSession.create(sessionId, userId);
-    await this.sessionRepository.save(session);
-
     const events = user.pullDomainEvents();
     await this.eventBus.dispatch(events);
 
-    return Result.ok({
-      type: 'SUCCESS' as const,
-      user,
-      sessionId: sessionId.value,
-    });
+    return Result.ok({ type: 'SUCCESS' as const, user });
   }
 }
 

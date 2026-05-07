@@ -6,7 +6,7 @@ import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
 import { withRateLimit } from '@/app/_shared/lib/next-safe-action/middleware/with-rate-limit';
 
-import { AuthManager } from '@/app/_shared/lib/session';
+import { setCookie } from '@/app/_shared/lib/session/session.service';
 
 import { loginUserSchema } from '../schema/login.schema';
 
@@ -21,8 +21,7 @@ const loginAction = actionClient
     );
 
     if (response.type === 'SUCCESS') {
-      await AuthManager.setSession(response.token, response.sessionId);
-
+      await setCookie(response.token);
       return;
     }
 

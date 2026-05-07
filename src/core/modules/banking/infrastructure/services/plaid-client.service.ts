@@ -6,24 +6,24 @@ import {
   CountryCode,
 } from 'plaid';
 
-import { PlaidErrorException } from '@/core/shared/domain';
-
 import {
   IPlaidClient,
   PlaidAccountData,
   PlaidSyncResult,
 } from '@/core/modules/banking/domain';
 
-type AxiosPlaidError = {
-  response: {
-    data: {
-      error_type: string;
-      error_code: string;
-      error_message: string;
-    };
-  };
-};
-
+/**
+ * Known gaps:
+ * - No error classification. Plaid returns typed errors (ITEM_LOGIN_REQUIRED,
+ *   INVALID_ACCESS_TOKEN, RATE_LIMIT_EXCEEDED) but callers receive a generic
+ *   PlaidErrorException. Retryable vs permanent vs re-auth errors should be
+ *   distinguished so the client can show the right UX.
+ *   See: https://plaid.com/docs/errors/
+ * - No retry or backoff for rate-limited (429) or transient (502/503) responses.
+ * - No access token refresh handling. If a token expires or is revoked,
+ *   the user must re-link via Plaid Link.
+ *   See: https://plaid.com/docs/link/update-mode/
+ */
 class PlaidClientService implements IPlaidClient {
   private constructor(private readonly plaidApi: PlaidApi) {}
 
@@ -54,24 +54,15 @@ class PlaidClientService implements IPlaidClient {
    * https://plaid.com/docs/api/link/#linktokencreate
    */
   async createLinkToken(userId: string): Promise<{ linkToken: string }> {
-    try {
-      const response = await this.plaidApi.linkTokenCreate({
-        user: { client_user_id: userId },
-        client_name: 'Ledger',
-        products: [Products.Transactions],
-        country_codes: [CountryCode.Us],
-        language: 'en',
-      });
+    const response = await this.plaidApi.linkTokenCreate({
+      user: { client_user_id: userId },
+      client_name: 'Ledger',
+      products: [Products.Transactions],
+      country_codes: [CountryCode.Us],
+      language: 'en',
+    });
 
-      return { linkToken: response.data.link_token };
-    } catch (error) {
-      const { error_type, error_code, error_message } =
-        (error as AxiosPlaidError).response.data;
-
-      throw new PlaidErrorException(
-        `[${error_type}] ${error_code}: ${error_message}`,
-      );
-    }
+    return { linkToken: response.data.link_token };
   }
 
   /**
@@ -84,23 +75,14 @@ class PlaidClientService implements IPlaidClient {
   async exchangePublicToken(
     publicToken: string,
   ): Promise<{ accessToken: string; itemId: string }> {
-    try {
-      const response = await this.plaidApi.itemPublicTokenExchange({
-        public_token: publicToken,
-      });
+    const response = await this.plaidApi.itemPublicTokenExchange({
+      public_token: publicToken,
+    });
 
-      return {
-        accessToken: response.data.access_token,
-        itemId: response.data.item_id,
-      };
-    } catch (error) {
-      const { error_type, error_code, error_message } =
-        (error as AxiosPlaidError).response.data;
-
-      throw new PlaidErrorException(
-        `[${error_type}] ${error_code}: ${error_message}`,
-      );
-    }
+    return {
+      accessToken: response.data.access_token,
+      itemId: response.data.item_id,
+    };
   }
 
   /**
@@ -111,30 +93,21 @@ class PlaidClientService implements IPlaidClient {
    * https://plaid.com/docs/api/accounts/#accountsget
    */
   async getAccounts(accessToken: string): Promise<PlaidAccountData[]> {
-    try {
-      const response = await this.plaidApi.accountsGet({
-        access_token: accessToken,
-      });
+    const response = await this.plaidApi.accountsGet({
+      access_token: accessToken,
+    });
 
-      return response.data.accounts.map((account) => ({
-        accountId: account.account_id,
-        name: account.name,
-        officialName: account.official_name ?? null,
-        mask: account.mask ?? null,
-        type: account.type,
-        subtype: account.subtype ?? null,
-        availableBalance: account.balances.available ?? null,
-        currentBalance: account.balances.current ?? null,
-        currencyCode: account.balances.iso_currency_code ?? null,
-      }));
-    } catch (error) {
-      const { error_type, error_code, error_message } =
-        (error as AxiosPlaidError).response.data;
-
-      throw new PlaidErrorException(
-        `[${error_type}] ${error_code}: ${error_message}`,
-      );
-    }
+    return response.data.accounts.map((account) => ({
+      accountId: account.account_id,
+      name: account.name,
+      officialName: account.official_name ?? null,
+      mask: account.mask ?? null,
+      type: account.type,
+      subtype: account.subtype ?? null,
+      availableBalance: account.balances.available ?? null,
+      currentBalance: account.balances.current ?? null,
+      currencyCode: account.balances.iso_currency_code ?? null,
+    }));
   }
 
   /**
@@ -149,34 +122,25 @@ class PlaidClientService implements IPlaidClient {
     accessToken: string,
     cursor?: string,
   ): Promise<PlaidSyncResult> {
-    try {
-      const response = await this.plaidApi.transactionsSync({
-        access_token: accessToken,
-        cursor: cursor || undefined,
-        options: {
-          include_personal_finance_category: true,
-        },
-      });
+    const response = await this.plaidApi.transactionsSync({
+      access_token: accessToken,
+      cursor: cursor || undefined,
+      options: {
+        include_personal_finance_category: true,
+      },
+    });
 
-      const data = response.data;
+    const data = response.data;
 
-      return {
-        added: data.added,
-        modified: data.modified,
-        removed: data.removed
-          .map((t) => t.transaction_id)
-          .filter((id): id is string => id !== undefined),
-        nextCursor: data.next_cursor,
-        hasMore: data.has_more,
-      };
-    } catch (error) {
-      const { error_type, error_code, error_message } =
-        (error as AxiosPlaidError).response.data;
-
-      throw new PlaidErrorException(
-        `[${error_type}] ${error_code}: ${error_message}`,
-      );
-    }
+    return {
+      added: data.added,
+      modified: data.modified,
+      removed: data.removed
+        .map((t) => t.transaction_id)
+        .filter((id): id is string => id !== undefined),
+      nextCursor: data.next_cursor,
+      hasMore: data.has_more,
+    };
   }
 
   /**
@@ -186,16 +150,7 @@ class PlaidClientService implements IPlaidClient {
    * https://plaid.com/docs/api/items/#itemremove
    */
   async itemRemove(accessToken: string): Promise<void> {
-    try {
-      await this.plaidApi.itemRemove({ access_token: accessToken });
-    } catch (error) {
-      const { error_type, error_code, error_message } =
-        (error as AxiosPlaidError).response.data;
-
-      throw new PlaidErrorException(
-        `[${error_type}] ${error_code}: ${error_message}`,
-      );
-    }
+    await this.plaidApi.itemRemove({ access_token: accessToken });
   }
 }
 

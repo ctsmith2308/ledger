@@ -8,7 +8,7 @@ import { withRateLimit } from '@/app/_shared/lib/next-safe-action/middleware/wit
 
 import { withMfaChallenge } from '@/app/_shared/lib/next-safe-action/middleware/with-mfa-challenge';
 
-import { AuthManager } from '@/app/_shared/lib/session';
+import { setCookie } from '@/app/_shared/lib/session/session.service';
 
 import { verifyMfaLoginSchema } from '../schema/verify-mfa.schema';
 
@@ -18,14 +18,12 @@ const verifyMfaLoginAction = actionClient
   .use(withMfaChallenge)
   .inputSchema(verifyMfaLoginSchema)
   .action(async ({ ctx, parsedInput }) => {
-    const response = await identityService.verifyMfaLogin(
+    const { token } = await identityService.verifyMfaLogin(
       ctx.userId,
       parsedInput.totpCode,
     );
 
-    if (response.type === 'SUCCESS') {
-      await AuthManager.setSession(response.token, response.sessionId);
-    }
+    await setCookie(token);
   });
 
 export { verifyMfaLoginAction };
