@@ -55,12 +55,15 @@ class PlaidClientService implements IPlaidClient {
    */
   async createLinkToken(userId: string): Promise<{ linkToken: string }> {
     try {
+      const webhookUrl = process.env.PLAID_WEBHOOK_URL;
+
       const response = await this.plaidApi.linkTokenCreate({
         user: { client_user_id: userId },
         client_name: 'Ledger',
         products: [Products.Transactions],
         country_codes: [CountryCode.Us],
         language: 'en',
+        ...(webhookUrl && { webhook: webhookUrl }),
       });
 
       return { linkToken: response.data.link_token };

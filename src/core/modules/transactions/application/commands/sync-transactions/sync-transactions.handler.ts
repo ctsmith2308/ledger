@@ -1,9 +1,16 @@
 import { Transaction as PlaidSDKTransaction } from 'plaid';
 
-import { IHandler, IEventBus, Result, DomainEvent } from '@/core/shared/domain';
+import {
+  type IHandler,
+  type IEventBus,
+  Result,
+  type DomainEvent,
+  PlaidErrorException,
+} from '@/core/shared/domain';
 
 import {
-  ITransactionRepository,
+  type ICategoryRollupRepository,
+  type ITransactionRepository,
   Transaction,
   SyncMismatchEvent,
 } from '@/core/modules/transactions/domain';
@@ -31,10 +38,15 @@ import {
  * re-process the same batch. Prisma's upsert on save handles this
  * idempotently.
  *
+ * Rollups: category rollups are upserted inline after saving added and
+ * modified transactions. This keeps the read model in sync without
+ * depending on async event delivery (QStash). Events still fire for
+ * cross-module consumers (budget threshold checks).
+ *
  * Event dispatch: events are collected per batch and dispatched after all
- * operations complete. TransactionCreatedEvent drives rollup materialization
- * and budget threshold checks. SyncMismatchEvent fires when Plaid reports
- * a modification for a transaction not in the DB (data fell out of sync).
+ * operations complete. TransactionCreatedEvent drives budget threshold
+ * checks. SyncMismatchEvent fires when Plaid reports a modification for
+ * a transaction not in the DB (data fell out of sync).
  */
 class SyncTransactionsHandler implements IHandler<
   SyncTransactionsCommand,
@@ -43,6 +55,7 @@ class SyncTransactionsHandler implements IHandler<
   constructor(
     private readonly plaidItemRepository: IPlaidItemRepository,
     private readonly transactionRepository: ITransactionRepository,
+    private readonly rollupRepository: ICategoryRollupRepository,
     private readonly plaidClient: IPlaidClient,
     private readonly eventBus: IEventBus,
   ) {}
@@ -50,68 +63,81 @@ class SyncTransactionsHandler implements IHandler<
   async execute(
     command: SyncTransactionsCommand,
   ): Promise<SyncTransactionsResponse> {
-    const items = await this.plaidItemRepository.findByUserId(command.userId);
+    try {
+      const items = await this.plaidItemRepository.findByUserId(
+        command.userId,
+      );
 
-    let added = 0;
-    let modified = 0;
-    let removed = 0;
+      let added = 0;
+      let modified = 0;
+      let removed = 0;
 
-    for (const item of items) {
-      let currentCursor = item.cursor;
-      let hasMore = true;
+      for (const item of items) {
+        let currentCursor = item.cursor;
+        let hasMore = true;
 
-      /**
-       * Plaid returns transactions in pages. Each response includes a
-       * next_cursor and a hasMore flag. We loop until hasMore is false,
-       * processing added/modified/removed in each batch and advancing
-       * the cursor after each page. This ensures large backlogs (initial
-       * sync or long gaps between syncs) are fully consumed without
-       * missing transactions mid-stream.
-       */
-      while (hasMore) {
-        const syncResult = await this.plaidClient.syncTransactions(
-          item.accessToken,
-          currentCursor,
-        );
-
-        const batchEvents: DomainEvent[] = [];
-        const promises: Promise<void>[] = [];
-
-        if (syncResult.removed.length > 0) {
-          promises.push(this._handleRemoved(syncResult.removed));
-        }
-
-        if (syncResult.added.length > 0) {
-          promises.push(
-            this._handleAdded(syncResult.added, item.userId, batchEvents),
+        /**
+         * Plaid returns transactions in pages. Each response includes a
+         * next_cursor and a hasMore flag. We loop until hasMore is false,
+         * processing added/modified/removed in each batch and advancing
+         * the cursor after each page. This ensures large backlogs (initial
+         * sync or long gaps between syncs) are fully consumed without
+         * missing transactions mid-stream.
+         */
+        while (hasMore) {
+          const syncResult = await this.plaidClient.syncTransactions(
+            item.accessToken,
+            currentCursor,
           );
-        }
 
-        if (syncResult.modified.length > 0) {
-          promises.push(
-            this._handleModified(syncResult.modified, item.userId, batchEvents),
+          const batchEvents: DomainEvent[] = [];
+          const promises: Promise<void>[] = [];
+
+          if (syncResult.removed.length > 0) {
+            promises.push(this._handleRemoved(syncResult.removed));
+          }
+
+          if (syncResult.added.length > 0) {
+            promises.push(
+              this._handleAdded(syncResult.added, item.userId, batchEvents),
+            );
+          }
+
+          if (syncResult.modified.length > 0) {
+            promises.push(
+              this._handleModified(
+                syncResult.modified,
+                item.userId,
+                batchEvents,
+              ),
+            );
+          }
+
+          await Promise.all(promises);
+
+          added += syncResult.added.length;
+          modified += syncResult.modified.length;
+          removed += syncResult.removed.length;
+
+          currentCursor = syncResult.nextCursor;
+
+          await this.plaidItemRepository.updateCursor(
+            item.id,
+            currentCursor,
           );
+
+          if (batchEvents.length > 0) {
+            await this.eventBus.dispatch(batchEvents);
+          }
+
+          hasMore = syncResult.hasMore;
         }
-
-        await Promise.all(promises);
-
-        added += syncResult.added.length;
-        modified += syncResult.modified.length;
-        removed += syncResult.removed.length;
-
-        currentCursor = syncResult.nextCursor;
-
-        await this.plaidItemRepository.updateCursor(item.id, currentCursor);
-
-        if (batchEvents.length > 0) {
-          await this.eventBus.dispatch(batchEvents);
-        }
-
-        hasMore = syncResult.hasMore;
       }
-    }
 
-    return Result.ok({ added, modified, removed });
+      return Result.ok({ added, modified, removed });
+    } catch (error) {
+      return Result.fail(error as PlaidErrorException);
+    }
   }
 
   private async _handleRemoved(removed: string[]): Promise<void> {
@@ -126,6 +152,8 @@ class SyncTransactionsHandler implements IHandler<
     const transactions = _mapToTransactions(added, userId);
 
     await this.transactionRepository.saveMany(transactions);
+
+    await this._upsertRollups(transactions);
 
     for (const transaction of transactions) {
       batchEvents.push(...transaction.pullDomainEvents());
@@ -173,9 +201,34 @@ class SyncTransactionsHandler implements IHandler<
 
     if (updated.length > 0) {
       await this.transactionRepository.saveMany(updated);
+
+      await this._upsertRollups(updated);
+    }
+  }
+
+  private async _upsertRollups(
+    transactions: Transaction[],
+  ): Promise<void> {
+    for (const txn of transactions) {
+      const category = txn.category ?? 'Uncategorized';
+      const period = _formatPeriod(txn.date);
+
+      await this.rollupRepository.upsert(
+        txn.userId,
+        category,
+        period,
+        Math.round(txn.amount * 100),
+      );
     }
   }
 }
+
+const _formatPeriod = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+
+  return `${year}-${month}`;
+};
 
 const _mapToTransactions = (
   added: PlaidSDKTransaction[],

@@ -48,7 +48,7 @@ class ExchangePublicTokenHandler
       const { accessToken, itemId } =
         await this.plaidClient.exchangePublicToken(command.publicToken);
 
-      const plaidItem = PlaidItem.link(
+      const plaidItem = PlaidItem.create(
         itemId,
         command.userId,
         accessToken,

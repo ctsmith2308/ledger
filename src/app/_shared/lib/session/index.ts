@@ -1,1 +1,1 @@
-export { AuthManager, type AuthSession } from './auth-manager';
+export { AuthManager } from './auth-manager';

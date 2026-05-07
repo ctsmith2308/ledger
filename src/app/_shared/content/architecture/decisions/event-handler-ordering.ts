@@ -7,13 +7,13 @@ const eventHandlerOrdering: ArchitectureDecision = {
     'Registration order is implicit coupling. It works because processing is sequential. An explicit event chain would make the dependency visible.',
   badge: 'Infrastructure',
   context:
-    'When a `TransactionCreated` event fires, two handlers respond: `updateCategoryRollup` (transactions module) materialises the read model, and `recordSpend` (budgets module) checks the rollup against budget limits to detect threshold breaches. The second handler depends on the first having completed because it reads from the rollup that the first handler writes. Running them in parallel would create a race condition where `recordSpend` reads stale data.',
+    'When a `TransactionCreated` event fires, the budgets module\'s `recordSpend` handler checks the rollup against budget limits to detect threshold breaches. The rollup was previously materialised by a separate event handler (`updateCategoryRollup`) that had to run first — creating an implicit ordering dependency. This was resolved by moving rollup upserts inline into the sync handler, so the rollup is always fresh before events dispatch.',
   decision:
-    'The `EventBus.process()` method runs handlers sequentially in registration order. The transactions module registers `updateCategoryRollup` before the budgets module registers `recordSpend`, so the rollup is always fresh when the spend check runs. This is an implicit ordering guarantee. It works because module initialisation order is deterministic and controlled in the composition root.',
+    'Category rollups are now upserted inline during sync, before events dispatch. The `recordSpend` handler (budgets module) is the only remaining `TransactionCreated` subscriber and reads from a rollup that is guaranteed to be current. The previous implicit ordering dependency between two event handlers no longer exists.',
   rationale: [
-    'Sequential processing eliminates the race condition. The rollup write completes before the spend check reads.',
-    'Registration order is deterministic. Modules initialise in a fixed order in the composition root. The dependency is implicit but stable.',
-    'If the ordering needs to become explicit, the extraction path is to introduce an intermediate event (`rollup.updated`) so each handler reacts to its actual precondition.',
+    'Inline rollup upserts guarantee the read model is current before events dispatch. No race condition possible.',
+    'The event bus still processes handlers sequentially, which matters if multiple cross-module handlers subscribe to the same event in the future.',
+    'The previous extraction path (intermediate `rollup.updated` event) is no longer needed since the ordering dependency was eliminated at the source.',
   ],
   tradeoffs: [
     {
@@ -41,14 +41,18 @@ async process(event: DomainEvent, recordId: string): Promise<void> {
 }`,
     },
     {
-      label: 'Registration order. Transactions before budgets',
-      code: `// transactions/api/index.ts registers first
-eventBus.register(
-  TransactionEvents.TRANSACTION_CREATED,
-  createUpdateCategoryRollupHandler(repos.categoryRollupRepository),
-);
+      label: 'Inline rollup eliminates ordering dependency',
+      code: `// SyncTransactionsHandler: upserts rollups inline after saving
+await this.transactionRepository.saveMany(transactions);
+await this._upsertRollups(transactions);
 
-// budgets/api/index.ts registers second, reads from fresh rollup
+// Events dispatch AFTER rollups are written
+if (batchEvents.length > 0) {
+  await this.eventBus.dispatch(batchEvents);
+}
+
+// budgets/api/index.ts — only remaining subscriber
+// Reads from a rollup guaranteed to be current
 eventBus.register(
   TransactionEvents.TRANSACTION_CREATED,
   createRecordSpendHandler(
@@ -57,20 +61,6 @@ eventBus.register(
     eventBus,
   ),
 );`,
-    },
-    {
-      label:
-        'Extraction path. Explicit event chain replaces implicit ordering',
-      code: `// Break the implicit dependency with an intermediate event:
-//
-// 1. updateCategoryRollup subscribes to "transaction.created"
-// 2. After writing the rollup, it publishes "rollup.updated"
-// 3. recordSpend subscribes to "rollup.updated", not "transaction.created"
-//
-// Each handler reacts to the event that represents its precondition.
-// No ordering dependency. No implicit coupling.
-//
-// transaction.created -> updateCategoryRollup -> rollup.updated -> recordSpend`,
     },
   ],
 };

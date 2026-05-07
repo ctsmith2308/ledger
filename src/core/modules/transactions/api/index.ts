@@ -1,4 +1,3 @@
-import { TransactionEvents } from '@/core/shared/domain';
 import {
   commandBus,
   queryBus,
@@ -20,7 +19,6 @@ import {
   GetSpendingByCategoryHandler,
   GetSpendingPeriodsQuery,
   GetSpendingPeriodsHandler,
-  createUpdateCategoryRollupHandler,
 } from '../application';
 
 import {
@@ -44,16 +42,12 @@ class TransactionsModule {
       plaidClient: PlaidClientService.create(),
     };
 
-    eventBus.register(
-      TransactionEvents.TRANSACTION_CREATED,
-      createUpdateCategoryRollupHandler(repos.categoryRollupRepository),
-    );
-
     commandBus.register(
       SyncTransactionsCommand,
       new SyncTransactionsHandler(
         repos.plaidItemRepository,
         repos.transactionRepository,
+        repos.categoryRollupRepository,
         services.plaidClient,
         eventBus,
       ),

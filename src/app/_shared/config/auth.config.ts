@@ -11,12 +11,17 @@ const COOKIE_OPTIONS = {
 
 const ACCESS_TOKEN_OPTIONS = {
   ...COOKIE_OPTIONS,
-  maxAge: 900,
+  maxAge: 1020, // 17 minutes — outlives the 15m JWT TTL so the proxy sees expired tokens
 } as const;
 
 const SESSION_ID_OPTIONS = {
   ...COOKIE_OPTIONS,
-  maxAge: 604800,
+  maxAge: 604800, // 60 (sec) * 60 (min) * 24 (hrs) * 7 (days)
+} as const;
+
+const AUTH_HEADERS = {
+  USER_ID: 'x-user-id',
+  SESSION_ID: 'x-session-id',
 } as const;
 
 export {
@@ -25,4 +30,5 @@ export {
   COOKIE_OPTIONS,
   ACCESS_TOKEN_OPTIONS,
   SESSION_ID_OPTIONS,
+  AUTH_HEADERS,
 };

@@ -51,7 +51,7 @@ async function POST(request: NextRequest) {
   try {
     await (eventBus as EventBus).process(event, recordId);
     return NextResponse.json({ status: 'processed' });
-  } catch (error: unknown) {
+  } catch (_error) {
     logger.error(`Event processing failed: ${eventType} [${recordId}]`);
 
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 });

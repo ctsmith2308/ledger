@@ -3,10 +3,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('server-only', () => ({}));
 
 vi.mock('react', () => ({
-  cache: (fn: Function) => fn,
+  cache: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
 }));
 
-import { UnauthorizedException, JWT_TYPE } from '@/core/shared/domain';
+import { UnauthorizedException } from '@/core/shared/domain';
+
+const mockHeaderStore = new Map<string, string>();
+
+vi.mock('next/headers', () => ({
+  headers: vi.fn(async () => ({
+    get: (name: string) => mockHeaderStore.get(name) ?? null,
+  })),
+}));
 
 vi.mock('@/app/_shared/lib/cookies', () => ({
   CookieManager: {
@@ -16,109 +24,48 @@ vi.mock('@/app/_shared/lib/cookies', () => ({
   },
 }));
 
-vi.mock('@/core/shared/infrastructure/services/jwt.service.impl', () => ({
-  JwtService: {
-    verify: vi.fn(),
-    signAccess: vi.fn(),
-    signChallenge: vi.fn(),
-  },
-}));
-
-vi.mock('@/core/modules/identity', () => ({
-  identityService: {
-    refreshSession: vi.fn(),
-  },
-}));
-
 import { CookieManager } from '@/app/_shared/lib/cookies';
-
-import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
-
-import { identityService } from '@/core/modules/identity';
 
 import { AuthManager } from '../auth-manager';
 
 const mockCookieManager = vi.mocked(CookieManager);
-const mockJwtService = vi.mocked(JwtService);
-const mockIdentityService = vi.mocked(identityService);
 
 describe('AuthManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHeaderStore.clear();
   });
 
   describe('getSession', () => {
-    it('returns userId and sessionId when access token is valid', async () => {
-      mockCookieManager.get
-        .mockResolvedValueOnce('valid-token')
-        .mockResolvedValueOnce('session-123');
-
-      mockJwtService.verify.mockResolvedValue({ sub: 'user-456' });
+    it('returns userId and sessionId from forwarded headers', async () => {
+      mockHeaderStore.set('x-user-id', 'user-456');
+      mockHeaderStore.set('x-session-id', 'session-123');
 
       const result = await AuthManager.getSession();
 
-      expect(result).toEqual({ userId: 'user-456', sessionId: 'session-123' });
-    });
-
-    it('calls refresh when access token verification fails', async () => {
-      mockCookieManager.get
-        .mockResolvedValueOnce('expired-token')
-        .mockResolvedValueOnce('session-123');
-
-      mockJwtService.verify.mockRejectedValue(new Error('expired'));
-
-      mockIdentityService.refreshSession.mockResolvedValue({
-        accessToken: 'new-token',
+      expect(result).toEqual({
         userId: 'user-456',
         sessionId: 'session-123',
       });
-
-      const result = await AuthManager.getSession();
-
-      expect(mockIdentityService.refreshSession).toHaveBeenCalledWith(
-        'session-123',
-      );
-
-      expect(result).toEqual({ userId: 'user-456', sessionId: 'session-123' });
     });
 
-    it('sets new cookies after successful refresh', async () => {
-      mockCookieManager.get
-        .mockResolvedValueOnce('expired-token')
-        .mockResolvedValueOnce('session-123');
-
-      mockJwtService.verify.mockRejectedValue(new Error('expired'));
-
-      mockIdentityService.refreshSession.mockResolvedValue({
-        accessToken: 'new-token',
-        userId: 'user-456',
-        sessionId: 'session-123',
-      });
-
-      await AuthManager.getSession();
-
-      expect(mockCookieManager.set).toHaveBeenCalledTimes(2);
-    });
-
-    it('throws UnauthorizedException when no sessionId cookie', async () => {
-      mockCookieManager.get
-        .mockResolvedValueOnce('some-token')
-        .mockResolvedValueOnce(null);
+    it('throws UnauthorizedException when x-user-id header is missing', async () => {
+      mockHeaderStore.set('x-session-id', 'session-123');
 
       await expect(AuthManager.getSession()).rejects.toBeInstanceOf(
         UnauthorizedException,
       );
     });
 
-    it('throws UnauthorizedException when refresh fails', async () => {
-      mockCookieManager.get
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce('session-123');
+    it('throws UnauthorizedException when x-session-id header is missing', async () => {
+      mockHeaderStore.set('x-user-id', 'user-456');
 
-      mockIdentityService.refreshSession.mockRejectedValue(
-        new UnauthorizedException(),
+      await expect(AuthManager.getSession()).rejects.toBeInstanceOf(
+        UnauthorizedException,
       );
+    });
 
+    it('throws UnauthorizedException when no headers are present', async () => {
       await expect(AuthManager.getSession()).rejects.toBeInstanceOf(
         UnauthorizedException,
       );

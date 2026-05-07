@@ -13,6 +13,8 @@ type CookieOptions = {
  * Next.js cookie store — no domain knowledge, no auth logic.
  * Consumers (AuthManager, etc.) use this for all cookie operations
  * so cookie access is centralized and testable at a higher layer.
+ *
+ * https://nextjs.org/docs/app/api-reference/functions/cookies
  */
 const CookieManager = {
   async get(name: string): Promise<string | null> {
@@ -21,7 +23,11 @@ const CookieManager = {
     return cookieStore.get(name)?.value ?? null;
   },
 
-  async set(name: string, value: string, options: CookieOptions): Promise<void> {
+  async set(
+    name: string,
+    value: string,
+    options: CookieOptions,
+  ): Promise<void> {
     const cookieStore = await cookies();
 
     cookieStore.set(name, value, options);

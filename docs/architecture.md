@@ -241,7 +241,7 @@ See [Application Layer, Command Bus](#command-bus--query-bus) for the full imple
 
 ```
 src/
-  proxy.ts                          # Next.js middleware. JWT validation, route protection.
+  proxy.ts                          # Next.js middleware. JWT validation, refresh, route protection.
 
   core/                             # framework-agnostic domain and application logic
     modules/
@@ -856,30 +856,35 @@ verifyMfaLoginAction → identityService.verifyMfaLogin(challengeToken, totpCode
   → signs new ACCESS JWT → { token, sessionId } → AuthManager.setSession(token, sessionId)
 
 proxy.ts (Next.js middleware)
-  → reads session cookie
+  → reads access_token and session_id cookies
   → JwtService.verify(token, JWT_TYPE.ACCESS)
-  → invalid/missing → redirect /login
-  → valid → NextResponse.next()
+  → valid → forwards x-user-id, x-session-id headers to server component
+  → invalid/expired + session_id exists → identityService.refreshSession(sessionId)
+    → success → sets new access_token cookie, forwards headers
+    → failure → redirect /login, delete both cookies
+  → no session_id → redirect /login
 
 withAuth middleware (on protected server actions)
   → AuthManager.getSession()
-  → verifies JWT, refreshes if expired, throws UnauthorizedException on failure
+  → reads forwarded headers (proxy already validated)
   → injects { userId, sessionId } into ctx
 
 AuthManager.getSession() (for pages and server components)
-  → React.cache() wrapped. Reads cookies, verifies JWT, refreshes if expired
+  → React.cache() wrapped. Reads x-user-id, x-session-id from forwarded headers
   → returns { userId, sessionId }
 ```
 
 ### Auth Session Management
 
-Session lifecycle is managed by `AuthManager` in `_shared/lib/session/auth-manager.ts`:
+Session validation and refresh are owned by the proxy (`src/proxy.ts`). The proxy verifies the JWT, refreshes via `identityService.refreshSession()` when expired, sets the new access token cookie, and forwards `x-user-id` / `x-session-id` headers to server components. This is necessary because Next.js server components cannot set cookies — only server actions, route handlers, and middleware can.
 
-- `AuthManager.getSession()`: verifies access token JWT, falls back to refresh via Postgres if expired, throws `UnauthorizedException` if both fail. Cached per request via `React.cache()`.
+Session lifecycle for actions is managed by `AuthManager` in `_shared/lib/session/auth-manager.ts`:
+
+- `AuthManager.getSession()`: reads `x-user-id` and `x-session-id` from request headers forwarded by the proxy. No JWT verification — trusts the proxy. Cached per request via `React.cache()`.
 - `AuthManager.setSession(accessToken, sessionId)`: sets both httpOnly cookies (access token + session ID). Called by login and MFA verify actions.
 - `AuthManager.revokeSession()`: clears both cookies. Called by logout and delete account actions.
 
-Generic cookie operations are centralized in `CookieManager` (`_shared/lib/cookies/cookie.manager.ts`). Auth cookie names and options are defined in `_shared/config/auth.config.ts`.
+Auth header keys, cookie names, and cookie options are defined in `_shared/config/auth.config.ts`. Generic cookie operations are centralized in `CookieManager` (`_shared/lib/cookies/cookie.manager.ts`).
 
 ---
 

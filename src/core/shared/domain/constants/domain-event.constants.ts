@@ -27,14 +27,12 @@ const BudgetEvents = {
   BUDGET_EXCEEDED: 'budgets.budget_exceeded',
 } as const;
 
-const AllEvents = {
-  ...IdentityEvents,
-  ...BankingEvents,
-  ...TransactionEvents,
-  ...BudgetEvents,
-};
+type AllEvents = typeof IdentityEvents &
+  typeof BankingEvents &
+  typeof TransactionEvents &
+  typeof BudgetEvents;
 
-type EventType = (typeof AllEvents)[keyof typeof AllEvents];
+type EventType = AllEvents[keyof AllEvents];
 
 export {
   IdentityEvents,

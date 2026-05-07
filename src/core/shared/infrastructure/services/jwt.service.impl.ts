@@ -54,7 +54,7 @@ const JwtService: IJwtService = {
       }
 
       return { sub: payload.sub };
-    } catch (_error: unknown) {
+    } catch (_error) {
       throw new InvalidJwtException('Jwt failed');
     }
   },
@@ -74,7 +74,7 @@ const sign = async (
       .sign(SECRET);
 
     return token;
-  } catch (_error: unknown) {
+  } catch (_error) {
     throw new InvalidJwtException('Jwt sign failed');
   }
 };
