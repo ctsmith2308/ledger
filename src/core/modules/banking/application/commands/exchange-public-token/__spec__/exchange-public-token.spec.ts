@@ -199,7 +199,7 @@ describe('ExchangePublicTokenHandler', () => {
         plaidClient: {
           exchangePublicToken: vi
             .fn()
-            .mockRejectedValue(new Error('Plaid down')),
+            .mockRejectedValue(new PlaidErrorException('[ITEM_ERROR] ITEM_LOGIN_REQUIRED: Plaid down')),
         },
       });
 
@@ -215,7 +215,7 @@ describe('ExchangePublicTokenHandler', () => {
           plaidClient: {
             exchangePublicToken: vi
               .fn()
-              .mockRejectedValue(new Error('Plaid down')),
+              .mockRejectedValue(new PlaidErrorException('[ITEM_ERROR] ITEM_LOGIN_REQUIRED: Plaid down')),
           },
         });
 
@@ -233,7 +233,7 @@ describe('ExchangePublicTokenHandler', () => {
         plaidClient: {
           getAccounts: vi
             .fn()
-            .mockRejectedValue(new Error('Account fetch failed')),
+            .mockRejectedValue(new PlaidErrorException('[ITEM_ERROR] ITEM_LOGIN_REQUIRED: Account fetch failed')),
         },
       });
 
@@ -248,7 +248,7 @@ describe('ExchangePublicTokenHandler', () => {
         plaidClient: {
           getAccounts: vi
             .fn()
-            .mockRejectedValue(new Error('Account fetch failed')),
+            .mockRejectedValue(new PlaidErrorException('[ITEM_ERROR] ITEM_LOGIN_REQUIRED: Account fetch failed')),
         },
       });
 

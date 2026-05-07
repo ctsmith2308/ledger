@@ -1,12 +1,18 @@
+import { redirect } from 'next/navigation';
+
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 
 import { budgetsService } from '@/core/modules/budgets';
 
+import { identityService } from '@/core/modules/identity';
+
+import { DomainException } from '@/core/shared/domain';
+
 import { getQueryClient } from '@/app/_shared/lib/query';
 
-import { loadSession } from '@/app/_shared/lib/session/session.service';
-
 import { queryKeys } from '@/app/_shared/lib/query/query-keys';
+
+import { AuthManager } from '@/app/_shared/lib/session';
 
 import { BudgetList, CreateBudgetButton } from '@/app/_features/budgets';
 
@@ -14,17 +20,30 @@ import { PageContainer, PageHeader } from '@/app/_widgets';
 
 import { BudgetDemoFootnote } from './_components/budget-demo-footnote';
 
-const loadBudgetOverview = async () => {
-  const session = await loadSession();
+const loadBudgetData = async () => {
+  try {
+    const queryClient = getQueryClient();
+    const { userId } = await AuthManager.getSession();
 
-  return budgetsService.getBudgetOverview(session.userId, new Date());
+    const [overview, account] = await Promise.all([
+      budgetsService.getBudgetOverview(userId, new Date()),
+      identityService.getUserAccount(userId),
+    ]);
+
+    queryClient.setQueryData(queryKeys.budgetOverview, overview);
+
+    queryClient.setQueryData(queryKeys.featureFlags, account.features);
+
+    return { queryClient, overview };
+  } catch (error) {
+    if (error instanceof DomainException) redirect('/login');
+
+    throw error;
+  }
 };
 
 async function BudgetsPage() {
-  const overview = await loadBudgetOverview();
-
-  const queryClient = getQueryClient();
-  queryClient.setQueryData(queryKeys.budgetOverview, overview);
+  const { queryClient } = await loadBudgetData();
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
@@ -35,6 +54,7 @@ async function BudgetsPage() {
         >
           <CreateBudgetButton />
         </PageHeader>
+
         <BudgetDemoFootnote />
 
         <BudgetList />

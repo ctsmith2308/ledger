@@ -1,12 +1,16 @@
+import { redirect } from 'next/navigation';
+
 import Link from 'next/link';
 
 import { ChevronRight } from 'lucide-react';
 
 import { transactionsService } from '@/core/modules/transactions';
 
+import { DomainException } from '@/core/shared/domain';
+
 import { ROUTES } from '@/app/_shared/routes';
 
-import { loadSession } from '@/app/_shared/lib/session/session.service';
+import { AuthManager } from '@/app/_shared/lib/session';
 
 import { formatPeriod } from '@/app/_shared/lib/formatters/format-period';
 
@@ -17,18 +21,25 @@ import { SpendingDoughnut } from '@/app/_features/transactions';
 import { PageContainer, PageHeader } from '@/app/_widgets';
 
 const loadSpendingData = async () => {
-  const session = await loadSession();
+  try {
+    const { userId } = await AuthManager.getSession();
 
-  const [spendingPeriods, currentMonthSpending] = await Promise.all([
-    transactionsService.getSpendingPeriods(session.userId),
-    transactionsService.getSpendingByCategory(session.userId, new Date()),
-  ]);
+    const [spendingPeriods, currentMonthSpending] = await Promise.all([
+      transactionsService.getSpendingPeriods(userId),
+      transactionsService.getSpendingByCategory(userId, new Date()),
+    ]);
 
-  return { spendingPeriods, currentMonthSpending };
+    return { spendingPeriods, currentMonthSpending };
+  } catch (error) {
+    if (error instanceof DomainException) redirect('/login');
+
+    throw error;
+  }
 };
 
 async function SpendingHabitsPage() {
   const { spendingPeriods, currentMonthSpending } = await loadSpendingData();
+
   const { periods } = spendingPeriods;
   const categoryData = mapSpendingDtoToCategory(currentMonthSpending);
 

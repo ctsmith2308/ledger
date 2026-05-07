@@ -58,7 +58,7 @@ describe('CreateLinkTokenHandler', () => {
         plaidClient: {
           createLinkToken: vi
             .fn()
-            .mockRejectedValue(new Error('Plaid down')),
+            .mockRejectedValue(new PlaidErrorException('[ITEM_ERROR] ITEM_LOGIN_REQUIRED: Plaid down')),
         },
       });
 

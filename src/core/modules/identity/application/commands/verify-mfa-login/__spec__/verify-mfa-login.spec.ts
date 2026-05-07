@@ -5,6 +5,7 @@ import { VerifyMfaLoginCommand } from '../verify-mfa-login.command';
 
 import {
   type IUserRepository,
+  type IUserSessionRepository,
   type ITotpService,
   User,
   UserId,
@@ -15,6 +16,7 @@ import {
 
 import {
   type IEventBus,
+  type IIdGenerator,
   UserNotFoundException,
   InvalidMfaCodeException,
 } from '@/core/shared/domain';
@@ -41,8 +43,10 @@ const _makeMfaUser = () =>
 
 const _makeHandler = (overrides: {
   userRepository?: Partial<IUserRepository>;
+  sessionRepository?: Partial<IUserSessionRepository>;
   eventBus?: Partial<IEventBus>;
   totpService?: Partial<ITotpService>;
+  idGenerator?: Partial<IIdGenerator>;
 } = {}) => {
   const userRepository: IUserRepository = {
     save: vi.fn(),
@@ -51,6 +55,14 @@ const _makeHandler = (overrides: {
     deleteById: vi.fn(),
     findExpiredTrialUsers: vi.fn().mockResolvedValue([]),
     ...overrides.userRepository,
+  };
+
+  const sessionRepository: IUserSessionRepository = {
+    save: vi.fn(),
+    findById: vi.fn(),
+    revokeById: vi.fn(),
+    revokeAllForUser: vi.fn(),
+    ...overrides.sessionRepository,
   };
 
   const eventBus: IEventBus = {
@@ -66,17 +78,26 @@ const _makeHandler = (overrides: {
     ...overrides.totpService,
   };
 
+  const idGenerator: IIdGenerator = {
+    generate: vi.fn().mockReturnValue('session-id-123'),
+    ...overrides.idGenerator,
+  };
+
   const handler = new VerifyMfaLoginHandler(
     userRepository,
+    sessionRepository,
     eventBus,
     totpService,
+    idGenerator,
   );
 
   return {
     handler,
     userRepository,
+    sessionRepository,
     eventBus,
     totpService,
+    idGenerator,
   };
 };
 

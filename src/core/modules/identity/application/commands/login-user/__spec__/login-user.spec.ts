@@ -5,6 +5,7 @@ import { LoginUserCommand } from '../login-user.command';
 
 import {
   type IUserRepository,
+  type IUserSessionRepository,
   type IPasswordHasher,
   Email,
   User,
@@ -15,6 +16,7 @@ import {
 
 import {
   type IEventBus,
+  type IIdGenerator,
   InvalidEmailException,
   InvalidPasswordException,
 } from '@/core/shared/domain';
@@ -31,8 +33,10 @@ const _existingUser = (opts?: { tier?: string; mfaEnabled?: boolean }) =>
 
 const _makeHandler = (overrides: {
   userRepository?: Partial<IUserRepository>;
+  sessionRepository?: Partial<IUserSessionRepository>;
   eventBus?: Partial<IEventBus>;
   hasher?: Partial<IPasswordHasher>;
+  idGenerator?: Partial<IIdGenerator>;
 } = {}) => {
   const userRepository: IUserRepository = {
     save: vi.fn(),
@@ -41,6 +45,14 @@ const _makeHandler = (overrides: {
     deleteById: vi.fn(),
     findExpiredTrialUsers: vi.fn().mockResolvedValue([]),
     ...overrides.userRepository,
+  };
+
+  const sessionRepository: IUserSessionRepository = {
+    save: vi.fn(),
+    findById: vi.fn(),
+    revokeById: vi.fn(),
+    revokeAllForUser: vi.fn(),
+    ...overrides.sessionRepository,
   };
 
   const eventBus: IEventBus = {
@@ -55,13 +67,20 @@ const _makeHandler = (overrides: {
     ...overrides.hasher,
   };
 
+  const idGenerator: IIdGenerator = {
+    generate: vi.fn().mockReturnValue('session-id-123'),
+    ...overrides.idGenerator,
+  };
+
   const handler = new LoginUserHandler(
     userRepository,
+    sessionRepository,
     eventBus,
     hasher,
+    idGenerator,
   );
 
-  return { handler, userRepository, eventBus, hasher };
+  return { handler, userRepository, sessionRepository, eventBus, hasher, idGenerator };
 };
 
 describe('LoginUserHandler', () => {

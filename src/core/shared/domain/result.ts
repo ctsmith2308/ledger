@@ -44,6 +44,7 @@ class Result<T, E extends Error> {
     if (this.status === 'FAIL') {
       throw this._error;
     }
+
     return this._value as T;
   }
 

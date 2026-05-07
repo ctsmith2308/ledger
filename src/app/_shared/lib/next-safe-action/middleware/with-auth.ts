@@ -1,21 +1,11 @@
 import { createMiddleware } from 'next-safe-action';
 
-import { UnauthorizedException, JWT_TYPE } from '@/core/shared/domain';
-
-import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
-
-import { getCookie } from '@/app/_shared/lib/session/session.service';
+import { AuthManager } from '@/app/_shared/lib/session';
 
 const withAuth = createMiddleware().define(async ({ next }) => {
-  const token = await getCookie();
+  const { userId, sessionId } = await AuthManager.getSession();
 
-  if (!token) throw new UnauthorizedException();
-
-  const result = await JwtService.verify(token, JWT_TYPE.ACCESS);
-
-  const userId = result.getValueOrThrow();
-
-  return next({ ctx: { userId } });
+  return next({ ctx: { userId, sessionId } });
 });
 
 export { withAuth };
