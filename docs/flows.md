@@ -193,7 +193,7 @@ sequenceDiagram
 
 ## Auth Flow -- Login (No MFA)
 
-When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, and `IdentityService` signs the JWT. The action sets the cookie directly. Feature flags are loaded lazily by the `withFeatureFlag` middleware on the first gated action, not at login time.
+When the user does not have MFA enabled, login completes in a single step. The handler raises `UserLoggedInEvent` via the aggregate, creates a `UserSession` in Postgres, and `IdentityService` signs the JWT. The action sets both cookies via `AuthManager.setSession()`. Feature flags are loaded lazily by the `withFeatureFlag` middleware on the first gated action, not at login time.
 
 ```mermaid
 sequenceDiagram
@@ -212,13 +212,14 @@ sequenceDiagram
     LH->>DB: userRepository.findByEmail
     LH->>LH: verify password hash
     LH->>LH: user.loggedIn()
+    LH->>DB: sessionRepository.save(session)
     Note over LH: UserLoggedInEvent (aggregate-raised)
     LH->>LH: user.pullDomainEvents()
     LH->>EB: dispatch(events)
-    LH-->>SVC: Result.ok({ type: SUCCESS, user })
-    SVC->>SVC: jwtService.sign(userId, access, 15m)
-    SVC-->>SA: { type: SUCCESS, token }
-    SA->>SA: setCookie(token)
+    LH-->>SVC: Result.ok({ type: SUCCESS, user, sessionId })
+    SVC->>SVC: jwtService.signAccess(userId)
+    SVC-->>SA: { type: SUCCESS, token, sessionId }
+    SA->>SA: AuthManager.setSession(token, sessionId)
     SA-->>UI: redirect /overview
 ```
 
@@ -248,7 +249,7 @@ sequenceDiagram
     LH->>LH: verify password hash
     LH->>LH: user.mfaEnabled == true
     LH-->>SVC: Result.ok({ type: MFA_REQUIRED, user })
-    SVC->>SVC: jwtService.sign(userId, mfa_challenge, 5m)
+    SVC->>SVC: jwtService.signChallenge(userId)
     SVC-->>SA: { type: MFA_REQUIRED, token }
     SA-->>UI: { challengeToken: token }
     UI->>UI: sessionStorage.set(challengeToken)
@@ -263,13 +264,14 @@ sequenceDiagram
     VH->>DB: userRepository.findById
     VH->>VH: totpService.verify(secret, code)
     VH->>VH: user.loggedIn()
+    VH->>DB: sessionRepository.save(session)
     Note over VH: UserLoggedInEvent (aggregate-raised)
     VH->>VH: user.pullDomainEvents()
     VH->>EB: dispatch(events)
-    VH-->>SVC: Result.ok(user)
-    SVC->>SVC: jwtService.sign(userId, access, 15m)
-    SVC-->>SA: { token }
-    SA->>SA: setCookie(token)
+    VH-->>SVC: Result.ok({ type: SUCCESS, user, sessionId })
+    SVC->>SVC: jwtService.signAccess(userId)
+    SVC-->>SA: { token, sessionId }
+    SA->>SA: AuthManager.setSession(token, sessionId)
     SA-->>UI: redirect /overview
 ```
 

@@ -316,7 +316,8 @@ src/
       lib/
         next-safe-action/           # actionClient, handleActionResponse, ActionError
           middleware/               # withAuth, withFeatureFlag, withRateLimit
-        session/                    # setCookie, deleteCookie, loadSession (React.cache)
+        cookies/                    # CookieManager (generic cookie CRUD)
+        session/                    # AuthManager (getSession, setSession, revokeSession)
         query/                      # getQueryClient, queryKeys, queryDefaults
         rate-limit/                 # rate limit service
         tailwind/                   # cn (tailwind merge)
@@ -625,31 +626,7 @@ export * from './api/identity.dto';
 
 ### Service Layer — `api/identity.service.ts`
 
-The service is the module's public API surface. It dispatches commands/queries via the bus, maps domain results to DTOs using dedicated mappers, and handles JWT signing for auth flows. Services replace the previous controller pattern:
-
-```ts
-class IdentityService {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-    private readonly jwtService: IJwtService,
-  ) {}
-
-  async loginUser(email: string, password: string): Promise<LoginResponseDTO> {
-    const result = await this.commandBus.dispatch(
-      new LoginUserCommand(email, password),
-    );
-
-    const loginResult = result.getValueOrThrow();
-    const { userId, purpose, ttl } = LoginMapper.toSigningParams(loginResult);
-
-    const tokenResult = await this.jwtService.sign(userId, purpose, ttl);
-    const token = tokenResult.getValueOrThrow();
-
-    return LoginMapper.toDTO(loginResult.type, token);
-  }
-}
-```
+The service is the module's public API surface. It dispatches commands/queries via the bus, maps domain results to DTOs using dedicated mappers, and handles JWT signing for auth flows. See [`identity.service.ts`](https://github.com/ctsmith2308/ledger/blob/master/src/core/modules/identity/api/identity.service.ts) for the full implementation.
 
 ### Handler Contract
 
@@ -714,12 +691,12 @@ The `domain_events` table serves three roles: durable delivery guarantee (persis
 
 `JwtService` is a plain object singleton implementing `IJwtService`. Uses `jose` (HS256). The `JWT_SECRET` environment variable is required at startup. The service throws a fatal error if missing.
 
-The JWT carries only `userId` in the `sub` claim plus a `type` discriminator. The interface is `sign(sub, type, ttl)` / `verify(token, type)`. Two JWT types are used:
+The JWT carries only `userId` in the `sub` claim plus a `type` discriminator. The interface exposes intent-based methods: `signAccess(sub)` and `signChallenge(sub)` encapsulate type and TTL. `verify(token, type)` validates the signature and type claim. Two JWT types are used:
 
 - `JWT_TYPE.ACCESS`: standard access token (15-minute TTL).
 - `JWT_TYPE.MFA_CHALLENGE`: short-lived challenge token for MFA verification (5-minute TTL).
 
-`verify()` validates both the cryptographic signature and the `type` claim, rejecting tokens that do not match the expected purpose.
+`verify()` validates both the cryptographic signature and the `type` claim, rejecting tokens that do not match the expected purpose. Throws `InvalidJwtException` on failure — callers handle the error at their boundary.
 
 ### Feature Flags
 
@@ -787,7 +764,7 @@ const loginAction = actionClient
     );
 
     if (response.type === 'SUCCESS') {
-      await setCookie(response.token);
+      await AuthManager.setSession(response.token, response.sessionId);
       return;
     }
 
@@ -850,11 +827,12 @@ Client calls handleActionResponse(loginAction({ email, password }))
             → userRepository.findByEmail()
             → hasher.verify()
             → user.loggedIn(), raises UserLoggedInEvent
+            → creates UserSession in Postgres
             → pullDomainEvents() + eventBus.dispatch()
-            → Result.ok({ type: 'SUCCESS', user })
-        → service signs JWT via jwtService.sign(userId, JWT_TYPE.ACCESS, '15m')
-        → returns { type: 'SUCCESS', token }
-      → setCookie(token), httpOnly cookie
+            → Result.ok({ type: 'SUCCESS', user, sessionId })
+        → service signs JWT via jwtService.signAccess(userId)
+        → returns { type: 'SUCCESS', token, sessionId }
+      → AuthManager.setSession(token, sessionId), sets both httpOnly cookies
       → returns void (success with no data)
   → next-safe-action returns { data: undefined }
   → handleActionResponse unwraps, returns undefined
@@ -870,36 +848,38 @@ On any throw:
 
 ```
 loginAction → identityService.loginUser() → signs JWT (userId in sub)
-  → MFA disabled: { type: 'SUCCESS', token } → setCookie(token)
+  → MFA disabled: { type: 'SUCCESS', token, sessionId } → AuthManager.setSession(token, sessionId)
   → MFA enabled:  { type: 'MFA_REQUIRED', token } → returned as challengeToken
 
 verifyMfaLoginAction → identityService.verifyMfaLogin(challengeToken, totpCode)
-  → verifies MFA_CHALLENGE JWT, validates TOTP code
-  → signs new ACCESS JWT → { token } → setCookie(token)
+  → verifies MFA_CHALLENGE JWT, validates TOTP code, creates session
+  → signs new ACCESS JWT → { token, sessionId } → AuthManager.setSession(token, sessionId)
 
-proxy.ts (Next.js edge middleware, exported as `middleware`)
+proxy.ts (Next.js middleware)
   → reads session cookie
   → JwtService.verify(token, JWT_TYPE.ACCESS)
   → invalid/missing → redirect /login
   → valid → NextResponse.next()
 
 withAuth middleware (on protected server actions)
-  → getCookie() → JwtService.verify(token, JWT_TYPE.ACCESS)
-  → injects { userId } into ctx
+  → AuthManager.getSession()
+  → verifies JWT, refreshes if expired, throws UnauthorizedException on failure
+  → injects { userId, sessionId } into ctx
 
-loadSession() (for React Server Components)
-  → React.cache() wrapped. getCookie() → JwtService.verify()
-  → returns { userId }
+AuthManager.getSession() (for pages and server components)
+  → React.cache() wrapped. Reads cookies, verifies JWT, refreshes if expired
+  → returns { userId, sessionId }
 ```
 
-### Cookie Helpers
+### Auth Session Management
 
-Session cookies are managed via standalone helpers in `_shared/lib/session/session.service.ts`:
+Session lifecycle is managed by `AuthManager` in `_shared/lib/session/auth-manager.ts`:
 
-- `setCookie(token)`: sets an httpOnly, secure, sameSite=lax cookie.
-- `deleteCookie()`: clears the session cookie.
-- `getCookie()`: reads the cookie value.
-- `loadSession()`: `React.cache()` wrapper that reads the cookie, verifies the JWT, and returns `{ userId }`. Used in React Server Components for session resolution.
+- `AuthManager.getSession()`: verifies access token JWT, falls back to refresh via Postgres if expired, throws `UnauthorizedException` if both fail. Cached per request via `React.cache()`.
+- `AuthManager.setSession(accessToken, sessionId)`: sets both httpOnly cookies (access token + session ID). Called by login and MFA verify actions.
+- `AuthManager.revokeSession()`: clears both cookies. Called by logout and delete account actions.
+
+Generic cookie operations are centralized in `CookieManager` (`_shared/lib/cookies/cookie.manager.ts`). Auth cookie names and options are defined in `_shared/config/auth.config.ts`.
 
 ---
 

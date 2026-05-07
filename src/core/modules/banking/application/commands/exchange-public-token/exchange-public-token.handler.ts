@@ -26,10 +26,9 @@ import {
  * the access token is recoverable for a retry. The alternative (fetching
  * first) risks losing the access token entirely on a crash.
  *
- * Known gap: the catch block wraps all Plaid errors in a generic
- * PlaidErrorException. The client cannot distinguish a rate limit from
- * an invalid token. See PlaidClientService comments for the planned
- * error classification.
+ * Error handling: Plaid API failures are classified by the PlaidClientService
+ * and thrown as PlaidErrorException with error details in the message.
+ * The catch block passes the exception through as Result.fail.
  */
 class ExchangePublicTokenHandler
   implements
@@ -82,15 +81,8 @@ class ExchangePublicTokenHandler
       await this.eventBus.dispatch(events);
 
       return Result.ok(plaidItem);
-    } catch {
-      /**
-       * TODO: Classify Plaid errors before wrapping. The Plaid SDK throws
-       * typed errors (ITEM_LOGIN_REQUIRED, RATE_LIMIT_EXCEEDED, etc.)
-       * that should map to distinct domain exceptions so the client can
-       * show the right UX (re-link vs retry vs generic error).
-       * See: PlaidClientService known gaps comment.
-       */
-      return Result.fail(new PlaidErrorException());
+    } catch (error) {
+      return Result.fail(error as PlaidErrorException);
     }
   }
 }

@@ -247,7 +247,8 @@ src/
     _shared/
       lib/
         next-safe-action/    # actionClient, handleActionResponse, middleware
-        session/             # getCookie, setCookie, deleteCookie, loadSession
+        cookies/             # CookieManager (generic cookie CRUD)
+        session/             # AuthManager (getSession, setSession, revokeSession)
         query/               # queryKeys, getQueryClient
         rate-limit/          # Upstash rate limiter
         formatters/          # format-category

@@ -1,6 +1,7 @@
 type LoginSuccessDTO = {
   type: 'SUCCESS';
   token: string;
+  sessionId: string;
 };
 
 type MfaChallengeDTO = {
@@ -9,6 +10,12 @@ type MfaChallengeDTO = {
 };
 
 type LoginResponseDTO = LoginSuccessDTO | MfaChallengeDTO;
+
+type RefreshSessionDTO = {
+  userId: string;
+  sessionId: string;
+  accessToken: string;
+};
 
 type MfaSetupDTO = {
   qrCodeDataUrl: string;
@@ -36,6 +43,7 @@ export type {
   LoginSuccessDTO,
   MfaChallengeDTO,
   LoginResponseDTO,
+  RefreshSessionDTO,
   MfaSetupDTO,
   UserDTO,
   UserAccountDTO,

@@ -2,7 +2,7 @@ import { Command, DomainException, Result } from '@/core/shared/domain';
 
 import { User } from '@/core/modules/identity/domain';
 
-type MfaLoginResult = { type: 'SUCCESS'; user: User };
+type MfaLoginResult = { type: 'SUCCESS'; user: User; sessionId: string };
 
 type VerifyMfaLoginResponse = Result<MfaLoginResult, DomainException>;
 

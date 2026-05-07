@@ -1,14 +1,16 @@
-import Link from 'next/link';
+import { redirect, notFound } from 'next/navigation';
 
-import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 import { ArrowLeft } from 'lucide-react';
 
 import { transactionsService } from '@/core/modules/transactions';
 
+import { DomainException } from '@/core/shared/domain';
+
 import { ROUTES } from '@/app/_shared/routes';
 
-import { loadSession } from '@/app/_shared/lib/session/session.service';
+import { AuthManager } from '@/app/_shared/lib/session';
 
 import {
   parsePeriod,
@@ -26,23 +28,30 @@ import { PageContainer, PageHeader } from '@/app/_widgets';
 const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
 
 const loadPeriodData = async (period: string) => {
-  const session = await loadSession();
-  const periodDate = parsePeriod(period);
+  try {
+    const { userId } = await AuthManager.getSession();
 
-  const [spending, allTransactions] = await Promise.all([
-    transactionsService.getSpendingByCategory(session.userId, periodDate),
-    transactionsService.getTransactions(session.userId),
-  ]);
+    const periodDate = parsePeriod(period);
 
-  const month = periodDate.getMonth();
-  const year = periodDate.getFullYear();
+    const [spending, allTransactions] = await Promise.all([
+      transactionsService.getSpendingByCategory(userId, periodDate),
+      transactionsService.getTransactions(userId),
+    ]);
 
-  const transactions = allTransactions.filter((tx) => {
-    const txDate = new Date(tx.date);
-    return txDate.getMonth() === month && txDate.getFullYear() === year;
-  });
+    const month = periodDate.getMonth();
+    const year = periodDate.getFullYear();
 
-  return { spending, transactions };
+    const transactions = allTransactions.filter((tx) => {
+      const txDate = new Date(tx.date);
+      return txDate.getMonth() === month && txDate.getFullYear() === year;
+    });
+
+    return { spending, transactions };
+  } catch (error) {
+    if (error instanceof DomainException) redirect('/login');
+
+    throw error;
+  }
 };
 
 async function SpendingPeriodPage({

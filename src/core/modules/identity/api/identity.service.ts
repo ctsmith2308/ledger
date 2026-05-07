@@ -13,17 +13,19 @@ import {
   VerifyMfaSetupCommand,
   VerifyMfaLoginCommand,
   DisableMfaCommand,
+  RefreshSessionCommand,
   GetUserAccountQuery,
 } from '../application';
 
 import {
   CleanupMapper,
   LoginMapper,
+  RefreshSessionMapper,
   UserMapper,
   UserAccountMapper,
 } from './mappers';
 
-import { type LoginResponseDTO } from './identity.dto';
+import { type LoginResponseDTO, type RefreshSessionDTO } from './identity.dto';
 
 class IdentityService {
   constructor(
@@ -51,12 +53,17 @@ class IdentityService {
     );
 
     const loginResult = result.getValueOrThrow();
-    const { userId, purpose, ttl } = LoginMapper.toSigningParams(loginResult);
+    const userId = loginResult.user.id.value;
 
-    const tokenResult = await this.jwtService.sign(userId, purpose, ttl);
-    const token = tokenResult.getValueOrThrow();
+    if (loginResult.type === 'SUCCESS') {
+      const token = await this.jwtService.signAccess(userId);
 
-    return LoginMapper.toDTO(loginResult.type, token);
+      return LoginMapper.toSuccessDTO(token, loginResult.sessionId);
+    }
+
+    const token = await this.jwtService.signChallenge(userId);
+
+    return LoginMapper.toMfaChallengeDTO(token);
   }
 
   async setupMfa(userId: string) {
@@ -82,12 +89,9 @@ class IdentityService {
     );
 
     const loginResult = result.getValueOrThrow();
-    const { userId: mfaUserId, purpose, ttl } = LoginMapper.toSigningParams(loginResult);
+    const token = await this.jwtService.signAccess(loginResult.user.id.value);
 
-    const tokenResult = await this.jwtService.sign(mfaUserId, purpose, ttl);
-    const token = tokenResult.getValueOrThrow();
-
-    return LoginMapper.toDTO(loginResult.type, token);
+    return LoginMapper.toSuccessDTO(token, loginResult.sessionId);
   }
 
   async disableMfa(userId: string) {
@@ -96,6 +100,18 @@ class IdentityService {
     );
 
     result.getValueOrThrow();
+  }
+
+  async refreshSession(sessionId: string): Promise<RefreshSessionDTO> {
+    const result = await this.commandBus.dispatch(
+      new RefreshSessionCommand(sessionId),
+    );
+
+    const session = result.getValueOrThrow();
+    const userId = session.userId.value;
+    const token = await this.jwtService.signAccess(userId);
+
+    return RefreshSessionMapper.toDTO(token, userId, session.id.value);
   }
 
   async logoutUser(sessionToken: string) {

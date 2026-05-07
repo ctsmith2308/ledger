@@ -75,7 +75,7 @@ class RegisterUserHandler implements IHandler<
     const hashString = await this.hasher.hash(plainPassword.content);
     const passwordHash = Password.fromHash(hashString);
 
-    const { value: userId } = UserId.create(this.idGenerator.generate());
+    const userId = UserId.from(this.idGenerator.generate());
 
     const user = User.register(userId, email, passwordHash);
 

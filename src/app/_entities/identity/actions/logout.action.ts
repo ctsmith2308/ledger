@@ -1,16 +1,22 @@
 'use server';
 
+import { identityService } from '@/core/modules/identity';
+
 import { actionClient } from '@/app/_shared/lib/next-safe-action/action-client';
 
-import { deleteCookie } from '@/app/_shared/lib/session/session.service';
+import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-auth';
 
-// TODO: When refresh token is stored client-side (second cookie),
-// revoke the session in the DB here before deleting cookies.
-// For now, JWT expires naturally (15min TTL).
+import { AuthManager } from '@/app/_shared/lib/session';
+
 const logoutAction = actionClient
   .metadata({ actionName: 'logoutUser' })
-  .action(async () => {
-  await deleteCookie();
-});
+  .use(withAuth)
+  .action(async ({ ctx }) => {
+    if (ctx.sessionId) {
+      await identityService.logoutUser(ctx.sessionId);
+    }
+
+    await AuthManager.revokeSession();
+  });
 
 export { logoutAction };

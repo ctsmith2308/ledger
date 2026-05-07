@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import {
   type IEventBus,
+  PlaidErrorException,
   PlaidItemNotFoundException,
   UnauthorizedException,
 } from '@/core/shared/domain';
@@ -272,7 +273,7 @@ describe('UnlinkBankHandler', () => {
       const { handler, transactionRepository, plaidItemRepository, eventBus } =
         _makeHandler({
           plaidClient: {
-            itemRemove: vi.fn().mockRejectedValue(new Error('Plaid down')),
+            itemRemove: vi.fn().mockRejectedValue(new PlaidErrorException('[ITEM_ERROR] ITEM_LOGIN_REQUIRED: Plaid down')),
           },
         });
 
