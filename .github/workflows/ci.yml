@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, staging]
   pull_request:
-    branches: [master]
+    branches: [master, staging]
 
 env:
   DATABASE_URL: postgresql://ci:ci@localhost:5432/ci

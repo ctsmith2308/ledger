@@ -1,15 +1,27 @@
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+
+import { getQueryClient } from '@/app/_shared/lib/query';
+
+import { loadLayoutData } from '@/app/_shared/lib/session/load-layout-data';
+
 import { AppMenuBar } from '@/app/_widgets';
 
-export default function AccountLayout({
+export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <AppMenuBar />
+  const queryClient = getQueryClient();
 
-      <div className="pt-14">{children}</div>
-    </div>
+  await loadLayoutData(queryClient);
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <div className="min-h-screen bg-background">
+        <AppMenuBar />
+
+        <div className="pt-14">{children}</div>
+      </div>
+    </HydrationBoundary>
   );
 }

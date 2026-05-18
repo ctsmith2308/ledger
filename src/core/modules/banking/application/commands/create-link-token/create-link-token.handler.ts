@@ -23,7 +23,8 @@ class CreateLinkTokenHandler implements IHandler<
 
       return Result.ok({ linkToken });
     } catch (error) {
-      return Result.fail(error as PlaidErrorException);
+      /** TODO: Classify Plaid error. See: PlaidClientService known gaps. */
+      return Result.fail(new PlaidErrorException());
     }
   }
 }

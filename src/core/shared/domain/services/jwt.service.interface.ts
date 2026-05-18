@@ -1,13 +1,19 @@
+import { DomainException } from '../exceptions';
+
+import { Result } from '../result';
+
 import { type JwtType } from '../constants';
 
-type JwtPayload = {
-  sub: string;
-};
-
 interface IJwtService {
-  signAccess(sub: string): Promise<string>;
-  signChallenge(sub: string): Promise<string>;
-  verify(token: string, type: JwtType): Promise<JwtPayload>;
+  sign(
+    sub: string,
+    type: JwtType,
+    ttl: string,
+  ): Promise<Result<string, DomainException>>;
+  verify(
+    token: string,
+    type: JwtType,
+  ): Promise<Result<string, DomainException>>;
 }
 
-export type { IJwtService, JwtPayload };
+export type { IJwtService };

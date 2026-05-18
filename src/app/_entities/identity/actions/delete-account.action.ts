@@ -10,7 +10,7 @@ import { withAuth } from '@/app/_shared/lib/next-safe-action/middleware/with-aut
 
 import { withFeatureFlag } from '@/app/_shared/lib/next-safe-action/middleware/with-feature-flag';
 
-import { AuthManager } from '@/app/_shared/lib/session';
+import { deleteCookie } from '@/app/_shared/lib/session/session.service';
 
 const deleteAccountAction = actionClient
   .metadata({ actionName: 'deleteAccount' })
@@ -19,7 +19,7 @@ const deleteAccountAction = actionClient
   .action(async ({ ctx }) => {
     await identityService.deleteAccount(ctx.userId);
 
-    await AuthManager.revokeSession();
+    await deleteCookie();
   });
 
 export { deleteAccountAction };

@@ -24,9 +24,8 @@ const _mockBus = () => ({
 });
 
 const _mockJwtService = () => ({
-  signAccess: vi.fn().mockResolvedValue('signed-access-token'),
-  signChallenge: vi.fn().mockResolvedValue('signed-challenge-token'),
-  verify: vi.fn().mockResolvedValue({ sub: 'user-1' }),
+  sign: vi.fn().mockResolvedValue(Result.ok('signed-token')),
+  verify: vi.fn().mockResolvedValue(Result.ok('user-1')),
 });
 
 const _makeService = () => {
@@ -96,23 +95,22 @@ describe('IdentityService', () => {
   });
 
   describe('loginUser', () => {
-    it('returns SUCCESS with token and sessionId when MFA is not enabled', async () => {
+    it('returns SUCCESS with token when MFA is not enabled', async () => {
       const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
-        Result.ok({ type: 'SUCCESS', user: _makeUser(), sessionId: 'session-1' }),
+        Result.ok({ type: 'SUCCESS', user: _makeUser() }),
       );
 
       const dto = await service.loginUser('test@example.com', 'Secure!1');
 
       expect(dto).toEqual({
         type: 'SUCCESS',
-        token: 'signed-access-token',
-        sessionId: 'session-1',
+        token: 'signed-token',
       });
     });
 
-    it('returns MFA_REQUIRED with challenge token when MFA is enabled', async () => {
+    it('returns MFA_REQUIRED with token when MFA is enabled', async () => {
       const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
@@ -123,7 +121,7 @@ describe('IdentityService', () => {
 
       expect(dto).toEqual({
         type: 'MFA_REQUIRED',
-        token: 'signed-challenge-token',
+        token: 'signed-token',
       });
     });
 
@@ -141,20 +139,16 @@ describe('IdentityService', () => {
   });
 
   describe('verifyMfaLogin', () => {
-    it('returns SUCCESS with token and sessionId', async () => {
+    it('returns SUCCESS with token', async () => {
       const { service, commandBus } = _makeService();
 
       commandBus.dispatch.mockResolvedValue(
-        Result.ok({ type: 'SUCCESS', user: _makeUser(true), sessionId: 'session-2' }),
+        Result.ok({ type: 'SUCCESS', user: _makeUser(true) }),
       );
 
       const result = await service.verifyMfaLogin('user-1', '123456');
 
-      expect(result).toEqual({
-        type: 'SUCCESS',
-        token: 'signed-access-token',
-        sessionId: 'session-2',
-      });
+      expect(result).toEqual({ type: 'SUCCESS', token: 'signed-token' });
     });
   });
 

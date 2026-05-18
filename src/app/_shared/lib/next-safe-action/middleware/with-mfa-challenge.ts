@@ -4,21 +4,16 @@ import { UnauthorizedException, JWT_TYPE } from '@/core/shared/domain';
 
 import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
 
-const withMfaChallenge = createMiddleware().define(
-  async ({ next, clientInput }) => {
-    const { challengeToken } = clientInput as { challengeToken?: string };
+const withMfaChallenge = createMiddleware().define(async ({ next, clientInput }) => {
+  const { challengeToken } = clientInput as { challengeToken?: string };
 
-    if (!challengeToken) throw new UnauthorizedException();
+  if (!challengeToken) throw new UnauthorizedException();
 
-    const result = await JwtService.verify(
-      challengeToken,
-      JWT_TYPE.MFA_CHALLENGE,
-    );
+  const result = await JwtService.verify(challengeToken, JWT_TYPE.MFA_CHALLENGE);
 
-    const { sub: userId } = result;
+  const userId = result.getValueOrThrow();
 
-    return next({ ctx: { userId } });
-  },
-);
+  return next({ ctx: { userId } });
+});
 
 export { withMfaChallenge };

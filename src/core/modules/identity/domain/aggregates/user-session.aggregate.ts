@@ -1,7 +1,7 @@
-// Session record persisted to Postgres on login. The session ID is stored
-// in an httpOnly cookie and used as the refresh token. On access token
-// expiry, the session is validated via refreshSession() before issuing
-// a new access token. Revocation marks revokedAt, blocking future refreshes.
+// Roadmap: Wire into Redis for session-based auth.
+// Login creates session → push to Redis (keyed by session ID) →
+// JWT carries sessionId claim → proxy checks Redis on each request →
+// revocation is instant (delete key). See project roadmap for details.
 
 import { AggregateRoot } from '@/core/shared/domain';
 import { SessionId, UserId } from '../value-objects';

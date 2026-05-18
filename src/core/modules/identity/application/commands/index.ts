@@ -1,5 +1,4 @@
 export * from './cleanup-expired-trials';
-export * from './refresh-session';
 export * from './delete-account';
 export * from './disable-mfa';
 export * from './login-user';

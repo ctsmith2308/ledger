@@ -1,116 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { type DomainException, Result, JWT_TYPE } from '@/core/shared/domain';
-
-import { identityService } from '@/core/modules/identity';
-
+import { JWT_TYPE } from '@/core/shared/domain';
 import { JwtService } from '@/core/shared/infrastructure/services/jwt.service.impl';
 
-import {
-  ACCESS_TOKEN,
-  ACCESS_TOKEN_OPTIONS,
-  AUTH_HEADERS,
-  SESSION_ID,
-} from '@/app/_shared/config/auth.config';
+const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'auth_session';
 
+/**
+ * TODO: Session revocation is not enforced here. The proxy verifies the
+ * JWT signature and expiry but does not check whether the session has
+ * been revoked in the database. A logged-out user's token remains valid
+ * until it expires. The fix is to check a Redis session blacklist on
+ * every request, populated on logout/password change. The UserSession
+ * aggregate and revokeById/revokeAllForUser methods already exist.
+ * See: docs/upstash.md roadmap section.
+ */
 export async function proxy(request: NextRequest) {
-  const token = request.cookies.get(ACCESS_TOKEN)?.value;
-  const sessionId = request.cookies.get(SESSION_ID)?.value;
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
 
-  if (!sessionId) {
-    return redirectToLogin(request);
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Token exists — verify it
-  if (token) {
-    const verifyResult = await verifyToken(token);
+  const result = await JwtService.verify(token, JWT_TYPE.ACCESS);
 
-    if (verifyResult.isSuccess) {
-      return forwardAuth(request, verifyResult.value, sessionId);
-    }
+  if (result.isFailure) {
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.cookies.delete(SESSION_COOKIE_NAME);
+    return response;
   }
 
-  // Token missing or invalid — attempt refresh
-  const refreshResult = await refreshToken(sessionId);
-
-  if (refreshResult.isFailure) {
-    return redirectToLogin(request);
-  }
-
-  const { userId, accessToken } = refreshResult.value;
-  const response = forwardAuth(request, userId, sessionId);
-
-  response.cookies.set({
-    name: ACCESS_TOKEN,
-    value: accessToken,
-    ...ACCESS_TOKEN_OPTIONS,
-  });
-
-  return response;
+  return NextResponse.next();
 }
 
-const verifyToken = async (
-  accessToken: string,
-): Promise<Result<string, DomainException>> => {
-  try {
-    const { sub } = await JwtService.verify(accessToken, JWT_TYPE.ACCESS);
-
-    return Result.ok(sub);
-  } catch (error) {
-    return Result.fail(error as DomainException);
-  }
-};
-
-const refreshToken = async (
-  sessionId: string,
-): Promise<
-  Result<{ userId: string; accessToken: string }, DomainException>
-> => {
-  try {
-    const result = await identityService.refreshSession(sessionId);
-
-    return Result.ok({
-      userId: result.userId,
-      accessToken: result.accessToken,
-    });
-  } catch (error) {
-    return Result.fail(error as DomainException);
-  }
-};
-
-const forwardAuth = (
-  request: NextRequest,
-  userId: string,
-  sessionId: string,
-): NextResponse => {
-  const requestHeaders = new Headers(request.headers);
-
-  requestHeaders.delete(AUTH_HEADERS.USER_ID);
-  requestHeaders.delete(AUTH_HEADERS.SESSION_ID);
-
-  requestHeaders.set(AUTH_HEADERS.USER_ID, userId);
-  requestHeaders.set(AUTH_HEADERS.SESSION_ID, sessionId);
-
-  return NextResponse.next({ request: { headers: requestHeaders } });
-};
-
-const redirectToLogin = (request: NextRequest) => {
-  const response = NextResponse.redirect(new URL('/login', request.url));
-
-  response.cookies.delete(ACCESS_TOKEN);
-
-  response.cookies.delete(SESSION_ID);
-
-  return response;
-};
-
 export const config = {
-  matcher: [
-    '/overview/:path*',
-    '/spending-habits/:path*',
-    '/transactions/:path*',
-    '/budgets/:path*',
-    '/accounts/:path*',
-    '/settings/:path*',
-  ],
+  matcher: ['/overview/:path*', '/spending-habits/:path*', '/transactions/:path*', '/budgets/:path*', '/accounts/:path*', '/settings/:path*'],
 };
