@@ -30,36 +30,69 @@ export default function Home() {
                 <span className="text-emerald-600">resume.</span>
               </h1>
 
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Built with
+                </span>
+
+                {[
+                  'Next.js',
+                  'TypeScript',
+                  'Prisma',
+                  'Tailwind CSS',
+                  'Plaid',
+                  'TanStack',
+                  'Upstash',
+                  'OpenTelemetry',
+                ].map((tech) => (
+                  <span
+                    key={tech}
+                    className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground transition-colors"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+
               <p className="max-w-md text-lg leading-relaxed text-muted-foreground">
                 Ledger is a personal finance app built to production-grade
                 standards. Not to compete with Mint, but to demonstrate how I
                 think about systems.
               </p>
 
-              <p className="max-w-md text-base leading-relaxed text-muted-foreground">
-                The feature set is a vehicle. The architectural decisions are
-                the point.
-              </p>
             </div>
 
-            <div className="grid w-fit grid-cols-2 gap-3">
-              <Button size="lg" asChild>
-                <a
-                  href="https://github.com/ctsmith2308/ledger"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Github className="size-4" />
-                  View source
-                </a>
-              </Button>
-
-              <Button variant="outline" size="lg" asChild>
+            <div className="flex flex-col gap-4">
+              <Button size="lg" asChild className="w-full text-base">
                 <Link href={ROUTES.demoLogin}>
                   <ExternalLink className="size-4" />
-                  Live demo
+                  Try the live demo
                 </Link>
               </Button>
+
+              <div className="flex items-center gap-3">
+                <hr className="flex-1 border-border" />
+
+                <p className="shrink-0 text-sm text-muted-foreground">
+                  Or explore what&apos;s under the hood
+                </p>
+
+                <hr className="flex-1 border-border" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={ROUTES.architecture}>
+                    Architecture decisions
+                  </Link>
+                </Button>
+
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={ROUTES.caseStudies}>
+                    Case studies
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -294,9 +327,7 @@ function CodePreview() {
 
             <div className="flex gap-2 pl-8">
               <span className="text-zinc-500">07</span>
-              <span className="text-zinc-400">
-                .sign(userId, type, ttl);
-              </span>
+              <span className="text-zinc-400">.sign(userId, type, ttl);</span>
             </div>
 
             <div className="mt-4 h-px w-full bg-zinc-700" />
