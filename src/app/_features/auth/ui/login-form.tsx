@@ -31,8 +31,8 @@ function LoginForm() {
   return (
     <div className="flex w-full max-w-md flex-col gap-6">
       <div className="space-y-2">
-        <p className="text-sm font-medium text-foreground">
-          Select a demo account
+        <p className="text-md font-medium text-foreground">
+          Select a demo account for quick access to the app!
         </p>
 
         <div className="grid gap-2">
