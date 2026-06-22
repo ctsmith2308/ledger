@@ -4,11 +4,11 @@ import { PlaidItem } from '../plaid-item.aggregate';
 import { BankAccountLinkedEvent } from '../../events';
 
 describe('PlaidItem', () => {
-  describe('link', () => {
+  describe('create', () => {
     it('creates a plaid item with the given values and no cursor', () => {
       const before = new Date();
 
-      const item = PlaidItem.link(
+      const item = PlaidItem.create(
         'item-1',
         'user-1',
         'access-token-xyz',
@@ -30,7 +30,7 @@ describe('PlaidItem', () => {
     });
 
     it('raises BankAccountLinkedEvent with the correct data', () => {
-      const item = PlaidItem.link(
+      const item = PlaidItem.create(
         'item-1',
         'user-1',
         'access-token-xyz',
@@ -49,7 +49,7 @@ describe('PlaidItem', () => {
     });
 
     it('allows institutionId to be undefined in both the item and the event', () => {
-      const item = PlaidItem.link('item-1', 'user-1', 'access-token-xyz');
+      const item = PlaidItem.create('item-1', 'user-1', 'access-token-xyz');
 
       expect(item.institutionId).toBeUndefined();
 
@@ -94,7 +94,7 @@ describe('PlaidItem', () => {
 
   describe('updateCursor', () => {
     it('updates the cursor without raising events', () => {
-      const item = PlaidItem.link('item-1', 'user-1', 'access-token-xyz');
+      const item = PlaidItem.create('item-1', 'user-1', 'access-token-xyz');
       item.pullDomainEvents();
 
       item.updateCursor('cursor-abc');

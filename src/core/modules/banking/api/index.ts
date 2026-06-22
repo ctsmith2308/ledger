@@ -16,6 +16,8 @@ import {
   GetAccountsHandler,
   GetConnectionsQuery,
   GetConnectionsHandler,
+  GetItemOwnerQuery,
+  GetItemOwnerHandler,
 } from '../application';
 
 import { TransactionRepository } from '@/core/modules/transactions/infrastructure';
@@ -77,6 +79,11 @@ class BankingModule {
     queryBus.register(
       GetConnectionsQuery,
       new GetConnectionsHandler(repos.plaidItemRepository),
+    );
+
+    queryBus.register(
+      GetItemOwnerQuery,
+      new GetItemOwnerHandler(repos.plaidItemRepository),
     );
 
     return new BankingService(commandBus, queryBus);

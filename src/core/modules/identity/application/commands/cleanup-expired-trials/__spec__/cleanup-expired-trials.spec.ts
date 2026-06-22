@@ -14,7 +14,6 @@ import {
 } from '@/core/modules/identity/domain';
 
 import { CleanupExpiredTrialsHandler } from '../cleanup-expired-trials.handler';
-import { CleanupExpiredTrialsCommand } from '../cleanup-expired-trials.command';
 
 const _trialUser = (id: string) =>
   User.reconstitute(
@@ -65,7 +64,6 @@ const _makeHandler = (
 };
 
 describe('CleanupExpiredTrialsHandler', () => {
-  const command = new CleanupExpiredTrialsCommand();
 
   describe('no expired users', () => {
     it('returns zero deleted', async () => {

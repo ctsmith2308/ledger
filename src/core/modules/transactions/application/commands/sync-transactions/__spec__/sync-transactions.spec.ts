@@ -5,7 +5,10 @@ import {
   type IEventBus,
   type DomainEvent,
   TransactionEvents,
+  PlaidErrorException,
 } from '@/core/shared/domain';
+
+import { type ICategoryRollupRepository } from '@/core/modules/transactions/domain';
 
 import {
   type IPlaidClient,
@@ -89,6 +92,7 @@ const _makeHandler = (
   overrides: {
     plaidItemRepository?: Partial<IPlaidItemRepository>;
     transactionRepository?: Partial<ITransactionRepository>;
+    rollupRepository?: Partial<ICategoryRollupRepository>;
     plaidClient?: Partial<IPlaidClient>;
     eventBus?: Partial<IEventBus>;
   } = {},
@@ -124,6 +128,13 @@ const _makeHandler = (
     ...overrides.plaidClient,
   };
 
+  const rollupRepository: ICategoryRollupRepository = {
+    upsert: vi.fn(),
+    findByUserAndPeriod: vi.fn(),
+    findDistinctPeriodsByUser: vi.fn(),
+    ...overrides.rollupRepository,
+  };
+
   const eventBus: IEventBus = {
     dispatch: vi.fn(),
     register: vi.fn(),
@@ -133,6 +144,7 @@ const _makeHandler = (
   const handler = new SyncTransactionsHandler(
     plaidItemRepository,
     transactionRepository,
+    rollupRepository,
     plaidClient,
     eventBus,
   );
@@ -141,6 +153,7 @@ const _makeHandler = (
     handler,
     plaidItemRepository,
     transactionRepository,
+    rollupRepository,
     plaidClient,
     eventBus,
   };
@@ -162,6 +175,7 @@ describe('SyncTransactionsHandler', () => {
         modified: 0,
         removed: 0,
       });
+
       expect(plaidClient.syncTransactions).not.toHaveBeenCalled();
     });
   });
@@ -171,9 +185,9 @@ describe('SyncTransactionsHandler', () => {
       const plaidTxn = _makePlaidTransaction();
       const { handler, transactionRepository, eventBus } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ added: [plaidTxn] }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ added: [plaidTxn] })),
         },
       });
 
@@ -183,17 +197,20 @@ describe('SyncTransactionsHandler', () => {
       const saved = (transactionRepository.saveMany as ReturnType<typeof vi.fn>)
         .mock.calls[0][0] as Transaction[];
       expect(saved).toHaveLength(1);
+
       expect(saved[0].id).toBe('txn-1');
+
       expect(saved[0].amount).toBe(42.5);
+
       expect(saved[0].category).toBe('FOOD_AND_DRINK');
 
       expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
-      const events = (eventBus.dispatch as ReturnType<typeof vi.fn>)
-        .mock.calls[0][0] as DomainEvent[];
+
+      const events = (eventBus.dispatch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as DomainEvent[];
       expect(events).toHaveLength(1);
-      expect(events[0].eventType).toBe(
-        TransactionEvents.TRANSACTION_CREATED,
-      );
+
+      expect(events[0].eventType).toBe(TransactionEvents.TRANSACTION_CREATED);
     });
 
     it('returns the count of added transactions', async () => {
@@ -203,9 +220,9 @@ describe('SyncTransactionsHandler', () => {
       ];
       const { handler } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ added: txns }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ added: txns })),
         },
       });
 
@@ -223,9 +240,9 @@ describe('SyncTransactionsHandler', () => {
 
       const { handler, transactionRepository } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ added: [plaidTxn] }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ added: [plaidTxn] })),
         },
       });
 
@@ -233,7 +250,9 @@ describe('SyncTransactionsHandler', () => {
 
       const saved = (transactionRepository.saveMany as ReturnType<typeof vi.fn>)
         .mock.calls[0][0] as Transaction[];
+
       expect(saved[0].merchantName).toBeUndefined();
+
       expect(saved[0].category).toBeUndefined();
     });
   });
@@ -250,9 +269,9 @@ describe('SyncTransactionsHandler', () => {
 
       const { handler, transactionRepository } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ modified: [modifiedPlaid] }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ modified: [modifiedPlaid] })),
         },
         transactionRepository: {
           findByIds: vi.fn().mockResolvedValue([existing]),
@@ -275,9 +294,9 @@ describe('SyncTransactionsHandler', () => {
 
       const { handler, transactionRepository, eventBus } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ modified: [modifiedPlaid] }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ modified: [modifiedPlaid] })),
         },
         transactionRepository: {
           findByIds: vi.fn().mockResolvedValue([]),
@@ -287,12 +306,16 @@ describe('SyncTransactionsHandler', () => {
       const result = await handler.execute(command);
 
       expect(transactionRepository.saveMany).not.toHaveBeenCalled();
+
       expect(result.getValueOrThrow().modified).toBe(1);
 
       expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
-      const events = (eventBus.dispatch as ReturnType<typeof vi.fn>)
-        .mock.calls[0][0] as DomainEvent[];
+
+      const events = (eventBus.dispatch as ReturnType<typeof vi.fn>).mock
+        .calls[0][0] as DomainEvent[];
+
       expect(events).toHaveLength(1);
+
       expect(events[0].eventType).toBe(TransactionEvents.SYNC_MISMATCH);
     });
   });
@@ -301,9 +324,11 @@ describe('SyncTransactionsHandler', () => {
     it('deletes by plaid ids and returns the count', async () => {
       const { handler, transactionRepository } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ removed: ['txn-1', 'txn-2'] }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(
+              _makeSyncResult({ removed: ['txn-1', 'txn-2'] }),
+            ),
         },
       });
 
@@ -353,9 +378,9 @@ describe('SyncTransactionsHandler', () => {
     it('persists the new cursor after each batch', async () => {
       const { handler, plaidItemRepository } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ nextCursor: 'new-cursor' }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ nextCursor: 'new-cursor' })),
         },
       });
 
@@ -394,13 +419,16 @@ describe('SyncTransactionsHandler', () => {
       const result = await handler.execute(command);
 
       expect(plaidClient.syncTransactions).toHaveBeenCalledTimes(2);
+
       expect(syncMock).toHaveBeenNthCalledWith(
         2,
         'access-token-xyz',
         'cursor-page-2',
       );
       expect(result.getValueOrThrow().added).toBe(2);
+
       expect(plaidItemRepository.updateCursor).toHaveBeenCalledTimes(2);
+
       expect(plaidItemRepository.updateCursor).toHaveBeenLastCalledWith(
         'item-1',
         'cursor-page-3',
@@ -436,8 +464,11 @@ describe('SyncTransactionsHandler', () => {
       const result = await handler.execute(command);
 
       expect(plaidClient.syncTransactions).toHaveBeenCalledTimes(2);
+
       expect(syncMock).toHaveBeenCalledWith('access-token-xyz', 'cursor-1');
+
       expect(syncMock).toHaveBeenCalledWith('access-token-2', 'cursor-2');
+
       expect(result.getValueOrThrow().added).toBe(2);
     });
   });
@@ -469,13 +500,38 @@ describe('SyncTransactionsHandler', () => {
       const result = await handler.execute(command);
 
       const value = result.getValueOrThrow();
+
       expect(value.added).toBe(1);
+
       expect(value.modified).toBe(1);
+
       expect(value.removed).toBe(1);
+
       expect(transactionRepository.saveMany).toHaveBeenCalledTimes(2);
+
       expect(transactionRepository.deleteByIds).toHaveBeenCalledWith([
         'txn-old',
       ]);
+    });
+  });
+
+  describe('plaid error handling', () => {
+    it('returns Result.fail with PlaidErrorException when plaid sync throws', async () => {
+      const plaidError = new PlaidErrorException(
+        '[API_ERROR] INTERNAL_SERVER_ERROR: internal server error',
+      );
+
+      const { handler } = _makeHandler({
+        plaidClient: {
+          syncTransactions: vi.fn().mockRejectedValue(plaidError),
+        },
+      });
+
+      const result = await handler.execute(command);
+
+      expect(result.isFailure).toBe(true);
+
+      expect(result.error).toBeInstanceOf(PlaidErrorException);
     });
   });
 
@@ -483,9 +539,9 @@ describe('SyncTransactionsHandler', () => {
     it('does not dispatch events when no transactions are added', async () => {
       const { handler, eventBus } = _makeHandler({
         plaidClient: {
-          syncTransactions: vi.fn().mockResolvedValue(
-            _makeSyncResult({ removed: ['txn-1'] }),
-          ),
+          syncTransactions: vi
+            .fn()
+            .mockResolvedValue(_makeSyncResult({ removed: ['txn-1'] })),
         },
       });
 

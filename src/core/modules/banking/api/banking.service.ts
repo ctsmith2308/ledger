@@ -6,6 +6,7 @@ import {
   UnlinkBankCommand,
   GetAccountsQuery,
   GetConnectionsQuery,
+  GetItemOwnerQuery,
 } from '../application';
 
 import {
@@ -62,6 +63,14 @@ class BankingService {
     );
 
     result.getValueOrThrow();
+  }
+
+  async getItemOwner(itemId: string): Promise<string> {
+    const result = await this.queryBus.dispatch(
+      new GetItemOwnerQuery(itemId),
+    );
+
+    return result.getValueOrThrow();
   }
 }
 

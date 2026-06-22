@@ -16,7 +16,7 @@ const actionClient = createSafeActionClient({
   defineMetadataSchema: () => z.object({ actionName: z.string() }),
 
   handleServerError: (error): ErrorResponse => {
-    logger.error(error);
+    logger.error(error instanceof Error ? error.message : String(error));
 
     return toErrorResponse(error);
   },

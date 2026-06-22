@@ -1,34 +1,26 @@
 /**
- * Lightweight logger for operational output (errors, debug, infra events).
+ * Structured logger via Pino.
  *
- * This is not a replacement for OpenTelemetry (traces) or domain events
- * (audit). Each serves a different purpose:
- * - Traces: request flows, handler timing, span-level debugging
- * - Domain events: business-level audit (persisted to domain_events table)
- * - Logger: operational noise that doesn't warrant a trace or event
- *   (Plaid API failures during cleanup, EventBus publish errors, rollup
- *   debug output, action client catch boundary)
+ * - Production: JSON to stdout (machine-readable for Grafana Loki / any log drain)
+ * - Development: pino-pretty for human-readable colored output
  *
- * TODO: Replace console transport with Pino for structured JSON logging,
- * production log-level filtering, and Grafana Loki integration. The call
- * sites stay the same; only the transport implementation changes.
+ * Log level defaults to "info" in production, "debug" in development.
+ * Override with the LOG_LEVEL env var.
  */
-const logger = {
-  error(message: unknown, traceId?: string): void {
-    console.error({ level: 'error', traceId, message });
-  },
+import pino from 'pino';
 
-  warn(message: unknown): void {
-    console.warn({ level: 'warn', message });
-  },
+const isProduction = process.env.NODE_ENV === 'production';
 
-  info(message: unknown): void {
-    console.info({ level: 'info', message });
-  },
-
-  debug(message: unknown): void {
-    console.debug({ level: 'debug', message });
+const devTransport = {
+  transport: {
+    target: 'pino-pretty',
+    options: { colorize: true },
   },
 };
+
+const logger = pino({
+  level: process.env.LOG_LEVEL ?? (isProduction ? 'info' : 'debug'),
+  ...(!isProduction && devTransport),
+});
 
 export { logger };

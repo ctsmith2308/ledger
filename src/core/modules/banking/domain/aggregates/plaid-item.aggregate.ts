@@ -13,7 +13,7 @@ class PlaidItem extends AggregateRoot {
     super();
   }
 
-  static link(
+  static create(
     id: string,
     userId: string,
     accessToken: string,
